@@ -1,0 +1,70 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.3.4'
+	id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group = 'com.singlebungle'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+
+	// Spring Boot Starter Web
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// spring health check
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// Spring Boot Starter Data JPA
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	// Jarkarta Persistence API
+	implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+
+	// Jakarta Servlet API
+	implementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+
+	// Swagger (Springdoc OpenAPI)
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.4'
+
+	// Spring Security
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// MySQL Driver
+	implementation 'mysql:mysql-connector-java:8.0.33'
+
+	// Lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// 테스트 의존성
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+
+
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
