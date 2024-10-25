@@ -1,7 +1,13 @@
+import MainPage from "./pages/MainPage"
+import "./asset/pretendard.css"
+import styled from "styled-components"
+import GlobalStyle from "./GlobalStyles"
+
 function App() {
   return (
     <div className="App">
-      <h1>싱글벙글</h1>
+      <GlobalStyle />
+      <MainPage />
     </div>
   )
 }
