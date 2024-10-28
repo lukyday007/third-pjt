@@ -10,7 +10,7 @@ import DefaultFolderIcon from "../asset/images/SideBar/DefaultFolderIcon.svg?rea
 import SettingsIcon from "../asset/images/SideBar/SettingsIcon.svg?react"
 import TrashBinIcon from "../asset/images/SideBar/TrashBinIcon.svg?react"
 
-import TestImage from "../asset/images/TestImage.svg?react"
+import TestImage from "../asset/images/TestImage.png"
 
 const s = {
   Container: styled.div`
@@ -74,7 +74,7 @@ const SideBar = () => {
           />
         </s.HomeIconArea>
         <s.UserInfoArea>
-          <TestImage />
+          <img src={TestImage} alt="borami" width="36px" />
           <s.Email>kke0402@naver.com</s.Email>
         </s.UserInfoArea>
         <s.FolderCaption>기본</s.FolderCaption>
