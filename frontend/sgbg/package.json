@@ -18,8 +18,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "electron-reload": "^2.0.0-alpha.1",
     "electron-updater": "^6.1.8",
-    "styled-components": "^6.1.13"
+    "styled-components": "^6.1.13",
+    "vite-plugin-svgr": "^4.2.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
