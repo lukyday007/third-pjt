@@ -1,9 +1,10 @@
 import styled from "styled-components"
-import SideBar from "../components/SideBar"
+import ImgPage from "./ImgPage"
 
 const s = {
   Container: styled.div`
     /* border: solid 1px red; */
+    width: 100%;
     margin: 0;
   `,
 }
@@ -14,6 +15,8 @@ const MainPage = () => {
       <h1>Mainpage</h1>
       <p>asdf</p>
       <span>asdf</span>
+      -------------
+      <ImgPage />
     </s.Container>
   )
 }
