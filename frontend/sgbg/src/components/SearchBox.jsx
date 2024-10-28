@@ -5,10 +5,11 @@ const s = {
   Container: styled.div`
     background-color: rgba(245, 245, 245, 1);
     display: flex;
-    padding: 18px 13px;
+    padding: 16px 12px;
     gap: 10px;
+    flex: 1 0 auto;
+
     border-radius: 16px;
-    width: 100%;
   `,
   Input: styled.input`
     background-color: inherit;
