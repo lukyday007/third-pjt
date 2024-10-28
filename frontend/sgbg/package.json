@@ -18,6 +18,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.3.0",
     "electron-reload": "^2.0.0-alpha.1",
     "electron-updater": "^6.1.8",
     "styled-components": "^6.1.13",
