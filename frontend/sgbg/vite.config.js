@@ -1,33 +1,37 @@
-import { rmSync } from 'node:fs'
-import path from 'node:path'
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import electron from 'vite-plugin-electron/simple'
-import pkg from './package.json'
+import { rmSync } from "node:fs"
+import path from "node:path"
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react"
+import electron from "vite-plugin-electron/simple"
+import pkg from "./package.json"
+import svgr from "vite-plugin-svgr"
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
-  rmSync('dist-electron', { recursive: true, force: true })
+  rmSync("dist-electron", { recursive: true, force: true })
 
-  const isServe = command === 'serve'
-  const isBuild = command === 'build'
+  const isServe = command === "serve"
+  const isBuild = command === "build"
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG
 
   return {
     resolve: {
       alias: {
-        '@': path.join(__dirname, 'src'),
+        "@": path.join(__dirname, "src"),
       },
     },
     plugins: [
       react(),
+      svgr(),
       electron({
         main: {
           // Shortcut of `build.lib.entry`
-          entry: 'electron/main/index.js',
+          entry: "electron/main/index.js",
           onstart(args) {
             if (process.env.VSCODE_DEBUG) {
-              console.log(/* For `.vscode/.debug.script.mjs` */ '[startup] Electron App')
+              console.log(
+                /* For `.vscode/.debug.script.mjs` */ "[startup] Electron App"
+              )
             } else {
               args.startup()
             }
@@ -36,9 +40,11 @@ export default defineConfig(({ command }) => {
             build: {
               sourcemap,
               minify: isBuild,
-              outDir: 'dist-electron/main',
+              outDir: "dist-electron/main",
               rollupOptions: {
-                external: Object.keys('dependencies' in pkg ? pkg.dependencies : {}),
+                external: Object.keys(
+                  "dependencies" in pkg ? pkg.dependencies : {}
+                ),
               },
             },
           },
@@ -46,14 +52,16 @@ export default defineConfig(({ command }) => {
         preload: {
           // Shortcut of `build.rollupOptions.input`.
           // Preload scripts may contain Web assets, so use the `build.rollupOptions.input` instead `build.lib.entry`.
-          input: 'electron/preload/index.js',
+          input: "electron/preload/index.js",
           vite: {
             build: {
-              sourcemap: sourcemap ? 'inline' : undefined, // #332
+              sourcemap: sourcemap ? "inline" : undefined, // #332
               minify: isBuild,
-              outDir: 'dist-electron/preload',
+              outDir: "dist-electron/preload",
               rollupOptions: {
-                external: Object.keys('dependencies' in pkg ? pkg.dependencies : {}),
+                external: Object.keys(
+                  "dependencies" in pkg ? pkg.dependencies : {}
+                ),
               },
             },
           },
