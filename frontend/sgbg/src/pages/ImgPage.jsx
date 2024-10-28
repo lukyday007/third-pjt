@@ -9,8 +9,7 @@ const s = {
     gap: 15px;
   `,
   Title: styled.div`
-    border: solid 1px red;
-    max-width: ;
+    max-width: 200px;
   `,
 }
 
@@ -19,7 +18,7 @@ const ImgPage = () => {
     <s.Containter>
       <s.Title>싱글벙글 페이지</s.Title>
       <SearchBox />
-      <p>이미지페이지</p>
+      <p>토글</p>
     </s.Containter>
   )
 }
