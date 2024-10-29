@@ -79,7 +79,7 @@ http://scripts.sil.org/OFL
     url(./fonts/Pretendard-Thin.woff) format('woff');
 }
 
-* {
+#save-modal {
   font-family: 'Pretendard';
   font-weight: 500;
 }
