@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 @Service
 @RequiredArgsConstructor
 public class ImageServiceImpl implements ImageService {
-    private final AmazonS3 amazonS3;
+//    private final AmazonS3 amazonS3;
 
     @Override
     public void saveImage(String url) {
