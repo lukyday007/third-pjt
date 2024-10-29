@@ -6,6 +6,7 @@ build/
 !**/src/test/**/build/
 
 ### env ###
+.env
 /backend/config/google-vision-credential.json
 
 ### STS ###
