@@ -7,7 +7,9 @@ build/
 
 ### env ###
 .env
-/backend/config/google-vision-credential.json
+
+### google vision credential ###
+backend/config/google-vision-credential.json
 
 ### STS ###
 .apt_generated
