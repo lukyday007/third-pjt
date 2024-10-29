@@ -94,9 +94,7 @@ document.addEventListener('drop', (event) => {
   if (dropArea) {
     event.preventDefault()
     console.log(dropArea)
-    dropArea.classList.remove('drag-over')
-    dropArea.style.cursor = ''
-    delete dropArea.dataset.dragCounter
+    initDrag(dropArea)
   }
 })
 
@@ -110,9 +108,7 @@ document.addEventListener('dragleave', (event) => {
     dropArea.dataset.dragCounter--
 
     if (dropArea.dataset.dragCounter == 0) {
-      dropArea.classList.remove('drag-over')
-      dropArea.style.cursor = ''
-      delete dropArea.dataset.dragCounter
+      initDrag(dropArea)
     }
   }
 })
@@ -131,17 +127,23 @@ document.addEventListener('dragend', (event) => {
 
   // 커서 및 drag-over 초기화
   document.querySelectorAll('.modal-droppable').forEach((dropArea) => {
-    dropArea.classList.remove('drag-over') // 드래그 관련 클래스 초기화
-    dropArea.style.cursor = '' // 커서 초기화
-    delete dropArea.dataset.dragCounter
+    initDrag(dropArea)
   })
 
+  // 모달 닫기
   const existingModal = document.querySelector('#save-modal')
 
   if (existingModal) {
     existingModal.remove()
   }
 })
+
+// 드래그 동작 초기화 함수
+function initDrag(dropArea) {
+  dropArea.classList.remove('drag-over') // 드래그오버 클래스 초기화
+  dropArea.style.cursor = '' // 커서 초기화
+  delete dropArea.dataset.dragCounter // dragCounter 데이터셋 삭제
+}
 
 // 모달 위치 계산 함수
 // 생성되는 모달이 창밖으로 넘어가지 않도록 조정
@@ -238,24 +240,21 @@ function showModal(event) {
 
   // 폴더 구조 추가
   directoryInfos.forEach((directoryInfo) => {
-    const newElement = document.createElement('div')
+    const folderArea = document.createElement('div')
+    folderArea.className = 'modal-folder-area modal-droppable'
+    folderArea.dataset.directoryId = directoryInfo.directoryId
 
     // 내부 구조 설정
-    newElement.innerHTML = `
-    <div class="modal-folder-area modal-droppable">
+    folderArea.innerHTML = `
       <img src="" alt="" class="directory-img"/>
       <span class="modal-folder-title"></span>
-    </div>`
-
-    // 이미지 디렉토리 저장시 디렉토리 id 감지를 위한 id값 설정
-    const folderArea = newElement.querySelector('.modal-folder-area')
-    folderArea.setAttribute('id', directoryInfo.directoryId)
+    `
 
     // 디렉토리 이름 설정
-    const folderTitle = newElement.querySelector('.modal-folder-title')
+    const folderTitle = folderArea.querySelector('.modal-folder-title')
     folderTitle.innerText = directoryInfo.directoryName
 
-    directoryList.appendChild(newElement)
+    directoryList.appendChild(folderArea)
   })
 
   // 기본 폴더 아이콘 추가
