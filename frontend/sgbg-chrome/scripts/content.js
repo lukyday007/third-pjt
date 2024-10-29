@@ -20,7 +20,8 @@ try {
 }
 
 // 폴더 임시 변수 -> 차후 api 요청해서 받는것으로 수정
-const directoryInfos = [
+let directoryInfos
+directoryInfos = [
   { directoryId: 1, directoryName: '싱글벙글 모음' },
   { directoryId: 2, directoryName: '훌쩍훌쩍 모음' },
   { directoryId: 2, directoryName: '오싹오싹 모음' },
@@ -85,6 +86,20 @@ document.addEventListener('dragover', (event) => {
   }
 })
 
+// 요소 드롭 이벤트
+document.addEventListener('drop', (event) => {
+  // 드롭 가능 영역 감지
+  const dropArea = event.target.closest('.modal-droppable')
+
+  if (dropArea) {
+    event.preventDefault()
+    console.log(dropArea)
+    dropArea.classList.remove('drag-over')
+    dropArea.style.cursor = ''
+    delete dropArea.dataset.dragCounter
+  }
+})
+
 // 드래그 퇴장 이벤트 - 추가했던 drag-over 요소 삭제
 document.addEventListener('dragleave', (event) => {
   // 드롭 가능 영역 감지
@@ -103,6 +118,9 @@ document.addEventListener('dragleave', (event) => {
 })
 
 // 드래그 끝 이벤트
+// drop 이벤트 후에도 drag-end 이벤트가 반드시 호출된다.
+// drop -> dragover -> dragend 순으로 종료되어
+// dragend 이벤트에서 cursor 및 스타일 관련 이벤트 처리가 필요하다.
 // 차후 여기에 이미지 저장 이벤트 추가
 document.addEventListener('dragend', (event) => {
   console.log('dragend', isDragging, startX, startY)
@@ -110,6 +128,13 @@ document.addEventListener('dragend', (event) => {
   startX = 0
   startY = 0
   console.log('dragend', isDragging, startX, startY)
+
+  // 커서 및 drag-over 초기화
+  document.querySelectorAll('.modal-droppable').forEach((dropArea) => {
+    dropArea.classList.remove('drag-over') // 드래그 관련 클래스 초기화
+    dropArea.style.cursor = '' // 커서 초기화
+    delete dropArea.dataset.dragCounter
+  })
 
   const existingModal = document.querySelector('#save-modal')
 
