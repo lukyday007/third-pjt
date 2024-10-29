@@ -19,4 +19,19 @@ public class Image extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "image_id", unique = true, nullable = false)
     private Long imageId;
+
+    @Column(name = "image_url", nullable = false)
+    private String imageUrl;
+
+    @Column(name = "source_url", nullable = false)
+    private String sourceUrl;
+
+    @Column(name = "directory_id", nullable = false)
+    private int directoryId;
+
+    private int count;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
+
 }

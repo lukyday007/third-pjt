@@ -5,6 +5,12 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+### env ###
+.env
+
+### google vision credential ###
+backend/config/google-vision-credential.json
+
 ### STS ###
 .apt_generated
 .classpath
@@ -19,6 +25,9 @@ bin/
 
 #### genereated 폴더 제외
 **/src/main/generated
+
+### yml ###
+*.yml
 
 ### IntelliJ IDEA ###
 .idea
