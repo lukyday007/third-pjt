@@ -24,7 +24,7 @@ let directoryInfos
 directoryInfos = [
   { directoryId: 1, directoryName: '싱글벙글 모음' },
   { directoryId: 2, directoryName: '훌쩍훌쩍 모음' },
-  { directoryId: 2, directoryName: '오싹오싹 모음' },
+  { directoryId: 3, directoryName: '오싹오싹 모음' },
 ]
 
 // 드래그 시작 이벤트 - 이미지 드래그 여부 확인 및 초기 위치 저장
@@ -92,6 +92,9 @@ document.addEventListener('drop', (event) => {
   const dropArea = event.target.closest('.modal-droppable')
 
   if (dropArea) {
+    if (dropArea.id === 'directory-create-area') {
+      showCreateFolderModal(event)
+    }
     event.preventDefault()
     console.log(dropArea)
     initDrag(dropArea)
@@ -221,7 +224,7 @@ function showModal(event) {
       </div>
       <div class="modal-directory-divider"></div>
       <div class="modal-directory-add">
-        <div class="modal-folder-area modal-droppable">
+        <div class="modal-folder-area modal-droppable" id="directory-create-area">
           <img src="" alt="폴더 만들기" class="create-folder-icon"/>
           <span class="modal-folder-title">폴더 만들기</span>
         </div>
@@ -266,6 +269,38 @@ function showModal(event) {
 
   // 폴더 만들기 아이콘 추가
   const createFolderIcon = modal.querySelector('.create-folder-icon')
+  createFolderIcon.src = createFolderIconUrl
+
+  document.body.appendChild(modal)
+}
+
+function showCreateFolderModal(event) {
+  // 기존 모달 제거
+  const existingModal = document.querySelector('#create-folder-modal')
+
+  if (existingModal) {
+    existingModal.remove()
+  }
+
+  // 모달 요소 추가
+  const modal = document.createElement('div')
+
+  const { left, top } = calcModalCoord(event.clientX, event.clientY)
+
+  // 모달이 화면 밖으로 넘어가지 않도록 계산
+  modal.style.top = `${top}px`
+  modal.style.left = `${left}px`
+
+  modal.id = 'create-folder-modal'
+
+  // 폴더 만들기 모달 내부 구조 정의
+  modal.innerHTML = `
+    <input class="modal-create-folder-input" placeholder="새 폴더 이름을 입력하세요"></input>
+    <img class="modal-create-folder-img" src="" alt="폴더 만들기" />
+  `
+
+  // 폴더 만들기 아이콘 추가
+  const createFolderIcon = modal.querySelector('.modal-create-folder-img')
   createFolderIcon.src = createFolderIconUrl
 
   document.body.appendChild(modal)

@@ -13,7 +13,7 @@ ul {
   transform: translate(-50%, -50%);
 
   border: 1px solid #ffffff;
-  box-shadow: 0 0 15px rgba(146, 59, 59, 0.3);
+  box-shadow: 0 0 15px rgba(0 0, 0, 0.3);
   border-radius: 20px;
 
   background-color: #ffffff;
@@ -149,4 +149,50 @@ ul {
   background-color: #eeeeee;
 
   transition: 0.1s;
+}
+
+#create-folder-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  padding: 0px 10px;
+
+  box-sizing: border-box;
+
+  width: 385px;
+  height: 80px;
+
+  display: flex;
+  flex-direction: row;
+
+  justify-content: space-around;
+  align-items: center;
+
+  background-color: #ffffff;
+
+  border: 1px solid #ffffff;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  border-radius: 20px;
+
+  z-index: 1000;
+}
+
+.modal-create-folder-input {
+  box-sizing: border-box;
+
+  padding: 0 20px;
+
+  width: 295px;
+  height: 50px;
+
+  border: 2px solid #eeeeee;
+  border-radius: 10px;
+
+  font-size: 20px;
+}
+
+.modal-create-folder-img {
+  width: 50px;
 }
