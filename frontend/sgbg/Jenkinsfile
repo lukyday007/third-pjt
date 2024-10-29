@@ -1,0 +1,95 @@
+pipeline {
+    agent any
+
+    environment {
+        TARGET_BRANCH = 'develop-fe'  // 목표 브랜치 이름 설정
+        REMOTE_USER = 'ubuntu'
+        REMOTE_HOST = 'k11b205.p.ssafy.io'
+        REMOTE_DIR = '/home/ubuntu/plog'  // 원격 서버에서 프로젝트가 위치한 경로
+    }
+
+    stages {
+        stage('Check Branch') { // 내가 원하는 브랜치인지 필터링 진행
+            when {
+                expression {
+                    return env.GIT_BRANCH == "origin/${TARGET_BRANCH}"
+                }
+            }
+            steps {
+                echo "Building branch: ${env.GIT_BRANCH}"
+            }
+        }
+        stage('Cleanup Workspace') {
+            steps {
+                deleteDir() // 작업 공간 초기화
+            }
+        }
+        stage('Checkout') {
+            steps {
+                script {
+                    checkout([$class: 'GitSCM',
+                              branches: [[name: '*/develop-fe']],
+                              doGenerateSubmoduleConfigurations: false,
+                              extensions: [[$class: 'CleanCheckout']],
+                              userRemoteConfigs: [[url: 'https://lab.ssafy.com/s11-final/S11P31B205.git',
+                              credentialsId: 'gitlab']]  // credentialsId를 올바르게 설정
+                    ])
+                }
+            }
+        }
+//        stage('Copy .env') {
+//            steps {
+//               script {
+//                    withCredentials([file(credentialsId: 'firebase-env', variable: 'ENV_FILE')]) {
+//                        // .env 파일 복사
+//                        sh 'cp $ENV_FILE frontend/.env'
+//
+//                        // 복사된 파일 내용 확인
+//                        sh 'cat frontend/.env'
+//                    }
+//                }
+//            }
+//        }
+        stage('Build with npm') {
+            steps {
+                dir('frontend') {
+                    sh 'npm install'
+                    sh 'CI=false npm run build'  // CI 환경 변수를 false로 설정
+                }
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // 빌드된 파일을 이용하여 Docker 이미지 빌드
+                    sh 'docker build -t frontend:latest -f frontend/Dockerfile frontend/.'
+                }
+            }
+        }
+        // stage('Deploy with deploy_frontend.sh') {
+        //     steps {
+        //         script {
+        //             // SSH 키를 사용하여 원격 서버에 연결하고 deploy_backend.sh 실행
+        //             sh """
+        //                 ssh -o StrictHostKeyChecking=no -i /var/jenkins_home/.ssh/jenkins_rsa ${REMOTE_USER}@${REMOTE_HOST} "
+        //                 cd ${REMOTE_DIR} &&
+        //                 ./deploy_frontend.sh
+        //                 "
+        //             """
+        //         }
+        //     }
+        // }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: '**/frontend/dist/**/*', fingerprint: true
+        }
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Deployment failed!'
+        }
+    }
+}
