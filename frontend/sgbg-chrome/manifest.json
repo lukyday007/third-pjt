@@ -20,12 +20,12 @@
     {
       "matches": ["<all_urls>"],
       "js": ["./scripts/content.js"],
-      "css": ["./scripts/content.css"]
+      "css": ["./scripts/content.css", "styles.css"]
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["images/*"],
+      "resources": ["images/*", "fonts/*"],
       "matches": ["<all_urls>"]
     }
   ],
