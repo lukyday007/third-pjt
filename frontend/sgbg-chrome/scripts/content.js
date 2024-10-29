@@ -3,6 +3,7 @@ let logoUrl
 let commonFolderIconUrl
 let createFolderIconUrl
 
+// 크롬 확장 경로의 이미지 파일 URl 로드
 try {
   logoUrl = chrome.runtime.getURL('images/singlebungle.svg')
   commonFolderIconUrl = chrome.runtime.getURL('images/common-folder-icon.svg')
@@ -18,6 +19,12 @@ directoryInfos = [
   { directoryId: 2, directoryName: '훌쩍훌쩍 모음' },
   { directoryId: 3, directoryName: '오싹오싹 모음' },
 ]
+
+let imageSaveRequestDto = {
+  webUrl: '',
+  imageUrl: '',
+  directoryId: 0,
+}
 
 // 드래그 동작 초기화 함수
 function initDrag(dropArea) {
@@ -62,7 +69,11 @@ function calcModalCoord(clientX, clientY) {
 }
 
 // 모달 표시 함수
-function showModal(event) {
+async function showModal(event) {
+  const currentTabUrl = await getCurrentTab()
+  imageSaveRequestDto.webUrl = currentTabUrl
+  console.log(imageSaveRequestDto)
+
   // 모달이 있다면 기존 모달 제거
   const existingModal = document.querySelector('#save-modal')
 
@@ -182,4 +193,22 @@ function showCreateFolderModal(event) {
   createFolderIcon.src = createFolderIconUrl
 
   document.body.appendChild(modal)
+}
+
+// 현재 탭의 정보 url을 받아오기
+// 탭 정보는 background.js 혹은 popup.js에서만 읽어올 수 있다.
+// background.js에 메세지를 보내서 탭 정보를 받아온다
+
+function getCurrentTab() {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ action: 'getCurrentTab' }, (response) => {
+      if (response.tab) {
+        console.log('현재 탭:', response.tab)
+        resolve(response.tab.url)
+      } else {
+        console.log('탭 불러오기 실패')
+        reject(new Error('탭 불러오기 실패'))
+      }
+    })
+  })
 }
