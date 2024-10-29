@@ -24,6 +24,9 @@ bin/
 #### genereated 폴더 제외
 **/src/main/generated
 
+### yml ###
+*.yml
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
