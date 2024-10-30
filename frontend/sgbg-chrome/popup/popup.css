@@ -1,8 +1,75 @@
-.popup-body {
+div {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  width: auto;
+  height: auto;
+  display: inline; /* 기본 block 속성 제거 */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  padding: 10px;
+
   width: 200px;
-  height: 100px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: space-around;
+}
+
+.login-btn {
+  width: 200px;
+  height: 40px;
+  cursor: pointer;
+
+  display: block;
+}
+
+.pop-btn {
+  padding: 4px;
+  /* margin-top: 10px; */
+
+  width: 200px;
+  max-width: 200px;
+  height: 40px;
+
+  display: flex;
+  flex-direction: row;
+
+  background-color: white;
+  border: 1.5px solid white;
+  border-radius: 5px;
+
+  align-items: center;
+  overflow: hidden;
+
+  cursor: pointer;
+}
+
+.pop-logo {
+  margin-left: 6px;
+  margin-right: 8px;
+
+  width: 24px;
+  height: 24px;
+}
+
+.pop-title {
+  flex-grow: 1;
+
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  max-width: calc(200px - 40px - 14px);
 }
