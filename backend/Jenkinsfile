@@ -67,26 +67,18 @@ pipeline {
                 }
             }
         }
-        stage('Build Docker Image') {
+        stage('Deploy with Docker Compose on Remote') { // 원격 서버에서 빌드 및 배포 실행
             steps {
                 script {
-                    // JAR 파일을 이용하여 Docker 이미지 빌드
-                    sh 'docker build -t backend:latest -f backend/Dockerfile backend/.'
-                }
-            }
-        }
-        stage('Deploy with Docker Compose') {
-            steps {
-                script {
-                    // SSH 키를 사용하여 원격 서버에 연결하고 명령을 실행
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no -i /var/jenkins_home/.ssh/jenkins_rsa ubuntu@k11b205.p.ssafy.io '
-                        cd /home/ubuntu/plog &&
-                        docker-compose stop backend &&
-                        docker-compose rm -f backend &&
+                    // SSH로 원격 서버에 접속하여 Docker 이미지를 빌드하고 컨테이너를 실행
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i /var/jenkins_home/.ssh/jenkins_rsa ${REMOTE_USER}@${REMOTE_HOST} '
+                        cd ${REMOTE_DIR} &&
+                        docker-compose down backend &&
+                        docker build -t backend:latest -f backend/Dockerfile backend/. &&
                         docker-compose up -d backend
                         '
-                    '''
+                    """
                 }
             }
         }
