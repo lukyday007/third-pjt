@@ -1,0 +1,99 @@
+pipeline {
+    agent any
+
+    environment {
+        TARGET_BRANCH = 'develop-be'  // 목표 브랜치 이름 설정
+        REMOTE_USER = 'ubuntu'
+        REMOTE_HOST = 'k11b205.p.ssafy.io'
+        REMOTE_DIR = '/home/ubuntu/plog'  // 원격 서버에서 프로젝트가 위치한 경로
+    }
+
+    stages {
+        stage('Check Branch') { // 내가 원하는 브랜치인지 필터링 진행
+            when {
+                expression {
+                    return env.GIT_BRANCH == "origin/${TARGET_BRANCH}"
+                }
+            }
+            steps {
+                echo "Building branch: ${env.GIT_BRANCH}"
+            }
+        }
+        stage('Cleanup Workspace') {
+            steps {
+                deleteDir() // 작업 공간 초기화
+            }
+        }
+        stage('Checkout') {
+            steps {
+                script {
+                    checkout([$class: 'GitSCM',
+                              branches: [[name: "*/${TARGET_BRANCH}"]],
+                              doGenerateSubmoduleConfigurations: false,
+                              extensions: [[$class: 'CleanCheckout']],
+                              userRemoteConfigs: [[url: 'https://lab.ssafy.com/s11-final/S11P31B205.git',
+                              credentialsId: 'gitlab']]  // credentialsId를 올바르게 설정
+                    ])
+                }
+            }
+        }
+        stage('Create Directories') {
+            steps {
+                script {
+                    // 필요한 디렉토리 생성
+                    sh 'mkdir -p ${WORKSPACE}/backend/src/main/resources'
+                }
+            }
+        }
+        stage('Copy application.yml') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: 'application-backend-yml', variable: 'APP_YML')]) {
+                        // 파일 복사
+                        sh 'cp $APP_YML backend/src/main/resources/application.yml'
+
+                        // 복사된 파일 내용 확인
+                        sh 'cat backend/src/main/resources/application.yml'
+                    }
+                }
+            }
+        }
+        stage('Build with Gradle') {
+            steps {
+                dir('backend') {
+                    sh 'chmod +x ./gradlew'  // 실행 권한 추가
+                    sh './gradlew clean build --no-daemon'
+                    sh 'ls -la build/test-results/test'  // 테스트 결과 파일 경로 출력
+                }
+            }
+        }
+        stage('Deploy with Docker Compose on Remote') { // 원격 서버에서 빌드 및 배포 실행
+            steps {
+                script {
+                    // SSH로 원격 서버에 접속하여 Docker 이미지를 빌드하고 컨테이너를 실행
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i /var/jenkins_home/.ssh/jenkins_rsa ${REMOTE_USER}@${REMOTE_HOST} '
+                        cd ${REMOTE_DIR} &&
+                        docker-compose down backend &&
+                        docker build -t backend:latest -f backend/Dockerfile backend/. &&
+                        docker-compose up -d backend
+                        '
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            junit '**/backend/build/test-results/test/*.xml'
+            archiveArtifacts artifacts: '**/backend/build/libs/*.jar', fingerprint: true
+        }
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Deployment failed!'
+        }
+    }
+}
