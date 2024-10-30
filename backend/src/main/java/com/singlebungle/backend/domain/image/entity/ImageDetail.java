@@ -28,6 +28,8 @@ public class ImageDetail {
     @JoinColumn(name = "keyword_id", nullable = false)
     private Keyword keyword;
 
+
+
     public static ImageDetail convertToEntity(Image image, Keyword keyword) {
         ImageDetail imageDetail = new ImageDetail();
         imageDetail.setImage(image);
