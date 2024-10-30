@@ -58,31 +58,18 @@ pipeline {
                 }
             }
         }
-        stage('Build Docker Image') {
+        stage('Deploy with Docker Compose on Remote') {
             steps {
                 script {
-                    echo 'Starting Docker build for frontend...'
-                    
-                    // Docker 이미지 빌드 명령어에 상세 진행 옵션 추가
-                    sh 'docker build --progress=plain --no-cache -t frontend:latest -f frontend/sgbg/Dockerfile frontend/sgbg/.'
-
-                    // 빌드 후 이미지 목록 확인
-                    sh 'docker images | grep frontend'
-                }
-            }
-        }
-        stage('Deploy with Docker Compose') {
-            steps {
-                script {
-                    // SSH 키를 사용하여 원격 서버에 연결하고 명령을 실행
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no -i /var/jenkins_home/.ssh/jenkins_rsa ubuntu@k11b205.p.ssafy.io '
-                        cd /home/ubuntu/plog &&
-                        docker-compose stop frontend &&
-                        docker-compose rm -f frontend &&
+                    // SSH로 원격 서버에 접속하여 Docker 이미지를 빌드하고 컨테이너를 실행
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i /var/jenkins_home/.ssh/jenkins_rsa ${REMOTE_USER}@${REMOTE_HOST} '
+                        cd ${REMOTE_DIR} &&
+                        docker-compose down frontend &&
+                        docker build -t frontend:latest -f frontend/sgbg/Dockerfile frontend/sgbg/. &&
                         docker-compose up -d frontend
                         '
-                    '''
+                    """
                 }
             }
         }
