@@ -3,7 +3,9 @@ package com.singlebungle.backend.domain.image.controller;
 import com.singlebungle.backend.domain.ai.service.GoogleVisionService;
 import com.singlebungle.backend.domain.ai.service.OpenaiService;
 import com.singlebungle.backend.domain.image.dto.request.ImageWebRequestDTO;
+import com.singlebungle.backend.domain.image.service.ImageDetailService;
 import com.singlebungle.backend.domain.image.service.ImageService;
+import com.singlebungle.backend.domain.keyword.service.KeywordService;
 import com.singlebungle.backend.global.exception.InvalidImageException;
 import com.singlebungle.backend.global.model.BaseResponseBody;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +26,8 @@ public class ImageController {
     private final OpenaiService openaiService;
     private final GoogleVisionService googleVisionService;
     private final ImageService imageService;
+    private final KeywordService keywordService;
+    private final ImageDetailService imageDetailService;
 
     @PostMapping("/web")
     @Operation(summary = "웹 이미지 저장", description = "웹에서 새로운 이미지를 등록합니다.")
@@ -38,8 +42,8 @@ public class ImageController {
             }
 
             // chatgpt api
-            String resultContent = openaiService.requestImageAnalysis(dto.getImageUrl(), labels);
-            if (resultContent == null) {
+            List<String> keywords = openaiService.requestImageAnalysis(dto.getImageUrl(), labels);
+            if (keywords == null) {
                 throw new InvalidImageException();
             }
 
@@ -51,7 +55,10 @@ public class ImageController {
 
             // 이미지 데이터 생성, 저장
             imageService.saveImage(dto);
-
+            // 키워드 데이터 생성, 저장
+            keywordService.saveKeyword(keywords);
+            // 이미지 디테일 데이터 생성, 저장
+            imageDetailService.saveImageDetail(dto, keywords);
 
         } catch (Exception e) {
             throw new RuntimeException(">>> 웹 이미지 저장을 실패했습니다. " + e);

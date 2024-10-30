@@ -3,6 +3,7 @@ package com.singlebungle.backend.domain.ai.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.singlebungle.backend.domain.ai.dto.request.ChatGPTRequest;
 import com.singlebungle.backend.domain.ai.dto.response.ChatGPTResponse;
+import com.singlebungle.backend.domain.image.service.ImageService;
 import com.singlebungle.backend.domain.keyword.service.KeywordService;
 import com.singlebungle.backend.global.exception.InvalidApiUrlException;
 import com.singlebungle.backend.global.exception.InvalidResponseException;
@@ -30,6 +31,7 @@ import java.util.regex.Pattern;
 public class OpenaiServiceImpl implements OpenaiService {
 
     private final KeywordService keywordService;
+    private final ImageService imageService;
 
     private final WebClient openAiConfig;  // WebClient 빈을 openAiConfig로 주입받음
 
@@ -45,7 +47,7 @@ public class OpenaiServiceImpl implements OpenaiService {
     private String apiKey;
 
     @Override
-    public String requestImageAnalysis(String imageUrl, List<String> labels) {
+    public List<String> requestImageAnalysis(String imageUrl, List<String> labels) {
         try {
             // 프롬프트 생성
             String gptPrompt = generatePrompt(imageUrl, labels);
@@ -57,7 +59,7 @@ public class OpenaiServiceImpl implements OpenaiService {
             String resultContent = extractResponseContent(response);
             List<String> keywords = extractKeywords(resultContent);
 
-            return resultContent;
+            return keywords;
 
 
         } catch (WebClientRequestException e) {
@@ -164,23 +166,8 @@ public class OpenaiServiceImpl implements OpenaiService {
             }
         }
 
-        // 키워드 생성
-        saveKeywords(keywords);
-
         return keywords;
     }
 
-
-    @Override
-    public void saveKeywords(List<String> keywords) {
-        keywordService.save(keywords);
-    }
-
-
-    @Override
-    public List<String> getKeywords() {
-        return keywords;
-    }
 
 }
-

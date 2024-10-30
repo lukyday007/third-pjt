@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface OpenaiService {
 
-    String requestImageAnalysis(String imageUrl, List<String> labels);
+    List<String> requestImageAnalysis(String imageUrl, List<String> labels);
     // 프롬프트 생성
     String generatePrompt(String imageUrl, List<String> labels);
     // OpenAI api 요청
@@ -17,6 +17,5 @@ public interface OpenaiService {
     String extractResponseContent(ChatGPTResponse response);
     List<String> extractKeywords(String response);
 
-    void saveKeywords(List<String> keywords);
-    List<String> getKeywords();
+
 }

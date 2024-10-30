@@ -21,7 +21,7 @@ public class KeywordServiceImpl implements KeywordService {
 
     @Override
     @Transactional
-    public void save(List<String> keywords) {
+    public void saveKeyword(List<String> keywords) {
 
         for (String keyword : keywords) {
             boolean result = keywordRepository.existsByKeywordName(keyword);
