@@ -1,5 +1,4 @@
 import styled from "styled-components"
-import ImgPage from "./ImgPage"
 
 const s = {
   Container: styled.div`
@@ -15,8 +14,6 @@ const MainPage = () => {
       <h1>Mainpage</h1>
       <p>asdf</p>
       <span>asdf</span>
-      -------------
-      <ImgPage />
     </s.Container>
   )
 }
