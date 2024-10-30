@@ -27,12 +27,12 @@ public class ImageDetailServiceImpl implements ImageDetailService {
     @Transactional
     public void saveImageDetail(ImageWebRequestDTO requestDTO, List<String> keywords) {
         // 이미지 조회
-        boolean isImage = imageRepository.existsByWebUrlAndImageUrl(requestDTO.getWebUrl(), requestDTO.getImageUrl());
+        boolean isImage = imageRepository.existsBySourceUrlAndImageUrl(requestDTO.getWebUrl(), requestDTO.getImageUrl());
         Image image;
 
         if (! isImage)
             throw new EntityNotFoundException("해당 이미지 데이터가 존재하지 않습니다.");
-        image = imageRepository.findByWebUrlAndImageUrl(requestDTO.getWebUrl(), requestDTO.getImageUrl());
+        image = imageRepository.findBySourceUrlAndImageUrl(requestDTO.getWebUrl(), requestDTO.getImageUrl());
 
         // 키워드 조회
         for (String name : keywords) {

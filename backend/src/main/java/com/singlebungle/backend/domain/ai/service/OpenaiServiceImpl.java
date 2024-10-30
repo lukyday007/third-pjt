@@ -30,9 +30,6 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class OpenaiServiceImpl implements OpenaiService {
 
-    private final KeywordService keywordService;
-    private final ImageService imageService;
-
     private final WebClient openAiConfig;  // WebClient 빈을 openAiConfig로 주입받음
 
     private List<String> keywords;

@@ -4,12 +4,9 @@ import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.singlebungle.backend.domain.ai.service.OpenaiService;
 import com.singlebungle.backend.domain.image.dto.request.ImageWebRequestDTO;
 import com.singlebungle.backend.domain.image.entity.Image;
-import com.singlebungle.backend.domain.image.entity.ImageDetail;
 import com.singlebungle.backend.domain.image.repository.ImageDetailRepository;
 import com.singlebungle.backend.domain.image.repository.ImageRepository;
-import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
-import com.singlebungle.backend.global.exception.EntityNotFoundException;
 import com.singlebungle.backend.global.exception.ImageSaveException;
 import com.singlebungle.backend.global.exception.InvalidRequestException;
 import jakarta.transaction.Transactional;
@@ -20,17 +17,13 @@ import org.springframework.stereotype.Service;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ImageServiceImpl implements ImageService {
 
-    private final OpenaiService openaiService;
     private final ImageRepository imageRepository;
-    private final KeywordRepository keywordRepository;
-    private final ImageDetailRepository imageDetailRepository;
 //    private final AmazonS3 amazonS3;
 
     @Override

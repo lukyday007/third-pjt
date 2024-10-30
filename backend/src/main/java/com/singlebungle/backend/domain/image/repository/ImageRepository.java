@@ -7,7 +7,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ImageRepository extends JpaRepository<Image, Long> {
-    boolean existsByWebUrlAndImageUrl(String webUrl, String imageUrl);
 
-    Image findByWebUrlAndImageUrl(@NotNull(message = "web url을 입력해주세요.") String webUrl, @NotNull(message = "image url을 입력해주세요.") String imageUrl);
+    Image findBySourceUrlAndImageUrl(String webUrl, String imageUrl);
+
+    boolean existsBySourceUrlAndImageUrl(@NotNull(message = "web url을 입력해주세요.") String webUrl, @NotNull(message = "image url을 입력해주세요.") String imageUrl);
 }
