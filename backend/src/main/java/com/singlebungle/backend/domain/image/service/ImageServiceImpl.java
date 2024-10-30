@@ -1,14 +1,17 @@
 package com.singlebungle.backend.domain.image.service;
 
-import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.singlebungle.backend.domain.ai.service.OpenaiService;
+import com.singlebungle.backend.domain.image.dto.request.ImageWebRequestDTO;
+import com.singlebungle.backend.domain.image.entity.Image;
+import com.singlebungle.backend.domain.image.repository.ImageDetailRepository;
+import com.singlebungle.backend.domain.image.repository.ImageRepository;
+import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
 import com.singlebungle.backend.global.exception.ImageSaveException;
-import com.singlebungle.backend.global.exception.InvalidImageException;
 import com.singlebungle.backend.global.exception.InvalidRequestException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
@@ -19,10 +22,12 @@ import java.nio.charset.StandardCharsets;
 @Service
 @RequiredArgsConstructor
 public class ImageServiceImpl implements ImageService {
+
+    private final ImageRepository imageRepository;
 //    private final AmazonS3 amazonS3;
 
     @Override
-    public void saveImage(String url) {
+    public void uploadImageFromUrlToS3(String url) {
         try {
             // url 디코딩
             String decodeUrl = URLDecoder.decode(url, StandardCharsets.UTF_8.name());
@@ -43,7 +48,15 @@ public class ImageServiceImpl implements ImageService {
 
         } catch (IllegalArgumentException e) {
             log.error(">>> Invalid request: URL 형식 오류", e);
-            throw new InvalidRequestException("잘못된 요청입니다. URL 형식이 올바르지 않습니다. : " + e);
+            throw new InvalidRequestException("잘못된 요청입니다. URL 형식이 올바르지 않습니다. : " + e.getMessage());
         }
     }
+
+    @Override
+    @Transactional
+    public void saveImage(ImageWebRequestDTO requestDTO) {
+        Image image = Image.convertToEntity(requestDTO);
+        imageRepository.save(image);
+    }
+
 }

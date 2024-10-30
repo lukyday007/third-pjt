@@ -15,6 +15,40 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(EntityIsFoundException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseEntity<ExceptionResponseDto> handleEntityIsFoundException(EntityIsFoundException ex, HttpServletRequest request) {
+
+        log.error("EntityIsFoundException 발생 - URL: {}, Message: {}", request.getRequestURI(), ex.getMessage());
+
+        ExceptionResponseDto response = ExceptionResponseDto.of(
+                request.getMethod(),
+                request.getRequestURI(),
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage()
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<ExceptionResponseDto> handleEntityNotFoundException(EntityNotFoundException ex, HttpServletRequest request) {
+
+        log.error("EntityNotFoundException 발생 - URL: {}, Message: {}", request.getRequestURI(), ex.getMessage());
+
+        ExceptionResponseDto response = ExceptionResponseDto.of(
+                request.getMethod(),
+                request.getRequestURI(),
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage()
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+
     @ExceptionHandler(InvalidImageException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ExceptionResponseDto> handleInvalidImageException(InvalidImageException ex, HttpServletRequest request) {
@@ -37,7 +71,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponseDto> handleInvalidApiUrlException(
             InvalidApiUrlException ex, HttpServletRequest request) {
 
-        log.error("Exception 발생 - URL: {}, Message: {}", request.getRequestURI(), ex.getMessage());
+        log.error("InvalidApiUrlException 발생 - URL: {}, Message: {}", request.getRequestURI(), ex.getMessage());
 
         ExceptionResponseDto response = ExceptionResponseDto.of(
                 request.getMethod(),
@@ -55,7 +89,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponseDto> handleUnAuthorizedApiKeyException(
             UnAuthorizedApiKeyException ex, HttpServletRequest request) {
 
-        log.error("Exception 발생 - URL: {}, Message: {}", request.getRequestURI(), ex.getMessage());
+        log.error("UnAuthorizedApiKeyException 발생 - URL: {}, Message: {}", request.getRequestURI(), ex.getMessage());
 
         ExceptionResponseDto response = ExceptionResponseDto.of(
                 request.getMethod(),
@@ -73,7 +107,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponseDto> handleInvalidResponseException(
             InvalidResponseException ex, HttpServletRequest request) {
 
-        log.error("Exception 발생 - URL: {}, Message: {}", request.getRequestURI(), ex.getMessage());
+        log.error("InvalidResponseException 발생 - URL: {}, Message: {}", request.getRequestURI(), ex.getMessage());
 
         ExceptionResponseDto response = ExceptionResponseDto.of(
                 request.getMethod(),
@@ -91,7 +125,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponseDto> handleImageSaveException(
             ImageSaveException ex, HttpServletRequest request) {
 
-        log.error("Exception 발생 - URL: {}, Message: {}", request.getRequestURI(), ex.getMessage());
+        log.error("ImageSaveException 발생 - URL: {}, Message: {}", request.getRequestURI(), ex.getMessage());
 
         ExceptionResponseDto response = ExceptionResponseDto.of(
                 request.getMethod(),
@@ -109,7 +143,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponseDto> handleInvalidRequestException(
             InvalidRequestException ex, HttpServletRequest request) {
 
-        log.error("Exception 발생 - URL: {}, Message: {}", request.getRequestURI(), ex.getMessage());
+        log.error("InvalidRequestException 발생 - URL: {}, Message: {}", request.getRequestURI(), ex.getMessage());
 
         ExceptionResponseDto response = ExceptionResponseDto.of(
                 request.getMethod(),

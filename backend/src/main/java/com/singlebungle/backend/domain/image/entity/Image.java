@@ -1,5 +1,7 @@
 package com.singlebungle.backend.domain.image.entity;
 
+import com.singlebungle.backend.domain.image.dto.request.ImageAppRequestDTO;
+import com.singlebungle.backend.domain.image.dto.request.ImageWebRequestDTO;
 import com.singlebungle.backend.global.model.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -33,5 +35,15 @@ public class Image extends BaseTimeEntity {
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
+
+    // 웹에서 저장할 때
+    public static Image convertToEntity(ImageWebRequestDTO requestDTO) {
+        Image image = new Image();
+        image.setSourceUrl(requestDTO.getWebUrl());
+        image.setImageUrl(requestDTO.getImageUrl());
+        image.setDirectoryId(requestDTO.getDirectoryId());
+
+        return image;
+    }
 
 }
