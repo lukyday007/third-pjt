@@ -43,7 +43,7 @@ public class ImageServiceImpl implements ImageService {
 
         } catch (IllegalArgumentException e) {
             log.error(">>> Invalid request: URL 형식 오류", e);
-            throw new InvalidRequestException("잘못된 요청입니다. URL 형식이 올바르지 않습니다. : " + e);
+            throw new InvalidRequestException("잘못된 요청입니다. URL 형식이 올바르지 않습니다. : " + e.getMessage());
         }
     }
 }

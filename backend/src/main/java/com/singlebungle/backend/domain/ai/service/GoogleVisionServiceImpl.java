@@ -68,14 +68,15 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
 
     @Override
     public List<String> analyzeImage(String imageUrl) throws IOException {
+        List<String> labels;
         if (!detectSafeSearchGoogleVision(imageUrl)) {
             throw new InvalidImageException(">>> google vision - 부적절항 이미지 입니다.");
         }
 
         // detectSafeSearchGoogleVision이 true인 경우에만 실행
-        return detectLabels(imageUrl);
+        labels = detectLabels(imageUrl);
+        return labels;
     }
-
 
     // Likelihood 값이 LIKELY 또는 VERY_LIKELY인지 확인하는 메서드
     private static boolean isLikelyOrVeryLikely(Likelihood likelihood) {
