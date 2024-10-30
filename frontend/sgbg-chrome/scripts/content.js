@@ -1,11 +1,13 @@
 // 로고 이미지 URL 정의 변수
 let logoUrl
+let logoSadUrl
 let commonFolderIconUrl
 let createFolderIconUrl
 
 // 크롬 확장 경로의 이미지 파일 URl 로드
 try {
   logoUrl = chrome.runtime.getURL('images/singlebungle.svg')
+  logoSadUrl = chrome.runtime.getURL('images/singlebungle-sad.svg')
   commonFolderIconUrl = chrome.runtime.getURL('images/common-folder-icon.svg')
   createFolderIconUrl = chrome.runtime.getURL('images/create-folder-icon.svg')
 } catch (e) {
@@ -70,16 +72,27 @@ function calcModalCoord(clientX, clientY) {
 
 // 모달 표시 함수
 async function showModal(event) {
+  // 현재 탭 정보를 받아와서 출력 (임시 확인용) ##################################################
   const currentTabUrl = await getCurrentTab()
   imageSaveRequestDto.webUrl = currentTabUrl
   console.log(imageSaveRequestDto)
 
-  // 모달이 있다면 기존 모달 제거
-  const existingModal = document.querySelector('#save-modal')
+  // // 모달이 있다면 기존 모달 제거
+  // const existingModal = document.querySelector('#save-modal')
 
-  if (existingModal) {
-    existingModal.remove()
+  // if (existingModal) {
+  //   existingModal.remove()
+  // }
+
+  const existingOverlay = document.querySelector('#save-modal-overlay')
+
+  if (existingOverlay) {
+    existingOverlay.remove()
   }
+
+  // overlay 요소 추가
+  const overlay = document.createElement('div')
+  overlay.id = 'save-modal-overlay'
 
   // 모달 요소 추가
   const modal = document.createElement('div')
@@ -97,7 +110,7 @@ async function showModal(event) {
   modal.innerHTML = `
   <div class="modal-container">
     <section class="modal-drop-section">
-      <div class="modal-drop-box modal-droppable">
+      <div class="modal-drop-box modal-droppable" data-directory-id="0">
         <img src="" alt="" class="modal-drop-logo" />
         <span>여기에 파일을 드롭하세요</span>
         <div></div>
@@ -106,7 +119,7 @@ async function showModal(event) {
     <div class="modal-container-divider"></div>
     <section class="modal-directory-section">
       <div class="modal-directory-list">
-        <div class="modal-folder-area modal-droppable">
+        <div class="modal-folder-area modal-droppable" data-directory-id="0">
           <img src="" alt="" class="directory-img" />
           <span class="modal-folder-title">기본 폴더</span>
         </div>
@@ -130,7 +143,7 @@ async function showModal(event) {
   // 디렉토리 리스트를 담는 요소
   const directoryList = modal.querySelector('.modal-directory-list')
 
-  // 폴더 구조 추가
+  // 모달 폴더 리스트 내에 아이템 추가
   directoryInfos.forEach((directoryInfo) => {
     const folderArea = document.createElement('div')
     folderArea.className = 'modal-folder-area modal-droppable'
@@ -160,7 +173,9 @@ async function showModal(event) {
   const createFolderIcon = modal.querySelector('.create-folder-icon')
   createFolderIcon.src = createFolderIconUrl
 
-  document.body.appendChild(modal)
+  // document.body.appendChild(modal)
+  overlay.appendChild(modal)
+  document.body.appendChild(overlay)
 }
 
 function showCreateFolderModal(event) {
@@ -211,4 +226,68 @@ function getCurrentTab() {
       }
     })
   })
+}
+
+// 알림 팝업 모달 띄우기
+function showAlertModal(imgSrc, isSaved) {
+  // 기존 모달 제거
+  const existingModals = document.querySelectorAll('.alert-modal')
+  existingModals.forEach((modal) => modal.remove())
+
+  // 현재 시간으로 고유 ID 설정
+  const modalId = 'alert-modal-' + Date.now()
+  const modal = document.createElement('div')
+  modal.id = modalId
+  modal.className = 'alert-modal'
+
+  modal.innerHTML = `
+  <img src="" alt="" class="modal-response-img" />
+  <div class="modal-response-box">
+    <div class="modal-response-title-box">
+      <img src="" alt="" class="modal-result-img" />
+      <span class="modal-response-title"></span>
+    </div>
+    <span class="modal-response-text"></span>
+  </div>
+  `
+
+  const responseImage = modal.querySelector('.modal-response-img')
+
+  // 저장한 이미지 src로 띄우기
+  // 현재는 임시로 logoUrl, 차후 API 완성되면 imgSrc 로 변경 ##################################################
+  responseImage.src = logoUrl
+  responseImage.alt = '저장 이미지'
+
+  // 결과 이미지
+  const resultImage = modal.querySelector('.modal-result-img')
+  // 결과 제목
+  const resultTitle = modal.querySelector('.modal-response-title')
+  // 결과 메세지
+  const resultMessage = modal.querySelector('.modal-response-text')
+
+  if (isSaved === true) {
+    // 성공시 동작
+    resultImage.src = logoUrl
+    resultTitle.innerText = '다운로드 완료'
+    resultMessage.innerText = '이미지 저장이 완료됐어요'
+  } else {
+    resultImage.src = logoSadUrl
+    resultTitle.innerText = '다운로드 실패'
+    resultMessage.innerText = '이미지 저장을 실패했어요'
+  }
+
+  document.body.appendChild(modal)
+
+  // 타이머 설정으로 알림창 삭제
+  setTimeout(() => {
+    const modalToRemove = document.getElementById(modalId)
+    if (modalToRemove) {
+      modalToRemove.remove()
+    }
+    // 2500 ms -> 2.5 초
+  }, 2500)
+}
+
+function testImageAlert(imgSrc, isSaved) {
+  showAlertModal(logoSadUrl, isSaved)
 }
