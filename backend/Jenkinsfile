@@ -75,19 +75,21 @@ pipeline {
                 }
             }
         }
-        // stage('Deploy with deploy_backend.sh') {
-        //     steps {
-        //         script {
-        //             // SSH 키를 사용하여 원격 서버에 연결하고 deploy_backend.sh 실행
-        //             sh """
-        //                 ssh -o StrictHostKeyChecking=no -i /var/jenkins_home/.ssh/jenkins_rsa ${REMOTE_USER}@${REMOTE_HOST} "
-        //                 cd ${REMOTE_DIR} &&
-        //                 ./deploy_backend.sh
-        //                 "
-        //             """
-        //         }
-        //     }
-        // }
+        stage('Deploy with Docker Compose') {
+            steps {
+                script {
+                    // SSH 키를 사용하여 원격 서버에 연결하고 명령을 실행
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no -i /var/jenkins_home/.ssh/jenkins_rsa ubuntu@k11b205.p.ssafy.io '
+                        cd /home/ubuntu/plog &&
+                        docker-compose stop backend &&
+                        docker-compose rm -f backend &&
+                        docker-compose up -d backend
+                        '
+                    '''
+                }
+            }
+        }
     }
 
     post {
