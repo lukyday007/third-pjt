@@ -27,7 +27,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["images/*", "fonts/*", "scripts/dragDropHandler.js"],
+      "resources": ["images/*", "fonts/*"],
       "matches": ["<all_urls>"]
     }
   ],
