@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         TARGET_BRANCH = 'develop-be'  // 목표 브랜치 이름 설정
-        REMOTE_USER = 'ubuntu'
+        REMOTE_USER = 'jenkins'
         REMOTE_HOST = 'k11b205.p.ssafy.io'
         REMOTE_DIR = '/home/ubuntu/plog'  // 원격 서버에서 프로젝트가 위치한 경로
     }
