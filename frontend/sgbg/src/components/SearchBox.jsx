@@ -26,7 +26,7 @@ const s = {
     flex: 1 0 auto;
     position: relative;
   `,
-  SearchSection: styled.div`
+  SearchArea: styled.div`
     display: flex;
     align-items: center;
     gap: 10px;
@@ -47,7 +47,7 @@ const s = {
       display: none;
     }
   `,
-  ResultsSection: styled.div`
+  ResultsArea: styled.div`
     display: flex;
     flex-direction: column;
     position: absolute;
@@ -91,7 +91,7 @@ const SearchBox = () => {
 
   return (
     <s.Container>
-      <s.SearchSection>
+      <s.SearchArea>
         <SearchIcon />
         <s.SearchInput
           type="search"
@@ -99,16 +99,16 @@ const SearchBox = () => {
           value={query}
           onChange={handleSearch}
         />
-      </s.SearchSection>
+      </s.SearchArea>
       {filteredKeywords.length > 0 && (
-        <s.ResultsSection>
+        <s.ResultsArea>
           {filteredKeywords.map((keyword, index) => (
             <s.ResultItem key={index}>
               <KeywordIcon />
               {keyword}
             </s.ResultItem>
           ))}
-        </s.ResultsSection>
+        </s.ResultsArea>
       )}
     </s.Container>
   )
