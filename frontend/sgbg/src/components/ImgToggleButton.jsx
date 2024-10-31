@@ -1,47 +1,59 @@
 import React, { useState } from "react"
 import styled from "styled-components"
 
-const s = {
-  ToggleContainer: styled.div`
-    display: flex;
-    border: 2px solid #ccc;
-    border-radius: 20px;
-    overflow: hidden;
-  `,
-  ToggleItem: styled.button`
-    padding: 10px 20px;
-    font-size: 12px;
-    background-color: ${(props) => (props.active ? "black" : "white")};
-    color: ${(props) => (props.active ? "white" : "black")};
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: background-color 0.3s, color 0.3s;
+// ToggleContainer 스타일 정의
+const ToggleContainer = styled.label`
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  width: fit-content;
+  padding: 6px;
+  border: 3px solid #343434;
+  border-radius: 20px;
+  background: #343434;
+  font-weight: bold;
+  color: #343434;
+  cursor: pointer;
+  overflow: hidden;
+  gap: 12px;
+`
 
-    &:hover {
-      background-color: ${(props) => (props.active ? "#333" : "#ddd")};
-    }
-  `,
-}
+const ToggleBackground = styled.div`
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  left: ${({ isChecked }) => (isChecked ? "50%" : "0%")};
+  border-radius: 20px;
+  background: white;
+  transition: all 0.3s;
+`
+
+const ToggleText = styled.div`
+  z-index: 1;
+  font-size: 12px;
+  text-align: center;
+  color: ${({ isChecked, position }) =>
+    (isChecked && position === "right") || (!isChecked && position === "left")
+      ? "#343434"
+      : "white"};
+  transition: color 0.3s;
+`
 
 const ImgToggleButton = () => {
-  const [active, setActive] = useState("latest")
+  const [isChecked, setIsChecked] = useState(false)
+
+  const toggle = () => setIsChecked((prev) => !prev)
 
   return (
-    <s.ToggleContainer>
-      <s.ToggleItem
-        active={active === "latest"}
-        onClick={() => setActive("latest")}
-      >
+    <ToggleContainer onClick={toggle}>
+      <ToggleBackground isChecked={isChecked} />
+      <ToggleText isChecked={isChecked} position="left">
         최신순
-      </s.ToggleItem>
-      <s.ToggleItem
-        active={active === "random"}
-        onClick={() => setActive("random")}
-      >
+      </ToggleText>
+      <ToggleText isChecked={isChecked} position="right">
         랜덤순
-      </s.ToggleItem>
-    </s.ToggleContainer>
+      </ToggleText>
+    </ToggleContainer>
   )
 }
 

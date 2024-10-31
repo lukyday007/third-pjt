@@ -2,12 +2,12 @@ import styled from "styled-components"
 import SearchBox from "../components/SearchBox"
 import ImgToggleButton from "../components/ImgToggleButton"
 import ImgList from "../components/ImgList"
+
 const s = {
   Containter: styled.div`
     display: flex;
     width: 100%;
     flex-direction: column;
-    border: solid 1px blue;
     padding: 0 20px;
     gap: 20px;
   `,

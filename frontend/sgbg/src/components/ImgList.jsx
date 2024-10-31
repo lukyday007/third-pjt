@@ -1,6 +1,6 @@
 import { useState } from "react"
 import styled from "styled-components"
-import Masonry, { ResponsiveMasonry } from "react-responsive-masonry"
+import { MasonryInfiniteGrid } from "@egjs/react-infinitegrid"
 
 const Dummydata = {
   images: [
@@ -38,21 +38,17 @@ const s = {
 const ImgList = () => {
   const [selectedImageId, setSelectedImageId] = useState(null)
   return (
-    <ResponsiveMasonry
-      columnsCountBreakPoints={{ 350: 1, 750: 2, 900: 3, 1200: 4 }}
-    >
-      <Masonry gutter="20px">
-        {Dummydata.images.map((image) => (
-          <s.Image
-            key={image.imageId}
-            src={image.imageUrl}
-            alt={`이미지 ${image.imageId}`}
-            isSelected={selectedImageId === image.imageId}
-            onClick={() => setSelectedImageId(image.imageId)}
-          />
-        ))}
-      </Masonry>
-    </ResponsiveMasonry>
+    <MasonryInfiniteGrid gap={20}>
+      {Dummydata.images.map((image) => (
+        <s.Image
+          key={image.imageId}
+          src={image.imageUrl}
+          alt={`이미지 ${image.imageId}`}
+          isSelected={selectedImageId === image.imageId}
+          onClick={() => setSelectedImageId(image.imageId)}
+        />
+      ))}
+    </MasonryInfiniteGrid>
   )
 }
 
