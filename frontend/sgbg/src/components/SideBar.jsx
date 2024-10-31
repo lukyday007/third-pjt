@@ -105,6 +105,7 @@ const SideBar = () => {
           <s.FolderTitle>설정</s.FolderTitle>
         </s.FolderArea>
       </s.Container>
+
       <s.ClosedSidebar $isopen={isSideBarOpen}>
         <SideBarToggleIcon
           onClick={toggleSideBar}

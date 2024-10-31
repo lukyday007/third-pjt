@@ -8,15 +8,22 @@ const s = {
     padding: 16px 12px;
     gap: 10px;
     flex: 1 0 auto;
-
     border-radius: 16px;
   `,
-  Input: styled.input`
+  SearchBox: styled.input`
     background-color: inherit;
     border-color: transparent;
     outline: none;
     font-size: 16px;
     width: 100%;
+
+    /* 크롬 기본 스타일 초기화 (기본 x 스타일 제거) */
+    &::-webkit-search-decoration,
+    &::-webkit-search-cancel-button,
+    &::-webkit-search-results-button,
+    &::-webkit-search-results-decoration {
+      display: none;
+    }
   `,
 }
 
@@ -24,7 +31,7 @@ const SearchBox = () => {
   return (
     <s.Container>
       <SearchIcon />
-      <s.Input type="search" placeholder="싱글벙글한 이미지" />
+      <s.SearchBox type="search" placeholder="싱글벙글한 이미지" />
     </s.Container>
   )
 }

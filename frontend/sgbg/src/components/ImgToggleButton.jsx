@@ -24,7 +24,7 @@ const s = {
   `,
 }
 
-const ImgToggle = () => {
+const ImgToggleButton = () => {
   const [active, setActive] = useState("latest")
 
   return (
@@ -45,4 +45,4 @@ const ImgToggle = () => {
   )
 }
 
-export default ImgToggle
+export default ImgToggleButton
