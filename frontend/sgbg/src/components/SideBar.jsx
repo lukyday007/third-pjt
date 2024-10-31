@@ -13,10 +13,23 @@ import TrashBinIcon from "../asset/images/SideBar/TrashBinIcon.svg?react"
 import TestImage from "../asset/images/TestImage.png"
 
 const s = {
+  Test: styled.div`
+    width: 356px;
+    min-width: 356px;
+    display: ${(props) => (props.$isopen === true ? "flex" : "none")};
+  `,
+  Testt: styled.div`
+    width: 76px;
+    min-width: 76px;
+    display: ${(props) => (props.$isopen === true ? "none" : "flex")};
+  `,
   Container: styled.div`
+    position: fixed;
     border-right: solid 1px #e1e3e1;
+    min-width: 300px;
     width: 300px;
     padding: 28px;
+    height: 100%;
     flex-direction: column;
     display: ${(props) => (props.$isopen === true ? "flex" : "none")};
   `,
@@ -51,6 +64,8 @@ const s = {
     cursor: pointer;
   `,
   ClosedSidebar: styled.div`
+    position: fixed;
+    height: 100%;
     padding: 35px 28px 0 28px;
     display: ${(props) => (props.$isopen === true ? "none" : "inline")};
   `,
@@ -65,53 +80,57 @@ const SideBar = () => {
 
   return (
     <>
-      <s.Container $isopen={isSideBarOpen}>
-        <s.HomeIconArea>
-          <HomeIcon style={{ cursor: "pointer" }} />
+      <s.Test $isopen={isSideBarOpen}>
+        <s.Container $isopen={isSideBarOpen}>
+          <s.HomeIconArea>
+            <HomeIcon style={{ cursor: "pointer" }} />
+            <SideBarToggleIcon
+              onClick={toggleSideBar}
+              style={{ cursor: "pointer" }}
+            />
+          </s.HomeIconArea>
+          <s.UserInfoArea>
+            <img src={TestImage} alt="borami" width="36px" />
+            <s.Email>kke0402@naver.com</s.Email>
+          </s.UserInfoArea>
+          <s.FolderCaption>기본</s.FolderCaption>
+          <s.FolderArea>
+            <AllImagesIcon />
+            <s.FolderTitle>전체 이미지</s.FolderTitle>
+          </s.FolderArea>
+          <s.FolderArea>
+            <DefaultFolderIcon />
+            <s.FolderTitle>기본폴더</s.FolderTitle>
+          </s.FolderArea>
+          <s.FolderCaption>내 폴더</s.FolderCaption>
+          <s.FolderArea>
+            <CommonFolderIcon />
+            <s.FolderTitle>싱글벙글한 이미지</s.FolderTitle>
+          </s.FolderArea>
+          <s.FolderCaption>관리</s.FolderCaption>
+          <s.FolderArea>
+            <CreateFolderIcon />
+            <s.FolderTitle>폴더 만들기</s.FolderTitle>
+          </s.FolderArea>
+          <s.FolderArea>
+            <TrashBinIcon />
+            <s.FolderTitle>휴지통</s.FolderTitle>
+          </s.FolderArea>
+          <s.FolderArea>
+            <SettingsIcon />
+            <s.FolderTitle>설정</s.FolderTitle>
+          </s.FolderArea>
+        </s.Container>
+      </s.Test>
+
+      <s.Testt $isopen={isSideBarOpen}>
+        <s.ClosedSidebar $isopen={isSideBarOpen}>
           <SideBarToggleIcon
             onClick={toggleSideBar}
             style={{ cursor: "pointer" }}
           />
-        </s.HomeIconArea>
-        <s.UserInfoArea>
-          <img src={TestImage} alt="borami" width="36px" />
-          <s.Email>kke0402@naver.com</s.Email>
-        </s.UserInfoArea>
-        <s.FolderCaption>기본</s.FolderCaption>
-        <s.FolderArea>
-          <AllImagesIcon />
-          <s.FolderTitle>전체 이미지</s.FolderTitle>
-        </s.FolderArea>
-        <s.FolderArea>
-          <DefaultFolderIcon />
-          <s.FolderTitle>기본폴더</s.FolderTitle>
-        </s.FolderArea>
-        <s.FolderCaption>내 폴더</s.FolderCaption>
-        <s.FolderArea>
-          <CommonFolderIcon />
-          <s.FolderTitle>싱글벙글한 이미지</s.FolderTitle>
-        </s.FolderArea>
-        <s.FolderCaption>관리</s.FolderCaption>
-        <s.FolderArea>
-          <CreateFolderIcon />
-          <s.FolderTitle>폴더 만들기</s.FolderTitle>
-        </s.FolderArea>
-        <s.FolderArea>
-          <TrashBinIcon />
-          <s.FolderTitle>휴지통</s.FolderTitle>
-        </s.FolderArea>
-        <s.FolderArea style={{ marginTop: "auto" }}>
-          <SettingsIcon />
-          <s.FolderTitle>설정</s.FolderTitle>
-        </s.FolderArea>
-      </s.Container>
-
-      <s.ClosedSidebar $isopen={isSideBarOpen}>
-        <SideBarToggleIcon
-          onClick={toggleSideBar}
-          style={{ cursor: "pointer" }}
-        />
-      </s.ClosedSidebar>
+        </s.ClosedSidebar>
+      </s.Testt>
     </>
   )
 }
