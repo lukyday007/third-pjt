@@ -1,0 +1,32 @@
+# 단계 1: 빌드 단계
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+# p7zip 패키지 설치 및 7za 링크 설정
+RUN apk add --no-cache p7zip \
+    && ln -s /usr/bin/7z /usr/bin/7za
+
+# 의존성 설치
+COPY package.json package-lock.json ./
+ENV USE_SYSTEM_7ZIP true
+RUN HOME=/app npm install  # npm install 시에만 HOME 설정
+
+# .env 파일 복사(필요하다면)
+# COPY .env .env
+
+# 소스 코드 복사 및 빌드
+COPY . .
+RUN unset HOME && npm run build  # electron-builder 실행 시 HOME 초기화
+
+# 단계 2: 실행 단계
+FROM nginx:alpine
+
+# 빌드 결과물을 Nginx의 기본 경로로 복사
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Nginx 템플릿 파일을 복사 (nginx.template 사용)
+COPY nginx.template /etc/nginx/conf.d/default.conf.template
+
+# Nginx 설정 파일에 환경 변수를 치환하고 적용
+CMD ["/bin/sh", "-c", "envsubst '${LISTEN_PORT}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
