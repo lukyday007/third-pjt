@@ -7,7 +7,6 @@ const s = {
     display: flex;
     width: 100%;
     flex-direction: column;
-    border: solid 1px blue;
     padding: 0 20px;
     gap: 20px;
   `,
