@@ -1,11 +1,12 @@
 # 단계 1: 빌드 단계
-FROM node:16-alpine AS build
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
 # 의존성 설치
 COPY package.json package-lock.json ./
-RUN npm install
+ENV USE_SYSTEM_7ZIP true
+RUN npm install && npm install 7zip-bin --save-dev
 
 # .env 파일 복사(필요하다면)
 # COPY .env .env
