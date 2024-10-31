@@ -3,8 +3,9 @@ FROM node:18-alpine AS build
 
 WORKDIR /app
 
-# p7zip 패키지 설치
-RUN apk add --no-cache p7zip
+# p7zip 패키지 설치 및 심볼릭 링크 생성
+RUN apk add --no-cache p7zip \
+    && ln -s /usr/bin/7z /usr/bin/7za  # electron-builder가 7za 경로를 참조하도록 설정
 
 # 의존성 설치
 COPY package.json package-lock.json ./
