@@ -21,6 +21,7 @@ const s = {
     flex: 1 0 auto;
     display: flex;
     padding: 60px;
+    height: 10200px;
   `,
   Title: styled.div`
     font-size: 36px;

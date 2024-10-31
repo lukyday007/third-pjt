@@ -18,8 +18,8 @@ function App() {
       <GlobalStyle />
       <s.Container>
         <SideBar />
-        {/* <MainPage /> */}
-        <ImgPage />
+        <MainPage />
+        {/* <ImgPage /> */}
       </s.Container>
     </div>
   )
