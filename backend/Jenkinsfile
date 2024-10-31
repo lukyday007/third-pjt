@@ -74,7 +74,9 @@ pipeline {
                     sh """
                         ssh -o StrictHostKeyChecking=no -i /var/jenkins_home/.ssh/jenkins_rsa ${REMOTE_USER}@${REMOTE_HOST} '
                         cd ${REMOTE_DIR} &&
-                        docker-compose down backend &&
+                        if docker-compose ps backend | grep -q "backend"; then
+                            docker-compose down backend;
+                        fi &&
                         docker build -t backend:latest -f backend/Dockerfile backend/. &&
                         docker-compose up -d backend
                         '
