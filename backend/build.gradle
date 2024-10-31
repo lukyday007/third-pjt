@@ -44,7 +44,7 @@ dependencies {
 	// Swagger (Springdoc OpenAPI)
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.4'
 
-//	// Spring Security
+//  //	 Spring Security
 //	implementation 'org.springframework.boot:spring-boot-starter-security'
 
 	// MySQL Driver
@@ -70,9 +70,9 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 //	testImplementation 'org.springframework.security:spring-security-test'
 
+	// 타임리프
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
-
 
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
