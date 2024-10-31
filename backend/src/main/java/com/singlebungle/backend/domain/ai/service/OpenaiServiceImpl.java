@@ -1,14 +1,11 @@
 package com.singlebungle.backend.domain.ai.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.singlebungle.backend.domain.ai.dto.request.ChatGPTRequest;
 import com.singlebungle.backend.domain.ai.dto.response.ChatGPTResponse;
-import com.singlebungle.backend.domain.image.service.ImageService;
-import com.singlebungle.backend.domain.keyword.service.KeywordService;
+import com.singlebungle.backend.domain.search.service.SearchService;
 import com.singlebungle.backend.global.exception.InvalidApiUrlException;
 import com.singlebungle.backend.global.exception.InvalidResponseException;
 import com.singlebungle.backend.global.exception.UnAuthorizedApiKeyException;
-import com.singlebungle.backend.global.model.BaseResponseBody;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +14,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,9 +26,10 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class OpenaiServiceImpl implements OpenaiService {
 
+    private final SearchService searchService;
     private final WebClient openAiConfig;  // WebClient 빈을 openAiConfig로 주입받음
 
-    private List<String> keywords;
+    public List<String> tags;
 
     @Value("${openai.model}")
     private String apiModel;
@@ -52,12 +49,15 @@ public class OpenaiServiceImpl implements OpenaiService {
             // OpenAI api 요청
             ChatGPTResponse response = sendOpenAiRequest(imageUrl, gptPrompt);
 
-            // 응답 처리 및 키워드 추출
+            // 응답 처리
             String resultContent = extractResponseContent(response);
+            // 키워드 추출
             List<String> keywords = extractKeywords(resultContent);
+            // 태그 추출
+            tags = extractTags(resultContent);
+            searchService.saveTags(tags);
 
             return keywords;
-
 
         } catch (WebClientRequestException e) {
             throw new InvalidApiUrlException(">>> ChatGPT api url이 부정확합니다. 확인해주세요.");
@@ -77,12 +77,13 @@ public class OpenaiServiceImpl implements OpenaiService {
     public String generatePrompt(String imageUrl, List<String> labels) {
         String labelsToString = String.join(", ", labels);
 
+//        "### 이미지에 있는 텍스트\n" +
+//                "이미지에 텍스트가 있으면 텍스트를 학습해. 없으면 '텍스트 없음'이라고 작성해.\n\n" +
+
         return String.format(
                 "### 라벨 번역\n" +
                         "우선 labels 배열에 있는 목록을 명사로 번역해서 리스트로 돌려줘 [%s].\n" +
                         "이때 들여쓰기하고 번역한 결과를 써야해.\n\n" +
-                        "### 이미지에 있는 텍스트\n" +
-                        "이미지에 텍스트가 있으면 텍스트를 학습하고 반환해. 없으면 '텍스트 없음'이라고 작성해.\n\n" +
                         "### 키워드\n" +
                         "이 이미지에 대한 키워드를 5개 정도 추출해서 번호와 함께 리스트로 반환해줘. 이때 '텍스트' 나 '언어', '유머', '인물'은 없는 키워드여야 해",
                 labelsToString
@@ -108,7 +109,7 @@ public class OpenaiServiceImpl implements OpenaiService {
                 .temperature(0)
                 .build();
 
-        log.info(">>> ChatGPT Request JSON: {}", new ObjectMapper().writeValueAsString(request));
+//        log.info(">>> ChatGPT Request JSON: {}", new ObjectMapper().writeValueAsString(request));
 
         return openAiConfig.post()
                 .uri("/v1/chat/completions")
@@ -133,7 +134,7 @@ public class OpenaiServiceImpl implements OpenaiService {
 
         ChatGPTResponse.Choice choice = response.getChoices().get(0);
         String resultContent = choice.getMessage().getContent();
-        log.info(">>> OpenAI Response: {}", resultContent);
+//        log.info(">>> OpenAI Response: {}", resultContent);
 
         return resultContent;
     }
@@ -166,5 +167,34 @@ public class OpenaiServiceImpl implements OpenaiService {
         return keywords;
     }
 
+
+    @Override
+    public List<String> extractTags(String response) {
+        List<String> labels = new ArrayList<>();
+
+        // "### 라벨 번역" 이후의 항목만 추출하는 정규 표현식
+        Pattern pattern = Pattern.compile("### 라벨 번역\\s*([\\s\\S]+?)\\n\\n###");
+        Matcher matcher = pattern.matcher(response);
+
+        if (matcher.find()) {
+            // 라벨 섹션만 추출
+            String labelSection = matcher.group(1);
+
+            // 각 항목을 줄 단위로 분리하여 리스트에 추가
+            String[] lines = labelSection.split("\\n");
+            for (String line : lines) {
+                line = line.trim();
+                if (!line.isEmpty()) {  // 빈 줄 제외
+                    labels.add(line.replaceFirst("-\\s*", ""));  // "-" 문자 제거
+                }
+            }
+        }
+
+        System.out.println("===========================");
+        System.out.println(Arrays.toString(labels.toArray()));
+        System.out.println("===========================");
+
+        return labels;
+    }
 
 }

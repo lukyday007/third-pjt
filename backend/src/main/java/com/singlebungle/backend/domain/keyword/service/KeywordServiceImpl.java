@@ -1,10 +1,7 @@
 package com.singlebungle.backend.domain.keyword.service;
 
-import com.singlebungle.backend.domain.ai.service.OpenaiService;
 import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
-import com.singlebungle.backend.global.exception.EntityIsFoundException;
-import com.singlebungle.backend.global.exception.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,15 +20,18 @@ public class KeywordServiceImpl implements KeywordService {
     @Transactional
     public void saveKeyword(List<String> keywords) {
 
-        for (String keyword : keywords) {
-            boolean result = keywordRepository.existsByKeywordName(keyword);
+        for (String name : keywords) {
+            boolean isKeyword = keywordRepository.existsByKeywordName(name);
 
-            if (result) {
+            if (isKeyword) {
+                Keyword tmp = keywordRepository.findByKeywordName(name);
+                tmp.setUseCount(tmp.getUseCount() + 1);   // 키워드 사용 수 증가
+                keywordRepository.save(tmp);
                 continue;
             }
 
             // 키워드 저장
-            Keyword kw = Keyword.convertToEntity(keyword);
+            Keyword kw = Keyword.convertToEntity(name);
             keywordRepository.save(kw);
 
         }

@@ -13,7 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "image_detail")
-public class ImageDetail {
+public class ImageDetail {  // 이미지 디테일 조회용 (목록)
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

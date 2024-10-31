@@ -1,15 +1,13 @@
 package com.singlebungle.backend.domain.image.service;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.singlebungle.backend.domain.ai.service.OpenaiService;
-import com.singlebungle.backend.domain.image.dto.request.ImageWebRequestDTO;
 import com.singlebungle.backend.domain.image.entity.Image;
-import com.singlebungle.backend.domain.image.repository.ImageDetailRepository;
+
 import com.singlebungle.backend.domain.image.repository.ImageRepository;
-import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
+import com.singlebungle.backend.global.exception.EntityIsFoundException;
 import com.singlebungle.backend.global.exception.ImageSaveException;
 import com.singlebungle.backend.global.exception.InvalidRequestException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -54,8 +52,13 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     @Transactional
-    public void saveImage(ImageWebRequestDTO requestDTO) {
-        Image image = Image.convertToEntity(requestDTO);
+    public void saveImage(String imageUrl, String webUrl, Long directoryId) {
+        boolean isImage = imageRepository.existsBySourceUrlAndImageUrl(webUrl, imageUrl);
+
+        if (isImage)
+            throw new EntityIsFoundException("이미 해당 이미지 데이터가 존재합니다");
+
+        Image image = Image.convertToEntity(imageUrl, webUrl, directoryId);
         imageRepository.save(image);
     }
 

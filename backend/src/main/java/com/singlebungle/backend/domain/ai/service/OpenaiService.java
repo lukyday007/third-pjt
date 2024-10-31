@@ -15,7 +15,9 @@ public interface OpenaiService {
     ChatGPTResponse sendOpenAiRequest(String imageUrl, String prompt) throws Exception;
     // 응답 처리 및 키워드 추출
     String extractResponseContent(ChatGPTResponse response);
+    List<String> extractTags(String response);
     List<String> extractKeywords(String response);
+
 
 
 }
