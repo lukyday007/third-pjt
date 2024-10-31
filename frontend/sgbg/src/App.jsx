@@ -3,6 +3,7 @@ import "./asset/pretendard.css"
 import styled from "styled-components"
 import GlobalStyle from "./GlobalStyles"
 import SideBar from "./components/SideBar"
+import ImgPage from "./pages/ImgPage"
 
 const s = {
   Container: styled.div`
@@ -17,7 +18,8 @@ function App() {
       <GlobalStyle />
       <s.Container>
         <SideBar />
-        <MainPage />
+        {/* <MainPage /> */}
+        <ImgPage />
       </s.Container>
     </div>
   )

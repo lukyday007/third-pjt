@@ -1,11 +1,14 @@
 import styled from "styled-components"
 import SearchBox from "../components/SearchBox"
-import ImgToggle from "../components/ImgToggle"
+import ImgToggleButton from "../components/ImgToggleButton"
 import ImgList from "../components/ImgList"
 const s = {
   Containter: styled.div`
-    border: solid 1px blue;
-    padding: 0 10px;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    padding: 0 20px;
+    gap: 20px;
   `,
   Header: styled.div`
     display: flex;
@@ -24,7 +27,7 @@ const ImgPage = () => {
       <s.Header>
         <s.Title>싱글벙글한 이미지</s.Title>
         <SearchBox />
-        <ImgToggle />
+        <ImgToggleButton />
       </s.Header>
       <ImgList />
     </s.Containter>
