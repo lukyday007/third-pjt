@@ -3,10 +3,13 @@ FROM node:18-alpine AS build
 
 WORKDIR /app
 
+# p7zip 패키지 설치
+RUN apk add --no-cache p7zip
+
 # 의존성 설치
 COPY package.json package-lock.json ./
 ENV USE_SYSTEM_7ZIP true
-RUN npm install && npm install 7zip-bin --save-dev
+RUN npm install
 
 # .env 파일 복사(필요하다면)
 # COPY .env .env
