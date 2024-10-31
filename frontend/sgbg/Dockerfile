@@ -3,21 +3,16 @@ FROM node:18-alpine AS build
 
 WORKDIR /app
 
-# p7zip 패키지 설치 및 7za 링크 설정
-RUN apk add --no-cache p7zip \
-    && ln -s /usr/bin/7z /usr/bin/7za
-
 # 의존성 설치
 COPY package.json package-lock.json ./
-ENV USE_SYSTEM_7ZIP true
-RUN HOME=/app npm install  # npm install 시에만 HOME 설정
+RUN npm install
 
 # .env 파일 복사(필요하다면)
 # COPY .env .env
 
 # 소스 코드 복사 및 빌드
 COPY . .
-RUN unset HOME && npm run build  # electron-builder 실행 시 HOME 초기화
+RUN npm run build
 
 # 단계 2: 실행 단계
 FROM nginx:alpine
