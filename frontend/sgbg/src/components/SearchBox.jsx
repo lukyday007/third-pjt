@@ -1,8 +1,8 @@
 import React, { useState } from "react"
 import styled from "styled-components"
 import SearchIcon from "../asset/images/SearchBox/searchIcon.svg?react"
-import KeywordIcon from "../asset/images/searchBox/keywordIcon.svg?react"
-import KeywordCancleIcon from "../asset/images/searchBox/keywordCancleIcon.svg?react"
+import KeywordIcon from "../asset/images/SearchBox/keywordCancleIcon.svg?react"
+import KeywordCancleIcon from "../asset/images/SearchBox/keywordCancleIcon.svg?react"
 
 // 더미 데이터 예시
 const dummyKeywords = [
@@ -81,6 +81,7 @@ const SearchBox = () => {
     setQuery(input)
 
     // 검색어가 입력될 때마다 더미 데이터를 필터링
+    // 나중에는 검색어 입력할때마다 api gh
     if (input) {
       const results = dummyKeywords.filter((keyword) => keyword.includes(input))
       setFilteredKeywords(results)
