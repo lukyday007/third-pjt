@@ -2,8 +2,8 @@ package com.singlebungle.backend.domain.image.controller;
 
 import com.singlebungle.backend.domain.ai.service.GoogleVisionService;
 import com.singlebungle.backend.domain.ai.service.OpenaiService;
-import com.singlebungle.backend.domain.image.dto.request.ImageWebRequestDTO;
 import com.singlebungle.backend.domain.image.service.ImageDetailService;
+import com.singlebungle.backend.domain.image.service.ImageManagementService;
 import com.singlebungle.backend.domain.image.service.ImageService;
 import com.singlebungle.backend.domain.keyword.service.KeywordService;
 import com.singlebungle.backend.global.exception.InvalidImageException;
@@ -13,9 +13,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.util.List;
 
 @Slf4j
@@ -23,26 +25,30 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/image")
 public class ImageController {
+
     private final OpenaiService openaiService;
     private final GoogleVisionService googleVisionService;
     private final ImageService imageService;
     private final KeywordService keywordService;
     private final ImageDetailService imageDetailService;
+    private final ImageManagementService imageManagementService;
 
     @PostMapping("/web")
     @Operation(summary = "웹 이미지 저장", description = "웹에서 새로운 이미지를 등록합니다.")
     public ResponseEntity<BaseResponseBody> saveFromWeb(
-            @RequestBody @Valid ImageWebRequestDTO dto
+            @RequestParam("webUrl") String webUrl,
+            @RequestParam("imageUrl") String imageUrl,
+            @RequestParam(value = "directoryId", required = false, defaultValue = "0") Long directoryId
             ) {
         try {
             // google vision api
-            List<String> labels = googleVisionService.analyzeImage(dto.getImageUrl());
+            List<String> labels = googleVisionService.analyzeImage(imageUrl);
             if (labels == null) {
                 throw new InvalidImageException();
             }
 
             // chatgpt api
-            List<String> keywords = openaiService.requestImageAnalysis(dto.getImageUrl(), labels);
+            List<String> keywords = openaiService.requestImageAnalysis(imageUrl, labels);
             if (keywords == null) {
                 throw new InvalidImageException();
             }
@@ -51,17 +57,23 @@ public class ImageController {
              s3 이미지 저장
             */
             imageService.uploadImageFromUrlToS3(imageUrl);
-            log.info(">> [POST] /image/web");
+
+            /*
+             라벨 데이터 저장
+            */
+            //
 
             // 이미지 데이터 생성, 저장
-            imageService.saveImage(dto);
+            imageService.saveImage(imageUrl, webUrl, directoryId);
             // 키워드 데이터 생성, 저장
             keywordService.saveKeyword(keywords);
             // 이미지 디테일 데이터 생성, 저장
-            imageDetailService.saveImageDetail(dto, keywords);
+            imageDetailService.saveImageDetail(webUrl, imageUrl, keywords);
+
+            log.info(">> [POST] /image/web");
 
         } catch (Exception e) {
-            throw new RuntimeException(">>> 웹 이미지 저장을 실패했습니다. " + e);
+            throw new RuntimeException(">>> imageController - 웹 이미지 저장을 실패했습니다. " + e);
         }
 
 
@@ -71,7 +83,12 @@ public class ImageController {
 
     @PostMapping("/app")
     @Operation(summary = "앱 이미지 저장", description = "앱에서 이미지를 등록합니다.")
-    public ResponseEntity<BaseResponseBody> saveFromApp() {
+    public ResponseEntity<BaseResponseBody> saveFromApp(
+            @RequestParam @Valid Long imageId,
+            @RequestParam @Valid Long directoryId
+    ) {
+
+        imageManagementService.saveImageManagement(imageId, directoryId);
 
         return ResponseEntity.status(201).body(BaseResponseBody.of(201, "앱 이미지를 저장했습니다."));
     }

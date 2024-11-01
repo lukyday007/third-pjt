@@ -9,6 +9,6 @@ import java.util.List;
 public interface ImageService {
 
     void uploadImageFromUrlToS3(String url);
-    void saveImage(ImageWebRequestDTO requestDTO);
+    void saveImage(String imageUrl, String webUrl, Long directoryId);
 
 }

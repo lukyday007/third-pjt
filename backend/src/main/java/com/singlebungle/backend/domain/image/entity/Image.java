@@ -29,7 +29,7 @@ public class Image extends BaseTimeEntity {
     private String sourceUrl;
 
     @Column(name = "directory_id", nullable = false)
-    private int directoryId;
+    private Long directoryId;
 
     private int count;
 
@@ -37,11 +37,11 @@ public class Image extends BaseTimeEntity {
     private boolean isDeleted = false;
 
     // 웹에서 저장할 때
-    public static Image convertToEntity(ImageWebRequestDTO requestDTO) {
+    public static Image convertToEntity(String imageUrl, String webUrl, Long directoryId) {
         Image image = new Image();
-        image.setSourceUrl(requestDTO.getWebUrl());
-        image.setImageUrl(requestDTO.getImageUrl());
-        image.setDirectoryId(requestDTO.getDirectoryId());
+        image.setSourceUrl(webUrl);
+        image.setImageUrl(imageUrl);
+        image.setDirectoryId(directoryId);
 
         return image;
     }
