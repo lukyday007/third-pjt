@@ -19,6 +19,10 @@ const s = {
     flex: 1 0 auto;
     width: 100%;
   `,
+  Test: styled.div`
+    flex: 1 0 auto;
+    display: flex;
+  `,
 }
 
 function App() {
@@ -29,10 +33,12 @@ function App() {
         <SideBar />
         <s.ContentArea>
           <SearchBar />
-          <Routes>
-            <Route path="/" element={<MainPage />} />
-            <Route path="/image" element={<ImgPage />} />
-          </Routes>
+          <s.Test>
+            <Routes>
+              <Route path="/" element={<MainPage />} />
+              <Route path="/image" element={<ImgPage />} />
+            </Routes>
+          </s.Test>
         </s.ContentArea>
         {/* <BrowserRouter> */}
         {/* </BrowserRouter> */}
