@@ -25,7 +25,9 @@ const s = {
     display: ${(props) => (props.$isopen === true ? "none" : "flex")};
   `,
   Container: styled.div`
+    z-index: 10;
     position: fixed;
+    background-color: #ffffff;
     border-right: solid 1px #e1e3e1;
     min-width: 300px;
     width: 300px;
@@ -65,6 +67,9 @@ const s = {
     cursor: pointer;
   `,
   ClosedSidebar: styled.div`
+    z-index: 10;
+    background-color: #ffffff;
+    border-right: solid 1px #e1e3e1;
     position: fixed;
     height: 100%;
     padding: 35px 28px 0 28px;
