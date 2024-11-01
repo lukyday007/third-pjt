@@ -53,14 +53,14 @@ public class OpenaiServiceImpl implements OpenaiService {
             String resultContent = extractResponseContent(response);
             // 키워드 추출
             List<String> keywords = extractKeywords(resultContent);
-            // 태그 추출
-            tags = extractTags(resultContent);
-            searchService.saveTags(tags);
+//            // 태그 추출
+//            tags = extractTags(resultContent);
+//            searchService.saveTags(tags);
 
             return keywords;
 
         } catch (WebClientRequestException e) {
-            throw new InvalidApiUrlException(">>> ChatGPT api url이 부정확합니다. 확인해주세요.");
+            throw new InvalidApiUrlException(">>> ChatGPT api url이 부정확합니다. 확인해주세요. : " + e  );
 
         } catch (WebClientResponseException.Unauthorized e) {
             throw new UnAuthorizedApiKeyException(">>> ChatGPT api 인증이 실패했습니다. api 키를 확인해주세요.");

@@ -38,14 +38,17 @@ public class ImageController {
     public ResponseEntity<BaseResponseBody> saveFromWeb(
             @RequestParam("webUrl") String webUrl,
             @RequestParam("imageUrl") String imageUrl,
-            @RequestParam(value = "directoryId", required = false, defaultValue = "0") Long directoryId
+            @RequestParam(value = "directoryId", required = false, defaultValue = "0") String directoryIdStr
             ) {
         try {
+            Long directoryId = Long.parseLong(directoryIdStr);
+
             // google vision api
             List<String> labels = googleVisionService.analyzeImage(imageUrl);
-            if (labels == null) {
-                throw new InvalidImageException();
-            }
+
+//            if (labels == null) {
+//                throw new InvalidImageException();
+//            }
 
             // chatgpt api
             List<String> keywords = openaiService.requestImageAnalysis(imageUrl, labels);
@@ -73,7 +76,6 @@ public class ImageController {
         } catch (Exception e) {
             throw new RuntimeException(">>> imageController - 웹 이미지 저장을 실패했습니다. " + e);
         }
-
 
         return ResponseEntity.status(201).body(BaseResponseBody.of(201, "웹 이미지를 저장했습니다."));
     }

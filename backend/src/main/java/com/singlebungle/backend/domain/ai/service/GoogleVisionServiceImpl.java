@@ -52,30 +52,22 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
                 count += isLikelyOrVeryLikely(annotation.getRacy()) ? 1 : 0;
 
                 // 2개 이상일 경우 false 반환
-                if (count >= 2)
+                if (count >= 2) {
+                    log.warn(">>> 이미지 안전성 판별 결과 두 개 이상의 항목이 부적절함에 해당됩니다.");
                     return false;
+                }
             }
         } catch (WebClientResponseException.Unauthorized e) {
             throw new InvalidApiUrlException(">>> Google Vision api url이 부정확합니다. 확인해주세요.");
 
-        } catch (IOException | IllegalStateException e) {
+        } catch (IOException e) {
+            throw new RuntimeException(">>> Google Vision Credential이 제대로 등록되지 않았습니다.", e);
+
+        } catch( IllegalStateException e) {
             throw new RuntimeException(">>> Google Vision Credential이 제대로 등록되지 않았습니다. : " + e);
         }
 
         return true;
-    }
-
-
-    @Override
-    public List<String> analyzeImage(String imageUrl) throws IOException {
-        List<String> labels;
-        if (!detectSafeSearchGoogleVision(imageUrl)) {
-            throw new InvalidImageException(">>> google vision - 부적절항 이미지 입니다.");
-        }
-
-        // detectSafeSearchGoogleVision이 true인 경우에만 실행
-        labels = detectLabels(imageUrl);
-        return labels;
     }
 
     // Likelihood 값이 LIKELY 또는 VERY_LIKELY인지 확인하는 메서드
@@ -83,6 +75,17 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
         return likelihood == Likelihood.LIKELY || likelihood == Likelihood.VERY_LIKELY;
     }
 
+    @Override
+    public List<String> analyzeImage(String imageUrl) throws IOException {
+        List<String> labels;
+        if (!detectSafeSearchGoogleVision(imageUrl)) {
+            throw new InvalidImageException(">>> google vision - 부적절한 이미지 입니다. - " + detectSafeSearchGoogleVision(imageUrl));
+        }
+
+        // detectSafeSearchGoogleVision이 true인 경우에만 실행
+        labels = detectLabels(imageUrl);
+        return labels;
+    }
 
     // 외부 이미지 URL을 사용하여 라벨 검출 실행
     @Override
