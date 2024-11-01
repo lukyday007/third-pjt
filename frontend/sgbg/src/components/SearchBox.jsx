@@ -81,6 +81,7 @@ const SearchBox = () => {
     setQuery(input)
 
     // 검색어가 입력될 때마다 더미 데이터를 필터링
+    // 나중에는 검색어 입력할때마다 api
     if (input) {
       const results = dummyKeywords.filter((keyword) => keyword.includes(input))
       setFilteredKeywords(results)

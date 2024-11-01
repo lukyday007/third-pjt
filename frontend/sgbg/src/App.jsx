@@ -16,6 +16,7 @@ const s = {
   ContentArea: styled.div`
     display: flex;
     flex-direction: column;
+    flex: 1 0 auto;
     width: 100%;
   `,
 }
