@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom"
 import styled from "styled-components"
 import SearchBox from "./SearchBox"
 import ImgToggleButton from "./ImgToggleButton"
@@ -5,17 +6,15 @@ import ImgToggleButton from "./ImgToggleButton"
 const s = {
   Container: styled.div`
     display: flex;
-    /* padding: 20px 60px; */ // 홈일때
-    padding: 20px; // 다른페이지
+    padding: ${({ isHome }) => (isHome ? "20px 60px" : "20px")};
     align-items: center;
     gap: 50px;
   `,
   Title: styled.div`
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
     font-size: 16px;
-    min-width: 100px;
+    max-width: 500px;
   `,
 
   SearchButton: styled.button`
@@ -28,14 +27,17 @@ const s = {
 }
 
 const SearchBar = () => {
+  const location = useLocation()
+  const isHome = location.pathname === "/"
   return (
-    <s.Container>
-      <s.Title>
-        필터없음ㅇㄹㅇㄹㅇㄹㄴㅇㄴㅇㄴㅇㄴㅇㄴㅇㄴㅇㄴㅇㄴㅇㄴㅇ
-      </s.Title>
+    <s.Container isHome={isHome}>
+      {!isHome && <s.Title>폴더가 길어지면 검색창이 줄어들어요</s.Title>}
       <SearchBox />
-      {/* <s.SearchButton>싱글벙글 검색</s.SearchButton> 홈에서 */}
-      <ImgToggleButton />
+      {isHome ? (
+        <s.SearchButton>싱글벙글 검색</s.SearchButton>
+      ) : (
+        <ImgToggleButton />
+      )}
     </s.Container>
   )
 }
