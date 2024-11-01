@@ -37,7 +37,46 @@ public class JwtProvider {
         this.jwtTokenRepository = jwtTokenRepository;
     }
 
-    // 사용자의 정보를 포함한 JWT 토큰 생성 메소드
+    // 새로운 액세스 토큰과 리프레시 토큰을 생성하고 DB에 저장하는 메소드
+    @Transactional
+    public TokenInfo generateAndSaveToken(User user, String redirectUrl) {
+        // 액세스 토큰과 리프레시 토큰의 만료 시간 설정
+        Date accessTokenExpiresIn = new Date(System.currentTimeMillis() + TOKEN_EXPIRATION_TIME * 1000);
+        Date refreshTokenExpiresIn = new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME * 1000);
+
+        // 액세스 토큰 생성
+        String accessToken = Jwts.builder()
+                .setSubject(String.valueOf(user.getUserId()))
+                .setExpiration(accessTokenExpiresIn)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+
+        // 리프레시 토큰 생성
+        String refreshToken = Jwts.builder()
+                .setSubject(String.valueOf(user.getUserId()))
+                .setExpiration(refreshTokenExpiresIn)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+
+        // 새로운 JWT 토큰을 DB에 저장
+        JwtToken jwtToken = JwtToken.builder()
+                .userId(user.getUserId())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .accessExpirationTime(accessTokenExpiresIn.getTime())
+                .refreshExpirationTime(refreshTokenExpiresIn.getTime())
+                .redirectUri(redirectUrl)
+                .build();
+        jwtTokenRepository.save(jwtToken); // MySQL에 저장
+
+        // 발급된 토큰 정보 반환
+        return TokenInfo.builder()
+                .grantType("Bearer")
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
     @Transactional
     public TokenInfo generateToken(User user) {
         // 액세스 토큰과 리프레시 토큰의 만료 시간 설정
@@ -59,7 +98,7 @@ public class JwtProvider {
                 .compact();
 
         // 기존 토큰 삭제
-        jwtTokenRepository.deleteByUserId(user.getUserId());
+//        jwtTokenRepository.deleteByUserId(user.getUserId());
 
         // 새로운 JWT 토큰을 DB에 저장
         JwtToken jwtToken = JwtToken.builder()
@@ -68,6 +107,49 @@ public class JwtProvider {
                 .refreshToken(refreshToken)
                 .accessExpirationTime(accessTokenExpiresIn.getTime()) // Access Token 만료 시간 저장
                 .refreshExpirationTime(refreshTokenExpiresIn.getTime()) // Refresh Token 만료 시간 저장
+                .build();
+        jwtTokenRepository.save(jwtToken); // MySQL에 저장
+
+        // 발급된 토큰 정보 반환
+        return TokenInfo.builder()
+                .grantType("Bearer")
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    // 사용자의 정보를 포함한 JWT 토큰 생성 메소드
+    @Transactional
+    public TokenInfo generateToken(User user, String redirectUrl) {
+        // 액세스 토큰과 리프레시 토큰의 만료 시간 설정
+        Date accessTokenExpiresIn = new Date(System.currentTimeMillis() + TOKEN_EXPIRATION_TIME * 1000);
+        Date refreshTokenExpiresIn = new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME * 1000); // 리프레시 토큰은 더 긴 만료 시간
+
+        // 액세스 토큰 생성
+        String accessToken = Jwts.builder()
+                .setSubject(String.valueOf(user.getUserId()))
+                .setExpiration(accessTokenExpiresIn)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+
+        // 리프레시 토큰 생성
+        String refreshToken = Jwts.builder()
+                .setSubject(String.valueOf(user.getUserId()))
+                .setExpiration(refreshTokenExpiresIn)  // Refresh Token의 만료 시간 설정
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+
+//        // 기존 토큰 삭제
+//        jwtTokenRepository.deleteByUserId(user.getUserId());
+
+        // 새로운 JWT 토큰을 DB에 저장
+        JwtToken jwtToken = JwtToken.builder()
+                .userId(user.getUserId())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .accessExpirationTime(accessTokenExpiresIn.getTime()) // Access Token 만료 시간 저장
+                .refreshExpirationTime(refreshTokenExpiresIn.getTime()) // Refresh Token 만료 시간 저장
+                .redirectUri(redirectUrl)
                 .build();
         jwtTokenRepository.save(jwtToken); // MySQL에 저장
 
@@ -122,8 +204,8 @@ public class JwtProvider {
     }
 
     // DB에서 JWT 토큰을 조회하는 메소드
-    public String getTokenFromDatabase(Long userId) {
-        return jwtTokenRepository.findByUserId(userId)
+    public String getTokenFromDatabase(Long userId, String token) {
+        return jwtTokenRepository.findByUserIdAndAccessToken(userId, token)
                 .map(JwtToken::getAccessToken)
                 .orElse(null); // 해당 사용자 ID의 토큰을 조회하여 반환
     }

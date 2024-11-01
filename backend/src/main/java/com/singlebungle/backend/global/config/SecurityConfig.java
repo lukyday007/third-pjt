@@ -43,7 +43,8 @@ public class SecurityConfig {
                 })
                 .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry -> { // HTTP 요청에 대한 접근 권한을 설정한다.
                     authorizationManagerRequestMatcherRegistry
-                            .requestMatchers("/**").permitAll()
+//                            .requestMatchers("/**").permitAll()
+                            .requestMatchers("/oauth2/**").permitAll()
                             .anyRequest().authenticated(); // 나머지 모든 요청에 대해 인증을 요구
                 })
                 .headers(httpSecurityHeadersConfigurer ->

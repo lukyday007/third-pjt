@@ -57,7 +57,7 @@ public class JwtAuthenticationFilter extends GenericFilterBean { // JWT 토큰�
         // 토큰 유효성 검사
         if (token != null && jwtProvider.validateToken(token)) {
             // 토큰을 확인
-            String Token = jwtProvider.getTokenFromDatabase(jwtProvider.getUserIdFromToken(token));
+            String Token = jwtProvider.getTokenFromDatabase(jwtProvider.getUserIdFromToken(token), token);
             if (Token != null && Token.equals(token)) {
                 // 토큰이 유효할 경우, 토큰에서 Authentication 객체를 가져와 SecurityContext에 저장
                 Authentication authentication = jwtProvider.getAuthentication(token);
@@ -79,8 +79,8 @@ public class JwtAuthenticationFilter extends GenericFilterBean { // JWT 토큰�
                 chain.doFilter(request, response); // 필터 체인의 다음 필터를 호출하여 요청을 처리한다.
                 return;
             } else {
-                log.error("Token is either missing or not valid in Redis");
-                ((HttpServletResponse) response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid Token in Redis");
+                log.error("Token is either missing or not valid in DB");
+                ((HttpServletResponse) response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid Token in DB");
                 return;
             }
         } else {

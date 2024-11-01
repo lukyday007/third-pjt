@@ -7,6 +7,7 @@ import com.singlebungle.backend.domain.user.entity.User;
 import com.singlebungle.backend.domain.user.repository.UserRepository;
 import com.singlebungle.backend.global.auth.auth.JwtProvider;
 import com.singlebungle.backend.global.auth.service.JwtTokenService;
+import com.singlebungle.backend.global.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -80,15 +81,22 @@ public class UserServiceImpl implements UserService {
     public void userSignOut(String token) {
         log.info(">>> [USER SIGN OUT] - 사용자 로그아웃 요청: 토큰 = {}", token);
 
-        Long userId = jwtProvider.getUserIdFromToken(token);
+        // 토큰 삭제
+        jwtTokenService.deleteToken(token);
 
-        jwtTokenService.deleteAllTokens(userId);
-
-        log.info(">>> [USER SIGN OUT] - Redis에서 토큰 삭제 완료: 유저 ID = {}", userId);
+        log.info(">>> [USER SIGN OUT] - 특정 토큰 삭제 완료: 토큰 = {}", token);
 
         SecurityContextHolder.clearContext();
 
         log.info(">>> [USER SIGN OUT] - SecurityContextHolder 초기화 완료");
+    }
+
+
+    public UserInfoResponseDTO getUserInfoById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("해당 ID를 가진 유저를 찾을 수 없습니다: " + userId));
+
+        return UserInfoResponseDTO.convertToDTO(user);
     }
 
 }

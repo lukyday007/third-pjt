@@ -1,5 +1,6 @@
 package com.singlebungle.backend.global.auth.entity;
 
+import com.singlebungle.backend.global.model.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class JwtToken {
+public class JwtToken extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,4 +24,5 @@ public class JwtToken {
     private String refreshToken; // 리프레시 토큰
     private Long accessExpirationTime; // 액세스 토큰 만료 시간
     private Long refreshExpirationTime; // 리프레시 토큰 만료 시간
+    private String redirectUri; // 리다이렉트 URI
 }

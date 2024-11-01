@@ -33,72 +33,70 @@ public class GoogleAuthService implements AuthService {
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
 
-    @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
-    private String googleRedirectUri;
-
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
     private String googleClientSecret;
 
     // Google 로그인 또는 회원가입 처리
     @Override
-    public TokenResponseDTO handleLoginOrSignup(String code) {
+    public TokenResponseDTO handleLoginOrSignup(String code, String redirectUri) {
         log.info("Handling login or signup with Google for authorization code: {}", code);
 
         // Google로부터 액세스 토큰 요청
-        String googleAccessToken = getGoogleAccessToken(code);
+        String googleAccessToken = getGoogleAccessToken(code, redirectUri);
         log.info("Access token received from Google: {}", googleAccessToken);
 
         // Google 사용자 정보 요청
         AuthRequestDTO userInfo = getGoogleUserInfo(googleAccessToken);
         log.info("User information from Google: email={}, name={}", userInfo.getEmail(), userInfo.getNickname());
 
-        // 이메일로 기존 사용자 조회
-        Optional<User> existingUser = userRepository.findUserByEmail(userInfo.getEmail());
-
-        if (existingUser.isPresent()) {
-            // 기존 사용자일 경우 JWT 액세스 및 리프레시 토큰을 한 번 생성하여 사용
-            TokenInfo tokenInfo = jwtProvider.generateToken(existingUser.get());
-            String accessToken = tokenInfo.getAccessToken();
-            String refreshToken = tokenInfo.getRefreshToken();
-            log.info("Existing user found. Tokens issued: AccessToken={}, RefreshToken={}", accessToken, refreshToken);
-
-            // 두 토큰 모두 저장
-            saveJwtToken(existingUser.get(), accessToken, refreshToken);
-
-            // TokenResponseDTO 반환
-            return new TokenResponseDTO(accessToken, refreshToken);
-        } else {
-            log.info("No existing user found. Proceeding with signup.");
-
-            // 새로운 사용자 생성
-            AuthRequestDTO authRequestDTO = AuthRequestDTO.builder()
-                    .email(userInfo.getEmail())
-                    .nickname(userInfo.getNickname())
-                    .profileImagePath(userInfo.getProfileImagePath())
-                    .build();
-
-            User newUser = userService.oauthSignup(authRequestDTO);
-            log.info("User successfully signed up with Google: {}", newUser);
-
-            // 새로운 사용자에 대해 JWT 액세스 및 리프레시 토큰을 한 번 생성하여 사용
-            TokenInfo tokenInfo = jwtProvider.generateToken(newUser);
-            String accessToken = tokenInfo.getAccessToken();
-            String refreshToken = tokenInfo.getRefreshToken();
-            log.info("New user found. Tokens issued: AccessToken={}, RefreshToken={}", accessToken, refreshToken);
-
-            // 두 토큰 모두 저장
-            saveJwtToken(newUser, accessToken, refreshToken);
-
-            // TokenResponseDTO 반환
-            return new TokenResponseDTO(accessToken, refreshToken);
-        }
+        // 사용자 처리
+        return processUser(userInfo, redirectUri);
     }
 
-    @Override
+    private TokenResponseDTO processUser(AuthRequestDTO userInfo, String redirectUri) {
+        Optional<User> existingUser = userRepository.findUserByEmail(userInfo.getEmail());
+
+        User user; // User 객체를 메소드 내에서 선언
+        TokenInfo tokenInfo;
+
+        if (existingUser.isPresent()) {
+            user = existingUser.get(); // 기존 사용자 가져오기
+            tokenInfo = jwtProvider.generateAndSaveToken(user, redirectUri); // 토큰 생성 및 저장
+        } else {
+            log.info("No existing user found. Proceeding with signup.");
+            user = createUser(userInfo); // 새로운 사용자 생성
+            log.info("User successfully signed up with Google: {}", user);
+            tokenInfo = jwtProvider.generateAndSaveToken(user, redirectUri); // 토큰 생성 및 저장
+        }
+
+        return new TokenResponseDTO(tokenInfo.getAccessToken(), tokenInfo.getRefreshToken());
+    }
+
+//    private TokenResponseDTO saveTokensAndReturnResponse(User user, TokenInfo tokenInfo, String redirectUri) {
+//        String accessToken = tokenInfo.getAccessToken();
+//        String refreshToken = tokenInfo.getRefreshToken();
+//        log.info("Tokens issued: AccessToken={}, RefreshToken={}", accessToken, refreshToken);
+//
+//        saveJwtToken(user, accessToken, refreshToken, redirectUri);
+//
+//        return new TokenResponseDTO(accessToken, refreshToken);
+//    }
+
+    private User createUser(AuthRequestDTO userInfo) {
+        AuthRequestDTO authRequestDTO = AuthRequestDTO.builder()
+                .email(userInfo.getEmail())
+                .nickname(userInfo.getNickname())
+                .profileImagePath(userInfo.getProfileImagePath())
+                .build();
+
+        return userService.oauthSignup(authRequestDTO);
+    }
+
     // 리다이렉트 URL 생성 메소드
-    public String generateLoginUrl() {
+    @Override
+    public String generateLoginUrl(String redirectUri) {
         String loginUrl = "https://accounts.google.com/o/oauth2/auth?client_id=" + googleClientId +
-                "&redirect_uri=" + googleRedirectUri +
+                "&redirect_uri=" + redirectUri +
                 "&response_type=code" +
                 "&scope=openid%20email%20profile";
         log.info("Generated Google login URL: {}", loginUrl);
@@ -106,7 +104,7 @@ public class GoogleAuthService implements AuthService {
     }
 
     // Google Access Token 요청
-    private String getGoogleAccessToken(String code) {
+    private String getGoogleAccessToken(String code, String redirectUri) {
         log.info("Requesting access token from Google for authorization code: {}", code);
 
         String tokenUrl = "https://oauth2.googleapis.com/token";
@@ -119,8 +117,8 @@ public class GoogleAuthService implements AuthService {
         params.add("grant_type", "authorization_code");
         params.add("client_id", googleClientId);
         params.add("client_secret", googleClientSecret);
-        params.add("redirect_uri", googleRedirectUri);
         params.add("code", code);
+        params.add("redirect_uri", redirectUri);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
@@ -148,36 +146,26 @@ public class GoogleAuthService implements AuthService {
         String name = response.getBody().get("name").toString();
         String profileImagePath = response.getBody().get("picture").toString();
 
-        AuthRequestDTO googleRequestDTO =
-                AuthRequestDTO.builder()
-                        .email(email)
-                        .nickname(name)
-                        .profileImagePath(profileImagePath)
-                        .build();
-        log.info("Google user information retrieved: email={}, name={}", googleRequestDTO.getEmail(), googleRequestDTO.getNickname());
-
-        return googleRequestDTO;
+        return AuthRequestDTO.builder()
+                .email(email)
+                .nickname(name)
+                .profileImagePath(profileImagePath)
+                .build();
     }
 
-    // JWT 토큰을 MySQL에 저장하는 메소드
-    private void saveJwtToken(User user, String accessToken, String refreshToken) {
-        // 현재 사용자의 토큰이 이미 있는지 확인합니다.
-        Optional<JwtToken> existingTokenOpt = jwtTokenRepository.findByUserId(user.getUserId());
-
-        JwtToken jwtTokenEntity = existingTokenOpt.orElseGet(() ->
-                JwtToken.builder()
-                        .userId(user.getUserId())
-                        .build()
-        );
-
-        // 토큰 값을 새로 설정
-        jwtTokenEntity.setAccessToken(accessToken);
-        jwtTokenEntity.setRefreshToken(refreshToken);
-        jwtTokenEntity.setAccessExpirationTime(System.currentTimeMillis() + jwtProvider.getAccessTokenExpirationTime());
-        jwtTokenEntity.setRefreshExpirationTime(System.currentTimeMillis() + jwtProvider.getRefreshTokenExpirationTime());
-
-        // 갱신된 토큰을 저장합니다.
-        jwtTokenRepository.save(jwtTokenEntity);
-    }
-
+//    // JWT 토큰 저장 메소드
+//    private void saveJwtToken(User user, String accessToken, String refreshToken, String redirectUri) {
+//        log.info("Saving jwt token for user: {}", user);
+//        // 새로운 JwtToken 객체를 생성합니다.
+//        JwtToken jwtTokenEntity = JwtToken.builder()
+//                .userId(user.getUserId())
+//                .redirectUri(redirectUri)
+//                .accessToken(accessToken) // 액세스 토큰 설정
+//                .refreshToken(refreshToken) // 리프레시 토큰 설정
+//                .accessExpirationTime(System.currentTimeMillis() + jwtProvider.getAccessTokenExpirationTime()) // 액세스 토큰 만료 시간 설정
+//                .refreshExpirationTime(System.currentTimeMillis() + jwtProvider.getRefreshTokenExpirationTime()) // 리프레시 토큰 만료 시간 설정
+//                .build();
+//
+//        jwtTokenRepository.save(jwtTokenEntity);
+//    }
 }

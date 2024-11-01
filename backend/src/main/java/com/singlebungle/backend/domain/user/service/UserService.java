@@ -13,4 +13,6 @@ public interface UserService {
     User oauthSignup(AuthRequestDTO authRequestDTO);
 
     void userSignOut(String token);
+
+    UserInfoResponseDTO getUserInfoById(Long userId);
 }
