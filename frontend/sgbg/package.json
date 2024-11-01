@@ -24,6 +24,7 @@
     "electron-updater": "^6.1.8",
     "prop-types": "^15.8.1",
     "react-responsive-masonry": "^2.4.1",
+    "react-router-dom": "^6.27.0",
     "styled-components": "^6.1.13",
     "vite-plugin-svgr": "^4.2.0"
   },

@@ -11,6 +11,7 @@ import SettingsIcon from "../asset/images/SideBar/SettingsIcon.svg?react"
 import TrashBinIcon from "../asset/images/SideBar/TrashBinIcon.svg?react"
 
 import TestImage from "../asset/images/TestImage.png"
+import { useNavigate } from "react-router-dom"
 
 const s = {
   Test: styled.div`
@@ -78,19 +79,37 @@ const SideBar = () => {
     setIsSideBarOpen((prev) => !prev)
   }
 
+  const navigate = useNavigate()
+
+  const handleHomeButtonClick = () => {
+    navigate(`/`)
+  }
+
+  const handleImageButtonClick = () => {
+    navigate(`/image`)
+  }
+
   return (
     <>
       <s.Test $isopen={isSideBarOpen}>
         <s.Container $isopen={isSideBarOpen}>
           <s.HomeIconArea>
-            <HomeIcon style={{ cursor: "pointer" }} />
+            <HomeIcon
+              onClick={handleHomeButtonClick}
+              style={{ cursor: "pointer" }}
+            />
             <SideBarToggleIcon
               onClick={toggleSideBar}
               style={{ cursor: "pointer" }}
             />
           </s.HomeIconArea>
           <s.UserInfoArea>
-            <img src={TestImage} alt="borami" width="36px" />
+            <img
+              onClick={handleImageButtonClick}
+              src={TestImage}
+              alt="borami"
+              width="36px"
+            />
             <s.Email>kke0402@naver.com</s.Email>
           </s.UserInfoArea>
           <s.FolderCaption>기본</s.FolderCaption>
