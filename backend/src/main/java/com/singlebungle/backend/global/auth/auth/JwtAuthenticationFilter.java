@@ -27,7 +27,7 @@ public class JwtAuthenticationFilter extends GenericFilterBean { // JWT 토큰�
     private static final Map<String, Set<String>> EXCLUDE_URLS = new HashMap<>() {{
         put("/api/oauth2/code/google", new HashSet<>(List.of("GET")));
         put("/api/oauth2/google/authorize", new HashSet<>(List.of("GET")));
-        put("/api/auth/logout", new HashSet<>(List.of("POST"))); // 로그아웃 제외
+        put("/api/users/refresh-token", new HashSet<>(List.of("POST")));//리프레시 토큰 재발급 제외
         put("/api/user/oauth2/", new HashSet<>(List.of("POST"))); // 소셜 로그인 리다이렉션 제외
         put("/api/error", new HashSet<>(List.of("GET", "POST"))); // error 제외
         put("/api/swagger-ui", new HashSet<>(List.of("GET"))); // swagger 제외
@@ -43,6 +43,7 @@ public class JwtAuthenticationFilter extends GenericFilterBean { // JWT 토큰�
 
         // 요청 url 로그
         log.info("Incoming request to URL: {}, Method: {}", requestURI, method);
+        log.info("excluded from JWT validation is {}", isExcludedUrl(requestURI, method));
 
         // 특정 경로는 토큰 검사를 하지 않음
         if (isExcludedUrl(requestURI, method)) {

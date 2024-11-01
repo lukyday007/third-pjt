@@ -2,12 +2,15 @@ package com.singlebungle.backend.domain.user.controller;
 
 import com.singlebungle.backend.domain.user.dto.response.UserInfoResponseDTO;
 import com.singlebungle.backend.domain.user.service.UserService;
+import com.singlebungle.backend.global.auth.TokenInfo;
 import com.singlebungle.backend.global.auth.auth.JwtProvider;
+import com.singlebungle.backend.global.auth.dto.TokenResponseDTO;
 import com.singlebungle.backend.global.exception.model.NoTokenRequestException;
 import com.singlebungle.backend.global.model.BaseResponseBody;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,6 +64,37 @@ public class UserController {
         userService.userSignOut(token);
         log.info(">>> [GET] /user/logout - 로그아웃 완료");
         return ResponseEntity.status(200).body(BaseResponseBody.of(200, "로그아웃이 완료되었습니다."));
+    }
+
+//    @PostMapping("/refresh-token")
+//    public ResponseEntity<TokenResponseDTO> reissueToken(
+//            @CookieValue(value = "refreshToken", required = false) String refreshToken) {
+//
+//        if (refreshToken == null) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//                    .body(new TokenResponseDTO("Refresh token is missing or invalid"));
+//        }
+//
+//        String newAccessToken = userService.reissueAccessToken(refreshToken);
+//        return ResponseEntity.ok(new TokenResponseDTO(newAccessToken));
+//    }
+
+    @Operation(summary = "액세스 토큰 재발급", description = "쿠키에 저장된 리프레시 토큰을 사용하여 새로운 액세스 토큰을 재발급합니다.")
+    @PostMapping("/refresh-token")
+    public ResponseEntity<TokenInfo> refreshAccessToken(
+            @CookieValue(value = "refreshToken", required = false) String refreshToken) {
+        // 리프레시 토큰이 없으면 예외 처리
+        if (refreshToken == null) {
+            throw new NoTokenRequestException("리프레시 토큰이 필요합니다.");
+        }
+
+        // 사용자 ID를 가져오기 위한 리프레시 토큰의 유효성 검증 및 사용자 정보 추출
+        Long userId = jwtProvider.getUserIdFromToken(refreshToken);
+
+        // 액세스 토큰 재발급
+        TokenInfo tokenInfo = jwtProvider.regenerateAccessToken(userId, refreshToken);
+
+        return ResponseEntity.ok(tokenInfo);
     }
 
 }

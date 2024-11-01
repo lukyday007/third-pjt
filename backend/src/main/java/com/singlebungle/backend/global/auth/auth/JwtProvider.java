@@ -235,9 +235,9 @@ public class JwtProvider {
     }
 
     // 새로운 액세스 토큰만 생성하고 저장하는 메소드
-    public TokenInfo regenerateAccessToken(Long userId) {
-        // 기존 리프레시 토큰을 조회
-        JwtToken existingToken = jwtTokenRepository.findByUserId(userId)
+    public TokenInfo regenerateAccessToken(Long userId, String refreshToken) {
+        // 리프레시 토큰을 통해 기존 토큰을 조회
+        JwtToken existingToken = jwtTokenRepository.findByUserIdAndRefreshToken(userId, refreshToken)
                 .orElseThrow(() -> new IllegalArgumentException("User not found or no token available"));
 
         // 리프레시 토큰이 유효한지 확인
@@ -265,6 +265,4 @@ public class JwtProvider {
                 .refreshToken(existingToken.getRefreshToken()) // 기존 리프레시 토큰 반환
                 .build();
     }
-
-
 }
