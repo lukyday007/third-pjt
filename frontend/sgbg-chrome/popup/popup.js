@@ -8,23 +8,18 @@ const openAppBtn = document.querySelector('#app-btn')
 const profileBtn = document.querySelector('#profile-btn')
 
 if (loginBtn) {
-  loginBtn.addEventListener('click', setLoggedIn)
+  // 구글 로그인 버튼
+  // loginBtn.addEventListener('click', setLoggedIn)
+  loginBtn.addEventListener('click', startLogin)
 }
 if (profileBtn) {
+  // 임시 로그아웃 버튼 (프로필 버튼)
   profileBtn.addEventListener('click', setLoggedOut)
 }
 if (openAppBtn) {
+  // 앱 열기 이벤트 클릭 시 발생으로 정의
   openAppBtn.addEventListener('click', openApp)
 }
-
-// 앱 열기 이벤트 클릭 시 발생으로 정의
-openAppBtn.addEventListener('click', openApp)
-
-// 구글 로그인 버튼
-loginBtn.addEventListener('click', setLoggedIn)
-
-// 임시 로그아웃 버튼 (프로필 버튼)
-profileBtn.addEventListener('click', setLoggedOut)
 
 // 구글 로그인 버튼 이벤트
 function setLoggedIn() {
@@ -67,4 +62,15 @@ function setButtonsLoggedIn() {
 function setButtonsLoggedOut() {
   document.querySelector('.login-btn').style.display = 'block'
   document.querySelector('#profile-btn').style.display = 'none'
+}
+
+// 구글 로그인 이벤트 시작 (background.js로 message 전달)
+function startLogin() {
+  chrome.runtime.sendMessage({ action: 'startGoogleLogin' }, (response) => {
+    if (response && response.success) {
+      console.log('JWT Token:', response.token)
+    } else {
+      console.error('JWT fetch 실패')
+    }
+  })
 }
