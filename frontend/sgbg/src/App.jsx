@@ -15,12 +15,8 @@ const s = {
   `,
   ContentArea: styled.div`
     display: flex;
-    flex-direction: column;
-    width: 100%;
-  `,
-  Test: styled.div`
     flex: 1 0 auto;
-    display: flex;
+    flex-direction: column;
   `,
 }
 
@@ -32,12 +28,10 @@ function App() {
         <SideBar />
         <s.ContentArea>
           <SearchBar />
-          <s.Test>
-            <Routes>
-              <Route path="/" element={<MainPage />} />
-              <Route path="/image" element={<ImgPage />} />
-            </Routes>
-          </s.Test>
+          <Routes>
+            <Route path="/" element={<MainPage />} />
+            <Route path="/image" element={<ImgPage />} />
+          </Routes>
         </s.ContentArea>
         {/* <BrowserRouter> */}
         {/* </BrowserRouter> */}
