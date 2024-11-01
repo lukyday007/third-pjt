@@ -5,6 +5,8 @@ import GlobalStyle from "./GlobalStyles"
 import SideBar from "./components/SideBar"
 import ImgPage from "./pages/ImgPage"
 
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
+
 const s = {
   Container: styled.div`
     display: flex;
@@ -18,7 +20,13 @@ function App() {
       <GlobalStyle />
       <s.Container>
         <SideBar />
-        <MainPage />
+        {/* <BrowserRouter> */}
+        <Routes>
+          <Route path="/" element={<MainPage />} />
+          <Route path="/image" element={<ImgPage />} />
+        </Routes>
+        {/* </BrowserRouter> */}
+        {/* <MainPage /> */}
         {/* <ImgPage /> */}
       </s.Container>
     </div>
