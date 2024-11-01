@@ -6,7 +6,7 @@ const ToggleContainer = styled.label`
   position: relative;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  width: fit-content;
+  min-width: 90px;
   padding: 6px;
   border: 3px solid #343434;
   border-radius: 20px;

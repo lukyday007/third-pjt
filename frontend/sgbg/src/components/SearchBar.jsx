@@ -10,7 +10,14 @@ const s = {
     align-items: center;
     gap: 50px;
   `,
-  Title: styled.div``,
+  Title: styled.div`
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 16px;
+    min-width: 100px;
+  `,
+
   SearchButton: styled.button`
     color: white;
     border-radius: 8px;
@@ -23,7 +30,9 @@ const s = {
 const SearchBar = () => {
   return (
     <s.Container>
-      <s.Title>싱글벙글한 이미지</s.Title>
+      <s.Title>
+        필터없음ㅇㄹㅇㄹㅇㄹㄴㅇㄴㅇㄴㅇㄴㅇㄴㅇㄴㅇㄴㅇㄴㅇㄴㅇ
+      </s.Title>
       <SearchBox />
       {/* <s.SearchButton>싱글벙글 검색</s.SearchButton> 홈에서 */}
       <ImgToggleButton />

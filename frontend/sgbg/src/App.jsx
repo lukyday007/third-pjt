@@ -6,6 +6,8 @@ import SideBar from "./components/SideBar"
 import SearchBar from "./components/SearchBar"
 import ImgPage from "./pages/ImgPage"
 
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
+
 const s = {
   Container: styled.div`
     display: flex;
@@ -26,9 +28,15 @@ function App() {
         <SideBar />
         <s.ContentArea>
           <SearchBar />
-          {/* <MainPage /> */}
-          <ImgPage />
+          <Routes>
+            <Route path="/" element={<MainPage />} />
+            <Route path="/image" element={<ImgPage />} />
+          </Routes>
         </s.ContentArea>
+        {/* <BrowserRouter> */}
+        {/* </BrowserRouter> */}
+        {/* <MainPage /> */}
+        {/* <ImgPage /> */}
       </s.Container>
     </div>
   )
