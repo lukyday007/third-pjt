@@ -17,7 +17,7 @@ const s = {
     display: flex;
     flex-direction: column;
     flex: 1 0 auto;
-    width: 100%;
+    /* width: 100%; */
   `,
   Test: styled.div`
     flex: 1 0 auto;
