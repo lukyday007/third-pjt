@@ -1,5 +1,6 @@
 package com.singlebungle.backend.domain.image.service;
 
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.singlebungle.backend.domain.ai.service.OpenaiService;
 import com.singlebungle.backend.domain.image.dto.request.ImageWebRequestDTO;
@@ -24,7 +25,8 @@ import java.nio.charset.StandardCharsets;
 public class ImageServiceImpl implements ImageService {
 
     private final ImageRepository imageRepository;
-//    private final AmazonS3 amazonS3;
+    private final AmazonS3 amazonS3;
+
 
     @Override
     public void uploadImageFromUrlToS3(String url) {
@@ -34,9 +36,9 @@ public class ImageServiceImpl implements ImageService {
             log.info("Decoded URL: {}", decodeUrl);
 
             // S3 버킷과 키 추출
-            String bucketName = "plugbucket";
+            String bucketName = "sgbgbucket";
             String key;
-            String s3Prefix = "https://plogbucket.s3.ap-northeast-2.amazonaws.com/";
+            String s3Prefix = "https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/";
             int startIdx = decodeUrl.indexOf(s3Prefix) + s3Prefix.length();
             int endIdx = decodeUrl.indexOf("?");
             key = url.substring(startIdx, endIdx);
@@ -51,6 +53,7 @@ public class ImageServiceImpl implements ImageService {
             throw new InvalidRequestException("잘못된 요청입니다. URL 형식이 올바르지 않습니다. : " + e.getMessage());
         }
     }
+
 
     @Override
     @Transactional

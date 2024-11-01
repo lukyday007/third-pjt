@@ -50,8 +50,8 @@ public class ImageController {
             /*
              s3 이미지 저장
             */
-    //        imageService.uploadImageFromUrlToS3(imageUrl);
-    //        log.info(">> [POST] /image/web");
+            imageService.uploadImageFromUrlToS3(imageUrl);
+            log.info(">> [POST] /image/web");
 
             // 이미지 데이터 생성, 저장
             imageService.saveImage(dto);
