@@ -22,7 +22,7 @@ public class Image extends BaseTimeEntity {
     @Column(name = "image_id", unique = true, nullable = false)
     private Long imageId;
 
-    @Column(name = "image_url", nullable = false)
+    @Column(name = "image_url", nullable = false )
     private String imageUrl;
 
     @Column(name = "source_url", nullable = false)
@@ -37,9 +37,9 @@ public class Image extends BaseTimeEntity {
     private boolean isDeleted = false;
 
     // 웹에서 저장할 때
-    public static Image convertToEntity(String imageUrl, String webUrl, Long directoryId) {
+    public static Image convertToEntity(String sourceUrl, String imageUrl, Long directoryId) {
         Image image = new Image();
-        image.setSourceUrl(webUrl);
+        image.setSourceUrl(sourceUrl);
         image.setImageUrl(imageUrl);
         image.setDirectoryId(directoryId);
 

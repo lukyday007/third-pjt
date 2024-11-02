@@ -24,15 +24,11 @@ public class ImageDetailServiceImpl implements ImageDetailService {
 
     @Override
     @Transactional
-    public void saveImageDetail(String webUrl, String imageUrl, List<String> keywords) {
+    public void saveImageDetail(String sourceUrl, String imageUrl, List<String> keywords) {
         // 이미지 조회
-        boolean isImage = imageRepository.existsBySourceUrlAndImageUrl(webUrl, imageUrl);
-        Image image;
+        Image image = imageRepository.findBySourceUrlAndImageUrl(sourceUrl, imageUrl)
+                .orElseThrow(() -> new EntityNotFoundException("해당 이미지 데이터가 존재하지 않습니다."));
 
-        if (! isImage)
-            throw new EntityNotFoundException("해당 이미지 데이터가 존재하지 않습니다.");
-
-        image = imageRepository.findBySourceUrlAndImageUrl(webUrl, imageUrl);
 
         // 키워드 조회
         for (String name : keywords) {
