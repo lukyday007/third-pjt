@@ -8,7 +8,8 @@ import java.util.List;
 
 public interface ImageService {
 
-    void uploadImageFromUrlToS3(String url);
-    void saveImage(String imageUrl, String webUrl, Long directoryId);
+    String uploadImageFromUrlToS3(String url);
+    void saveImage(String sourceUrl, String imageUrl, Long directoryId);
+//    Long getImageId(String sourceUrl);
 
 }

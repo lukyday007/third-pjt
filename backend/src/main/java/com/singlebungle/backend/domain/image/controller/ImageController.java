@@ -36,7 +36,7 @@ public class ImageController {
     @PostMapping("/web")
     @Operation(summary = "웹 이미지 저장", description = "웹에서 새로운 이미지를 등록합니다.")
     public ResponseEntity<BaseResponseBody> saveFromWeb(
-            @RequestParam("webUrl") String webUrl,
+            @RequestParam("sourceUrl") String sourceUrl,
             @RequestParam("imageUrl") String imageUrl,
             @RequestParam(value = "directoryId", required = false, defaultValue = "0") String directoryIdStr
             ) {
@@ -53,22 +53,27 @@ public class ImageController {
             // chatgpt api
             List<String> keywords = openaiService.requestImageAnalysis(imageUrl, labels);
             if (keywords == null) {
+
                 throw new InvalidImageException();
+
+            } else {
+
+                // s3 이미지 저장
+//                Long imageId = imageService.getImageId(sourceUrl);
+                String filename = imageService.uploadImageFromUrlToS3(imageUrl);
+
+                // 이미지 데이터 생성, 저장
+                imageService.saveImage(sourceUrl, filename, directoryId);
+                // 키워드 데이터 생성, 저장
+                keywordService.saveKeyword(keywords);
+                // 이미지 디테일 데이터 생성, 저장
+                imageDetailService.saveImageDetail(sourceUrl, filename, keywords);
             }
 
             /*
              라벨 데이터 저장
             */
             //
-
-            // 이미지 데이터 생성, 저장
-            imageService.saveImage(imageUrl, webUrl, directoryId);
-            // 키워드 데이터 생성, 저장
-            keywordService.saveKeyword(keywords);
-            // 이미지 디테일 데이터 생성, 저장
-            imageDetailService.saveImageDetail(webUrl, imageUrl, keywords);
-            // s3 이미지 저장
-            imageService.uploadImageFromUrlToS3(imageUrl);
 
 
             log.info(">> [POST] /image/web");

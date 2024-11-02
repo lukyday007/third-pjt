@@ -1,9 +1,12 @@
 package com.singlebungle.backend.domain.image.service;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.singlebungle.backend.global.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,9 +16,14 @@ import com.singlebungle.backend.domain.image.entity.Image;
 import com.singlebungle.backend.domain.image.repository.ImageRepository;
 import com.singlebungle.backend.global.exception.EntityIsFoundException;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Base64;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -25,37 +33,67 @@ public class ImageServiceImpl implements ImageService {
 
     private final ImageRepository imageRepository;
     private final AmazonS3 amazonS3;
-    private final AmazonS3Client amazonS3Client;
 
     private final String bucketName = "sgbgbucket";
 
     @Override
-    public void uploadImageFromUrlToS3(String imageUrl) {
+    @Transactional
+    public String uploadImageFromUrlToS3(String imageUrl) {
+        String fileName;
+
         try {
-            // URL에서 InputStream 열기
-            URL url = new URL(imageUrl);
-            URLConnection urlConnection = url.openConnection();
+            InputStream inputStream;
+            String contentType;
 
-            // Content-Type으로 확장자 결정
-            String contentType = urlConnection.getContentType();
-            String extension = getExtensionFromContentType(contentType);
+            if (imageUrl.startsWith("data:image")) {
+                // Base64 이미지 처리
+                int commaIndex = imageUrl.indexOf(",");
+                contentType = imageUrl.substring(5, commaIndex).split(";")[0];
+                byte[] imageData = Base64.getDecoder().decode(imageUrl.substring(commaIndex + 1));
+                inputStream = new ByteArrayInputStream(imageData);
 
-            // URL에서 파일명 생성 (고유한 UUID + 확장자)
-            String fileName = UUID.randomUUID().toString() + extension;
+                // 파일명 생성
+                String extension = getExtensionFromContentType(contentType);
+                fileName = UUID.randomUUID().toString() + extension;
+            } else {
+                // URL 이미지 처리
+                URL url = new URL(imageUrl);
+                URLConnection urlConnection = url.openConnection();
+                contentType = urlConnection.getContentType();
+                inputStream = urlConnection.getInputStream();
 
-            try (InputStream inputStream = urlConnection.getInputStream()) {
-                // 메타데이터 설정
-                ObjectMetadata metadata = new ObjectMetadata();
-                metadata.setContentType(contentType);
-                metadata.setContentLength(urlConnection.getContentLengthLong());
-
-                // S3에 파일 업로드
-                PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, fileName, inputStream, metadata);
-                amazonS3.putObject(putObjectRequest);
-
+                // 파일명 생성
+                String extension = getExtensionFromContentType(contentType);
+                fileName = UUID.randomUUID().toString() + extension;
             }
+
+            // S3에 업로드
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentType(contentType);
+            metadata.setContentLength(inputStream.available());
+
+            // S3에 업로드 요청 생성
+            PutObjectRequest request = new PutObjectRequest(bucketName, fileName, inputStream, metadata);
+            amazonS3.putObject(request);
+
+            System.out.println("===> S3에 이미지 업로드 성공: " + fileName);
+
+            return fileName;
+
+        } catch (MalformedURLException e) {
+            log.error(">>> Invalid image URL format: {}", imageUrl, e);
+            throw new RuntimeException(">>> Invalid image URL format.", e);
+        } catch (IOException e) {
+            log.error(">>> Failed to open URL connection for image: {}", imageUrl, e);
+            throw new RuntimeException(">>> Failed to open URL connection for image.", e);
+        } catch (AmazonServiceException e) {
+            log.error(">>> Amazon S3 service error: {}", e.getMessage(), e);
+            throw new RuntimeException(">>> Amazon S3 service error.", e);
+        } catch (SdkClientException e) {
+            log.error(">>> S3 client error: {}", e.getMessage(), e);
+            throw new RuntimeException(">>> S3 client error.", e);
         } catch (Exception e) {
-            throw new RuntimeException("이미지를 S3에 업로드하는 동안 오류가 발생했습니다.", e);
+            throw new RuntimeException("-=-=-=> 이미지를 S3에 업로드하는 동안 오류가 발생했습니다.", e);
         }
     }
 
@@ -77,14 +115,21 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     @Transactional
-    public void saveImage(String imageUrl, String webUrl, Long directoryId) {
-        boolean isImage = imageRepository.existsBySourceUrlAndImageUrl(webUrl, imageUrl);
+    public void saveImage(String sourceUrl, String imageUrl, Long directoryId) {
+        boolean isImage = imageRepository.existsBySourceUrl(sourceUrl);
 
         if (isImage)
             throw new EntityIsFoundException("이미 해당 이미지 데이터가 존재합니다");
 
-        Image image = Image.convertToEntity(imageUrl, webUrl, directoryId);
+        Image image = Image.convertToEntity(sourceUrl, imageUrl, directoryId);
         imageRepository.save(image);
     }
+
+//    @Override
+//    public Long getImageId(String sourceUrl) {
+//        return Optional.ofNullable(imageRepository.findBySourceUrl(sourceUrl))
+//                .map(Image::getImageId)  // Image 객체에서 imageId 추출
+//                .orElse(0L); // 값이 없을 경우 0L 반환
+//    }
 
 }

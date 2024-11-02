@@ -48,7 +48,6 @@ public class OpenaiServiceImpl implements OpenaiService {
 
             // OpenAI api 요청
             ChatGPTResponse response = sendOpenAiRequest(imageUrl, gptPrompt);
-
             // 응답 처리
             String resultContent = extractResponseContent(response);
             // 키워드 추출
@@ -85,7 +84,7 @@ public class OpenaiServiceImpl implements OpenaiService {
                         "우선 labels 배열에 있는 목록을 명사로 번역해서 리스트로 돌려줘 [%s].\n" +
                         "이때 들여쓰기하고 번역한 결과를 써야해.\n\n" +
                         "### 키워드\n" +
-                        "이 이미지에 대한 키워드를 5개 정도 추출해서 번호와 함께 리스트로 반환해줘. 이때 '텍스트' 나 '언어', '유머', '인물'은 없는 키워드여야 해",
+                        "이 이미지에 대한 키워드를 5개 정도 추출해서 번호와 함께 리스트로 반환해줘. 이때 '텍스트' 나 '언어', '유머', '인물', '밈'은 없는 키워드여야 해",
                 labelsToString
         );
     }

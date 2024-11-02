@@ -1,6 +1,7 @@
 package com.singlebungle.backend.domain.ai.service;
 
 import com.google.cloud.vision.v1.*;
+import com.google.protobuf.ByteString;
 import com.singlebungle.backend.global.exception.InvalidApiUrlException;
 import com.singlebungle.backend.global.exception.InvalidImageException;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,29 +22,27 @@ import java.util.stream.Collectors;
 public class GoogleVisionServiceImpl implements GoogleVisionService {
 
     @Override
-    public boolean detectSafeSearchGoogleVision(String imageUrl) throws IOException {
-        List<AnnotateImageRequest> requests = new ArrayList<>();
+    public boolean detectSafeSearchGoogleVision(Image image) throws IOException {
 
-        // 외부 이미지 URL을 직접 사용하도록 구성
-        ImageSource imgSource = ImageSource.newBuilder().setImageUri(imageUrl).build();
-        Image img = Image.newBuilder().setSource(imgSource).build();
-        Feature feat = Feature.newBuilder().setType(Feature.Type.SAFE_SEARCH_DETECTION).build();
-
-        AnnotateImageRequest request =
-                AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
-        requests.add(request);
+        AnnotateImageRequest request = AnnotateImageRequest.newBuilder()
+                .addFeatures(Feature.newBuilder().setType(Feature.Type.SAFE_SEARCH_DETECTION).build())
+                .setImage(image)
+                .build();
 
         try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
-            BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
+            BatchAnnotateImagesResponse response = client.batchAnnotateImages(Collections.singletonList(request));
             List<AnnotateImageResponse> responses = response.getResponsesList();
 
             for (AnnotateImageResponse res : responses) {
                 if (res.hasError()) {
-                    System.out.format("Error: %s%n", res.getError().getMessage());
+                    System.out.format(">>> Error: %s%n", res.getError().getMessage());
                     return false;
                 }
 
                 SafeSearchAnnotation annotation = res.getSafeSearchAnnotation();
+                log.info("Adult: {}, Medical: {}, Spoof: {}, Violence: {}, Racy: {}",
+                        annotation.getAdult(), annotation.getMedical(),
+                        annotation.getSpoof(), annotation.getViolence(), annotation.getRacy());
 
                 // 'LIKELY' 또는 'VERY_LIKELY'가 2개 이상인지 검사
                 int count = 0;
@@ -50,6 +51,9 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
                 count += isLikelyOrVeryLikely(annotation.getSpoof()) ? 1 : 0;
                 count += isLikelyOrVeryLikely(annotation.getViolence()) ? 1 : 0;
                 count += isLikelyOrVeryLikely(annotation.getRacy()) ? 1 : 0;
+
+                System.out.println("========== count ==========");
+                System.out.println(count);
 
                 // 2개 이상일 경우 false 반환
                 if (count >= 2) {
@@ -77,30 +81,46 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
 
     @Override
     public List<String> analyzeImage(String imageUrl) throws IOException {
-        List<String> labels;
-        if (!detectSafeSearchGoogleVision(imageUrl)) {
-            throw new InvalidImageException(">>> google vision - 부적절한 이미지 입니다. - " + detectSafeSearchGoogleVision(imageUrl));
+
+        Image image = isBase64Image(imageUrl) ? buildImageFromBase64(imageUrl) : buildImageFromUrl(imageUrl);
+
+        if (!detectSafeSearchGoogleVision(image)) {
+            throw new InvalidImageException(">>> Google Vision - 부적절한 이미지 입니다.");
         }
 
         // detectSafeSearchGoogleVision이 true인 경우에만 실행
-        labels = detectLabels(imageUrl);
-        return labels;
+        return detectLabels(image);
+    }
+
+    @Override
+    public boolean isBase64Image(String imageUrl) {
+        return imageUrl.startsWith("data:image");
+    }
+
+    @Override
+    public Image buildImageFromBase64(String base64Image) {
+        String base64Data = base64Image.substring(base64Image.indexOf(",") + 1);
+        byte[] decodedBytes = Base64.getDecoder().decode(base64Data);
+        return Image.newBuilder().setContent(ByteString.copyFrom(decodedBytes)).build();
+    }
+
+    @Override
+    public Image buildImageFromUrl(String imageUrl) {
+        ImageSource imgSource = ImageSource.newBuilder().setImageUri(imageUrl).build();
+        return Image.newBuilder().setSource(imgSource).build();
     }
 
     // 외부 이미지 URL을 사용하여 라벨 검출 실행
     @Override
-    public List<String> detectLabels(String imageUrl) throws IOException {
-        List<AnnotateImageRequest> requests = new ArrayList<>();
+    public List<String> detectLabels(Image image) throws IOException {
 
-        ImageSource imgSource = ImageSource.newBuilder().setImageUri(imageUrl).build();
-        Image img = Image.newBuilder().setSource(imgSource).build();
-        Feature feat = Feature.newBuilder().setType(Feature.Type.LABEL_DETECTION).build();
-        AnnotateImageRequest request =
-                AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
-        requests.add(request);
+        AnnotateImageRequest request = AnnotateImageRequest.newBuilder()
+                .addFeatures(Feature.newBuilder().setType(Feature.Type.LABEL_DETECTION).build())
+                .setImage(image)
+                .build();
 
         try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
-            BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
+            BatchAnnotateImagesResponse response = client.batchAnnotateImages(Collections.singletonList(request));
             AnnotateImageResponse res = response.getResponsesList().get(0);
 
             if (res.hasError()) {
@@ -114,6 +134,7 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
+            log.error(">>> Google Vision API label request failed: {}", e.getMessage());
             throw new InvalidImageException(">>> Google Vision 부적절한 이미지 입니다. - " + e);
         }
     }

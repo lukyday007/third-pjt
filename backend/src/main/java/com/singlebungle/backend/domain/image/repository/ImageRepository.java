@@ -5,10 +5,17 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface ImageRepository extends JpaRepository<Image, Long> {
 
-    Image findBySourceUrlAndImageUrl(String webUrl, String imageUrl);
+    Optional<Image> findBySourceUrlAndImageUrl(String webUrl, String imageUrl);
 
-    boolean existsBySourceUrlAndImageUrl(@NotNull(message = "web url을 입력해주세요.") String webUrl, @NotNull(message = "image url을 입력해주세요.") String imageUrl);
+
+    boolean existsBySourceUrl(String sourceUrl);
+
+    Image findBySourceUrl(String sourceUrl);
+
+    boolean existsBySourceUrlAndImageUrl(String sourceUrl, String imageUrl);
 }
