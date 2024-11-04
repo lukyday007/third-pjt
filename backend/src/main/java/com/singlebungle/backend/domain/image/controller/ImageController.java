@@ -149,7 +149,7 @@ public class ImageController {
             @RequestBody ImageIdDeleteRequestDTO requestDTO
             ) {
 
-        log.info(">>> [DELETE] /images 삭제요청하는 이미지Id - {}", Arrays.toString(requestDTO.getImageIds().toArray()));
+        log.info(">>> [DELETE] /images 삭제요청하는 이미지Id - {}", Arrays.toString(requestDTO.getImageDetailIds().toArray()));
 
         imageDetailService.deleteImages(requestDTO);
 
