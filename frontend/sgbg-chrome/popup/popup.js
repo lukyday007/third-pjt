@@ -9,7 +9,6 @@ const profileBtn = document.querySelector('#profile-btn')
 
 if (loginBtn) {
   // 구글 로그인 버튼
-  // loginBtn.addEventListener('click', setLoggedIn)
   loginBtn.addEventListener('click', startLogin)
 }
 if (profileBtn) {
@@ -21,9 +20,23 @@ if (openAppBtn) {
   openAppBtn.addEventListener('click', openApp)
 }
 
-// 구글 로그인 버튼 이벤트
-function setLoggedIn() {
-  //
+// 구글 로그인 이벤트
+async function setLoggedIn() {
+  try {
+    const { email, profileImagePath } = await getUserInfoFromStorage()
+
+    console.log(email, profileImagePath)
+
+    const profileBtn = document.querySelector('#profile-btn')
+    const profileImg = profileBtn.querySelector('.pop-logo')
+    const profileTitle = profileBtn.querySelector('.pop-title')
+
+    profileImg.src = profileImagePath
+    profileTitle.innerText = email
+  } catch (e) {
+    console.log('로그인 실패', e)
+  }
+
   chrome.storage.local.set({ isLoggedIn: true })
   setButtonsLoggedIn()
 }
@@ -31,6 +44,9 @@ function setLoggedIn() {
 // 개발 임시 로그아웃 이벤트
 function setLoggedOut() {
   chrome.storage.local.set({ isLoggedIn: false })
+  chrome.storage.local.remove('userInfo', () => {
+    console.log('useinfo 삭제')
+  })
   setButtonsLoggedOut()
 }
 
@@ -45,7 +61,7 @@ function openApp() {
 document.addEventListener('DOMContentLoaded', function () {
   chrome.storage.local.get('isLoggedIn', ({ isLoggedIn }) => {
     if (isLoggedIn) {
-      setButtonsLoggedIn()
+      setLoggedIn()
     } else {
       setButtonsLoggedOut()
     }
@@ -75,12 +91,28 @@ function startLogin() {
     console.log('message response: ', response)
 
     if (response && response.success) {
-      console.log('JWT Token:', response)
-      if (response?.accessToken) {
-        setLoggedIn()
-      }
+      console.log('userInfo:', response)
+      setLoggedIn()
     } else {
       console.error('JWT fetch 실패')
     }
   })
+}
+
+async function getUserInfoFromStorage() {
+  try {
+    const userInfo = await new Promise((resolve, reject) => {
+      chrome.storage.local.get('userInfo', (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error('userInfo 없음'))
+        }
+
+        resolve(result.userInfo)
+      })
+    })
+
+    return userInfo
+  } catch (e) {
+    return new Error({ message: 'userInfo 없음' })
+  }
 }

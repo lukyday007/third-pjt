@@ -1,3 +1,5 @@
+const BASE_API_URL = 'http://localhost:8080/api'
+
 // 현재 탭의 URL 정보 받아오기
 async function getCurrentTab() {
   let queryOptions = { active: true, lastFocusedWindow: true }
@@ -43,14 +45,23 @@ async function handleGoogleLogin(sendResponse) {
     // Oauth 코드 가져오기
     const oauthCode = await fetchOauthCode()
 
-    // 차후 별도의 반환값이 없도록 수정
-    if (oauthCode) {
-      sendResponse({ success: true, oauthCode: oauthCode })
-    } else {
-      sendResponse({ success: false })
+    // 액세스 토큰 요청
+    const accessToken = await fetchJwtToken(oauthCode)
+
+    // 토큰 localStorage 저장
+    const isJwtStored = setAccessTokenAtStorage(accessToken)
+
+    if (!isJwtStored) {
+      throw new Error({ message: 'jwt 저장 실패' })
     }
 
-    // 코드로 로그인 요청
+    const isUserInfoStored = await fetchUserInfo()
+
+    if (!isUserInfoStored) {
+      throw new Error({ message: 'userInfo 저장 실패' })
+    }
+
+    return sendResponse({ success: true })
   } catch (e) {
     sendResponse({ success: false, error: e.message })
   }
@@ -59,7 +70,7 @@ async function handleGoogleLogin(sendResponse) {
 // 구글 소셜 로그인 동작 - 백엔드에 주소를 받아와서 구글 서비스에 로그인
 async function fetchOauthCode() {
   // 로그인 요청
-  const SPRING_LOGIN_URL = 'http://localhost:8080/api/oauth2/google/authorize?platform=extension'
+  const SPRING_LOGIN_URL = BASE_API_URL + '/oauth2/google/authorize?platform=extension'
 
   // 구글 로그인 URL을 백엔드 서버에 요청
   const GOOGLE_OAUTH_URL = await fetch(SPRING_LOGIN_URL)
@@ -105,11 +116,103 @@ async function fetchOauthCode() {
 }
 
 // Google Oauth Code로 JWT Token을 받아오는 함수 (access : Response body, refresh : Cookie)
+async function fetchJwtToken(oauthCode) {
+  // 토큰 요청
+  const JWT_FETCH_URL = BASE_API_URL + '/oauth2/code/google'
+  const params = {
+    platform: 'extension',
+    code: oauthCode,
+  }
+
+  // query Parameter 객체 문자열로 변환
+  const queryString = new URLSearchParams(params).toString()
+
+  // query Parameter를 합친 url로 변환
+  const urlWithParams = `${JWT_FETCH_URL}?${queryString}`
+
+  try {
+    const response = await fetch(urlWithParams)
+    console.log(response)
+
+    if (!response.ok) {
+      throw new Error({ message: 'jwt token fetch error' })
+    }
+
+    const data = await response.json()
+    const accessToken = data['access-token']
+
+    console.log('accessToken: ', accessToken)
+
+    return accessToken
+  } catch (e) {
+    console.log('fetchJwtToken 에러: ', e)
+  }
+}
 
 // JWT 토큰을 chrome storage에 저장
-function storeJWT(accessToken) {
-  chrome.storage.local.set({ accessToken: accessToken }, function () {
-    console.log('JWT token 저장 완료:', accessToken)
+function setAccessTokenAtStorage(accessToken) {
+  try {
+    chrome.storage.local.set({ accessToken: accessToken }, function () {
+      console.log('JWT token 저장 완료:', accessToken)
+    })
+    return true
+  } catch (e) {
+    console.log(e)
+    return false
+  }
+}
+
+// JWT 토큰을 chrome storage에서 읽기
+async function getAccessTokenFromStorage() {
+  try {
+    const result = await chrome.storage.local.get('accessToken')
+
+    const accessToken = result.accessToken
+
+    if (!accessToken) {
+      return new Error({ message: 'access Token 읽어오기 실패' })
+    }
+
+    console.log('스토리지에서 가져온 토큰: ', accessToken)
+
     return accessToken
-  })
+  } catch (e) {
+    return e
+  }
+}
+
+// 유저 정보 가져오기
+async function fetchUserInfo() {
+  const FETCH_USER_INFO_URL = BASE_API_URL + '/users'
+  const accessToken = await getAccessTokenFromStorage()
+
+  try {
+    const response = await fetch(FETCH_USER_INFO_URL, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+    const data = await response.json()
+
+    if (data) {
+      setUserInfoAtStorage(data)
+    }
+
+    return data
+  } catch (e) {
+    console.log('fetchUserInfo 에러: ', e)
+  }
+}
+
+// 유저 정보 저장
+async function setUserInfoAtStorage(userInfo) {
+  try {
+    chrome.storage.local.set({ userInfo: userInfo }, () => {
+      console.log('userInfo 저장 완료: ', userInfo)
+    })
+    return true
+  } catch (e) {
+    console.log(e)
+    return false
+  }
 }
