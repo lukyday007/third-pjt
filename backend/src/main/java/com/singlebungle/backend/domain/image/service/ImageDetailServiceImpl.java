@@ -51,7 +51,7 @@ public class ImageDetailServiceImpl implements ImageDetailService {
         List<Long> imageDetailIds = requestDTO.getImageDetailIds();
         // imageDetail에 있는 해당 이미지 ID들을 삭제
         try {
-            imageDetailRepository.deleteByImageIdIn(imageDetailIds);
+            imageDetailRepository.deleteByImageDetailIdIn(imageDetailIds);
             log.info(">>> imageDetailIds {}에 대한 ImageDetail 항목이 성공적으로 삭제되었습니다.", Arrays.toString(imageDetailIds.toArray()));
         } catch (Exception e) {
             log.error(">>> imageDetailIds {} 삭제 중 오류가 발생했습니다: {}",  Arrays.toString(imageDetailIds.toArray()), e.getMessage());
