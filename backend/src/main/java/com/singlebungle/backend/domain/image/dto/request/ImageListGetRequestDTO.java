@@ -17,4 +17,11 @@ public class ImageListGetRequestDTO {
     private String keyword;
     private int sort;
 
+    public ImageListGetRequestDTO(int page, int size, String keyword, int sort) {
+        this.page = page;
+        this.size = size;
+        this.keyword = keyword;
+        this.sort = sort;
+    }
+
 }

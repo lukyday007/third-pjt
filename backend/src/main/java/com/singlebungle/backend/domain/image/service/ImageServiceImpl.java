@@ -10,6 +10,7 @@ import com.singlebungle.backend.domain.image.dto.response.ImageInfoResponseDTO;
 import com.singlebungle.backend.domain.image.entity.Image;
 import com.singlebungle.backend.domain.image.entity.ImageDetail;
 import com.singlebungle.backend.domain.image.repository.ImageDetailRepository;
+import com.singlebungle.backend.domain.image.repository.ImageManagementRepositorySupport;
 import com.singlebungle.backend.domain.image.repository.ImageRepository;
 import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
@@ -39,6 +40,7 @@ public class ImageServiceImpl implements ImageService {
 
     private final ImageRepository imageRepository;
     private final ImageDetailRepository imageDetailRepository;
+    private final ImageManagementRepositorySupport imageManagementRepositorySupport;
     private final KeywordRepository keywordRepository;
     private final AmazonS3 amazonS3;
 
@@ -133,10 +135,13 @@ public class ImageServiceImpl implements ImageService {
         imageRepository.save(image);
     }
 
+
     @Override
     public Map<String, Object> getImageList(ImageListGetRequestDTO requestDTO) {
-        return Map.of();
+
+        return imageManagementRepositorySupport.findImageList(requestDTO);
     }
+
 
     @Override
     public ImageInfoResponseDTO getImageInfo(Long imageId) {

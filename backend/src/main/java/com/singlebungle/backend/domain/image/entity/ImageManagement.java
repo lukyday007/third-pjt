@@ -1,6 +1,7 @@
 package com.singlebungle.backend.domain.image.entity;
 
 import com.singlebungle.backend.domain.directory.entity.Directory;
+import com.singlebungle.backend.global.model.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,7 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "image_management")
-public class ImageManagement {  // 디렉토리 목록 용
+public class ImageManagement extends BaseTimeEntity {  // 디렉토리 목록 용
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

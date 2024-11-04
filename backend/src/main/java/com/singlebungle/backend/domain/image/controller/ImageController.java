@@ -122,7 +122,32 @@ public class ImageController {
         log.info(">>> [GET] /images/my - 요청 파라미터: directoryId - {}, page - {}, size - {}, keyword - {}, sort - {}", directoryId, page, size, keyword, sort);
 
         ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(directoryId, page, size, keyword, sort);
+        Map<String, Object> imageList = imageService.getImageList(requestDTO);
 
+        return ResponseEntity.status(200).body(imageList);
+    }
+
+
+    // feed?page=”int”&size=”int”&keyword=”string”&sort=”int”
+    // sort : 0 - 최신 / 1 - 오래된 / 2 - 랜덤
+    @GetMapping("/feed")
+    @Operation(summary = "디렉토리 안 이미지 조회", description = "디렉토리 내의 이미지를 조회합니다.")
+    public ResponseEntity<Map<String, Object>> getImageListFromFeed(
+            @Parameter(description = "페이지 번호")
+            @RequestParam(value = "page", required = false, defaultValue = "1") int page,
+            @Parameter(description = "이미지 개수")
+            @RequestParam(value = "size", required = false, defaultValue = "10") int size,
+            @Parameter(description = "키워드")
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @Parameter(description = "정렬기준 (0: 최신, 1: 오래 된, 2: 랜덤")
+            @RequestParam(value = "sort", required = false, defaultValue = "0") int sort
+//            @Parameter(description = "JWT", required = false)
+//            @RequestHeader(value = "Authorization", required = false) String token
+
+    ) {
+        log.info(">>> [GET] /images/feed - 요청 파라미터:  page - {}, size - {}, keyword - {}, sort - {}" , page, size, keyword, sort);
+
+        ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(page, size, keyword, sort);
         Map<String, Object> imageList = imageService.getImageList(requestDTO);
 
         return ResponseEntity.status(200).body(imageList);
