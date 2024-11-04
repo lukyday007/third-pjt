@@ -28,6 +28,8 @@ let imageSaveRequestDto = {
   directoryId: 0,
 }
 
+let newDirectoryName = ''
+
 // 드래그 동작 초기화 함수
 function initDrag(dropArea) {
   dropArea.classList.remove('drag-over') // 드래그오버 클래스 초기화
@@ -178,7 +180,7 @@ async function showModal(event) {
   document.body.appendChild(overlay)
 }
 
-function showCreateFolderModal(event) {
+async function showCreateFolderModal(event) {
   // 기존 모달 제거
   const existingModal = document.querySelector('#create-folder-modal')
 
@@ -203,9 +205,22 @@ function showCreateFolderModal(event) {
     <img class="modal-create-folder-img" src="" alt="폴더 만들기" />
   `
 
+  // input 바인딩
+  modal.addEventListener('input', (event) => {
+    console.log(event.target.value)
+    newDirectoryName = event.target.value
+  })
+
   // 폴더 만들기 아이콘 추가
   const createFolderIcon = modal.querySelector('.modal-create-folder-img')
   createFolderIcon.src = createFolderIconUrl
+
+  createFolderIcon.addEventListener('click', async () => {
+    if (newDirectoryName) {
+      await postCreateDirectory(newDirectoryName)
+      newDirectoryName = ''
+    }
+  })
 
   document.body.appendChild(modal)
 }

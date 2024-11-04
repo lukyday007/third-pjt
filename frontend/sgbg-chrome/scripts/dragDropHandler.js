@@ -78,6 +78,7 @@ function handleDrop(event) {
 
   if (dropArea) {
     if (dropArea.id === 'directory-create-area') {
+      fetchDirectoryList()
       showCreateFolderModal(event)
     } else if (dropArea.classList.contains('modal-folder-area') || dropArea.classList.contains('modal-drop-box')) {
       if (dropArea.dataset.directoryId === '0') {
