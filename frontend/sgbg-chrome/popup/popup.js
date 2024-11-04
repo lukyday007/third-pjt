@@ -67,8 +67,18 @@ function setButtonsLoggedOut() {
 // 구글 로그인 이벤트 시작 (background.js로 message 전달)
 function startLogin() {
   chrome.runtime.sendMessage({ action: 'startGoogleLogin' }, (response) => {
+    if (chrome.runtime.lastError) {
+      console.error('Runtime error: ', chrome.runtime.lastError)
+      return
+    }
+
+    console.log('message response: ', response)
+
     if (response && response.success) {
-      console.log('JWT Token:', response.token)
+      console.log('JWT Token:', response)
+      if (response?.accessToken) {
+        setLoggedIn()
+      }
     } else {
       console.error('JWT fetch 실패')
     }
