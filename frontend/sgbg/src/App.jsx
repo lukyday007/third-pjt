@@ -30,13 +30,9 @@ function App() {
           <SearchBar />
           <Routes>
             <Route path="/" element={<MainPage />} />
-            <Route path="/image" element={<ImgPage />} />
+            <Route path="image" element={<ImgPage />} />
           </Routes>
         </s.ContentArea>
-        {/* <BrowserRouter> */}
-        {/* </BrowserRouter> */}
-        {/* <MainPage /> */}
-        {/* <ImgPage /> */}
       </s.Container>
     </div>
   )
