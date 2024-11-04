@@ -12,5 +12,5 @@ public interface ImageDetailRepository extends JpaRepository<ImageDetail, Long> 
 
     List<ImageDetail> findAllByImage(Image image);
 
-    void deleteByImageIdIn(List<Long> imageDetailIds);
+    void deleteByImageDetailIdIn(List<Long> imageDetailIds);
 }
