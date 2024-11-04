@@ -67,29 +67,31 @@ const ImgList = () => {
   const [selectedImageId, setSelectedImageId] = useState(null)
   const [items, setItems] = React.useState(() => getItems(0, 10))
   return (
-    <MasonryInfiniteGrid
-      className="container"
-      gap={5}
-      align={"stretch"}
-      maxStretchColumnSize={360}
-      useFirstRender={true}
-      onRequestAppend={(e) => {
-        const nextGroupKey = (+e.groupKey || 0) + 1
+    <>
+      <MasonryInfiniteGrid
+        className="container"
+        gap={5}
+        align={"stretch"}
+        maxStretchColumnSize={360}
+        useFirstRender={true}
+        onRequestAppend={(e) => {
+          const nextGroupKey = (+e.groupKey || 0) + 1
 
-        setItems([...items, ...getItems(nextGroupKey, 10)])
-      }}
-      onRenderComplete={(e) => {
-        console.log(e)
-      }}
-    >
-      {items.map((item) => (
-        <Item
-          data-grid-groupkey={item.groupKey}
-          key={item.key}
-          num={item.key}
-        />
-      ))}
-    </MasonryInfiniteGrid>
+          setItems([...items, ...getItems(nextGroupKey, 10)])
+        }}
+        onRenderComplete={(e) => {
+          console.log(e)
+        }}
+      >
+        {items.map((item) => (
+          <Item
+            data-grid-groupkey={item.groupKey}
+            key={item.key}
+            num={item.key}
+          />
+        ))}
+      </MasonryInfiniteGrid>
+    </>
   )
 }
 
