@@ -1,5 +1,6 @@
 package com.singlebungle.backend.domain.image.service;
 
+import com.singlebungle.backend.domain.image.dto.request.ImageIdDeleteRequestDTO;
 import com.singlebungle.backend.domain.image.entity.Image;
 import com.singlebungle.backend.domain.image.entity.ImageDetail;
 import com.singlebungle.backend.domain.image.repository.ImageDetailRepository;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -41,6 +43,19 @@ public class ImageDetailServiceImpl implements ImageDetailService {
                 ImageDetail imageDetail = ImageDetail.convertToEntity(image, kw);
                 imageDetailRepository.save(imageDetail);
             }
+        }
+    }
+
+    @Override
+    public void deleteImages(ImageIdDeleteRequestDTO requestDTO) {
+        List<Long> imageDetailIds = requestDTO.getImageDetailIds();
+        // imageDetail에 있는 해당 이미지 ID들을 삭제
+        try {
+            imageDetailRepository.deleteByImageIdIn(imageDetailIds);
+            log.info(">>> imageDetailIds {}에 대한 ImageDetail 항목이 성공적으로 삭제되었습니다.", Arrays.toString(imageDetailIds.toArray()));
+        } catch (Exception e) {
+            log.error(">>> imageDetailIds {} 삭제 중 오류가 발생했습니다: {}",  Arrays.toString(imageDetailIds.toArray()), e.getMessage());
+            throw new RuntimeException("이미지 삭제 중 오류가 발생했습니다.", e);
         }
     }
 }

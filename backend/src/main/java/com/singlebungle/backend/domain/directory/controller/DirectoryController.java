@@ -21,7 +21,7 @@ public class DirectoryController {
     @PostMapping()
     @Operation(summary = "디렉토리 생성")
     public ResponseEntity<BaseResponseBody> create(
-            @RequestBody @Valid String directoryName
+            @RequestParam @Valid String directoryName
     ) {
 
         directoryService.saveDirectory(directoryName);

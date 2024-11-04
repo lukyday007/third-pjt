@@ -3,18 +3,22 @@ package com.singlebungle.backend.domain.image.service;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.singlebungle.backend.domain.image.dto.request.ImageListGetRequestDTO;
+import com.singlebungle.backend.domain.image.dto.response.ImageInfoResponseDTO;
+import com.singlebungle.backend.domain.image.entity.Image;
+import com.singlebungle.backend.domain.image.entity.ImageDetail;
+import com.singlebungle.backend.domain.image.repository.ImageDetailRepository;
+import com.singlebungle.backend.domain.image.repository.ImageRepository;
+import com.singlebungle.backend.domain.keyword.entity.Keyword;
+import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
+import com.singlebungle.backend.global.exception.EntityIsFoundException;
 import com.singlebungle.backend.global.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.singlebungle.backend.domain.image.entity.Image;
-import com.singlebungle.backend.domain.image.repository.ImageRepository;
-import com.singlebungle.backend.global.exception.EntityIsFoundException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -23,8 +27,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Base64;
-import java.util.Optional;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -32,6 +38,8 @@ import java.util.UUID;
 public class ImageServiceImpl implements ImageService {
 
     private final ImageRepository imageRepository;
+    private final ImageDetailRepository imageDetailRepository;
+    private final KeywordRepository keywordRepository;
     private final AmazonS3 amazonS3;
 
     private final String bucketName = "sgbgbucket";
@@ -125,11 +133,25 @@ public class ImageServiceImpl implements ImageService {
         imageRepository.save(image);
     }
 
-//    @Override
-//    public Long getImageId(String sourceUrl) {
-//        return Optional.ofNullable(imageRepository.findBySourceUrl(sourceUrl))
-//                .map(Image::getImageId)  // Image 객체에서 imageId 추출
-//                .orElse(0L); // 값이 없을 경우 0L 반환
-//    }
+    @Override
+    public Map<String, Object> getImageList(ImageListGetRequestDTO requestDTO) {
+        return Map.of();
+    }
+
+    @Override
+    public ImageInfoResponseDTO getImageInfo(Long imageId) {
+
+        Image image = imageRepository.findById(imageId).orElseThrow(() -> new EntityNotFoundException("일치하는 이미지 데이터가 존재하지 않습니다."));
+
+        List<String> keywordToStr = imageDetailRepository.findAllByImage(image)
+                .stream()
+                .map(ImageDetail::getKeyword)          // ImageDetail에서 Keyword 엔티티 추출
+                .map(Keyword::getKeywordName)           // Keyword 엔티티에서 keywordName 추출
+                .collect(Collectors.toList());
+
+        return ImageInfoResponseDTO.convertToDTO(image, keywordToStr);
+
+    }
+
 
 }
