@@ -1,6 +1,7 @@
 package com.singlebungle.backend.domain.ai.service;
 
 import com.singlebungle.backend.domain.ai.dto.response.ChatGPTResponse;
+import com.singlebungle.backend.domain.ai.dto.response.KeywordAndLabels;
 import com.singlebungle.backend.global.model.BaseResponseBody;
 
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.List;
 
 public interface OpenaiService {
 
-    List<String> requestImageAnalysis(String imageUrl, List<String> labels);
+    KeywordAndLabels requestImageAnalysis(String imageUrl, List<String> labels);
     // 프롬프트 생성
     String generatePrompt(String imageUrl, List<String> labels);
     // OpenAI api 요청

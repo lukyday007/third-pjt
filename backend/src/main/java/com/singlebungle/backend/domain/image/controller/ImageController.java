@@ -1,5 +1,6 @@
 package com.singlebungle.backend.domain.image.controller;
 
+import com.singlebungle.backend.domain.ai.dto.response.KeywordAndLabels;
 import com.singlebungle.backend.domain.ai.service.GoogleVisionService;
 import com.singlebungle.backend.domain.ai.service.OpenaiService;
 import com.singlebungle.backend.domain.image.dto.request.ImageAppRequestDTO;
@@ -10,6 +11,7 @@ import com.singlebungle.backend.domain.image.service.ImageDetailService;
 import com.singlebungle.backend.domain.image.service.ImageManagementService;
 import com.singlebungle.backend.domain.image.service.ImageService;
 import com.singlebungle.backend.domain.keyword.service.KeywordService;
+import com.singlebungle.backend.domain.search.service.SearchService;
 import com.singlebungle.backend.global.exception.InvalidImageException;
 import com.singlebungle.backend.global.model.BaseResponseBody;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +36,7 @@ public class ImageController {
     private final GoogleVisionService googleVisionService;
     private final ImageService imageService;
     private final KeywordService keywordService;
+    private final SearchService searchService;
     private final ImageDetailService imageDetailService;
     private final ImageManagementService imageManagementService;
 
@@ -47,7 +50,7 @@ public class ImageController {
         try {
             Long directoryId = Long.parseLong(directoryIdStr);
 
-            // google vision api
+            // google vision api -> 라벨 번역 안됨
             List<String> labels = googleVisionService.analyzeImage(imageUrl);
 
 //            if (labels == null) {
@@ -55,8 +58,9 @@ public class ImageController {
 //            }
 
             // chatgpt api
-            List<String> keywords = openaiService.requestImageAnalysis(imageUrl, labels);
-            if (keywords == null) {
+            KeywordAndLabels keywordAndLabels = openaiService.requestImageAnalysis(imageUrl, labels);
+
+            if (keywordAndLabels.getKeywords() == null) {
 
                 throw new InvalidImageException();
 
@@ -68,9 +72,12 @@ public class ImageController {
                 // 이미지 데이터 생성, 저장
                 imageService.saveImage(sourceUrl, filename, directoryId);
                 // 키워드 데이터 생성, 저장
-                keywordService.saveKeyword(keywords);
+                keywordService.saveKeyword(keywordAndLabels.getKeywords());
                 // 이미지 디테일 데이터 생성, 저장
-                imageDetailService.saveImageDetail(sourceUrl, filename, keywords);
+                imageDetailService.saveImageDetail(sourceUrl, filename, keywordAndLabels.getKeywords());
+                // 테그 생성, 저장
+                searchService.saveTags(keywordAndLabels.getTags(), filename);
+
             }
 
             /*

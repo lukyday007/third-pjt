@@ -2,6 +2,7 @@ package com.singlebungle.backend.domain.ai.service;
 
 import com.singlebungle.backend.domain.ai.dto.request.ChatGPTRequest;
 import com.singlebungle.backend.domain.ai.dto.response.ChatGPTResponse;
+import com.singlebungle.backend.domain.ai.dto.response.KeywordAndLabels;
 import com.singlebungle.backend.domain.search.service.SearchService;
 import com.singlebungle.backend.global.exception.InvalidApiUrlException;
 import com.singlebungle.backend.global.exception.InvalidResponseException;
@@ -41,7 +42,7 @@ public class OpenaiServiceImpl implements OpenaiService {
     private String apiKey;
 
     @Override
-    public List<String> requestImageAnalysis(String imageUrl, List<String> labels) {
+    public KeywordAndLabels requestImageAnalysis(String imageUrl, List<String> labels) {
         try {
             // 프롬프트 생성
             String gptPrompt = generatePrompt(imageUrl, labels);
@@ -52,11 +53,11 @@ public class OpenaiServiceImpl implements OpenaiService {
             String resultContent = extractResponseContent(response);
             // 키워드 추출
             List<String> keywords = extractKeywords(resultContent);
-//            // 태그 추출
-//            tags = extractTags(resultContent);
-//            searchService.saveTags(tags);
+            // 태그 추출
+            tags = extractTags(resultContent);
 
-            return keywords;
+
+            return new KeywordAndLabels(keywords, tags);
 
         } catch (WebClientRequestException e) {
             throw new InvalidApiUrlException(">>> ChatGPT api url이 부정확합니다. 확인해주세요. : " + e  );
