@@ -2,6 +2,9 @@ package com.singlebungle.backend.domain.keyword.service;
 
 import org.springframework.stereotype.Service;
 
-@Service
+import java.util.List;
+
 public interface KeywordService {
+
+    void saveKeyword(List<String> keywords);
 }

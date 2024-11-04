@@ -44,15 +44,18 @@ public class UserServiceImpl implements UserService {
                 log.info("기존 사용자 로그인: {}", existingUser.get().getEmail());
                 return UserInfoResponseDTO.convertToDTO(existingUser.get());
             } else {
-                // 새로운 사용자 등록
-                User user = User.builder()
-                        .email(authRequestDTO.getEmail())
-                        .nickname(authRequestDTO.getNickname())
-                        .build();
-                log.info("새로운 사용자 등록: {}", authRequestDTO.getEmail());
-                userRepository.save(user);
-                return UserInfoResponseDTO.convertToDTO(user);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다.");
             }
+//          else {
+//                // 새로운 사용자 등록
+//                User user = User.builder()
+//                        .email(authRequestDTO.getEmail())
+//                        .nickname(authRequestDTO.getNickname())
+//                        .build();
+//                log.info("새로운 사용자 등록: {}", authRequestDTO.getEmail());
+//                userRepository.save(user);
+//                return UserInfoResponseDTO.convertToDTO(user);
+//            }
         } catch (Exception e) {
             log.error("사용자 처리 중 예외 발생: {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "사용자 처리 중 문제가 발생했습니다.");

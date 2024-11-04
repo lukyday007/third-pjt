@@ -1,49 +1,135 @@
 package com.singlebungle.backend.domain.image.service;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.singlebungle.backend.global.exception.ImageSaveException;
-import com.singlebungle.backend.global.exception.InvalidImageException;
-import com.singlebungle.backend.global.exception.InvalidRequestException;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.singlebungle.backend.global.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import com.singlebungle.backend.domain.image.entity.Image;
+import com.singlebungle.backend.domain.image.repository.ImageRepository;
+import com.singlebungle.backend.global.exception.EntityIsFoundException;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Base64;
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ImageServiceImpl implements ImageService {
-//    private final AmazonS3 amazonS3;
+
+    private final ImageRepository imageRepository;
+    private final AmazonS3 amazonS3;
+
+    private final String bucketName = "sgbgbucket";
 
     @Override
-    public void saveImage(String url) {
+    @Transactional
+    public String uploadImageFromUrlToS3(String imageUrl) {
+        String fileName;
+
         try {
-            // url 디코딩
-            String decodeUrl = URLDecoder.decode(url, StandardCharsets.UTF_8.name());
-            log.info("Decoded URL: {}", decodeUrl);
+            InputStream inputStream;
+            String contentType;
 
-            // S3 버킷과 키 추출
-            String bucketName = "plugbucket";
-            String key;
-            String s3Prefix = "https://plogbucket.s3.ap-northeast-2.amazonaws.com/";
-            int startIdx = decodeUrl.indexOf(s3Prefix) + s3Prefix.length();
-            int endIdx = decodeUrl.indexOf("?");
-            key = url.substring(startIdx, endIdx);
-            log.info(">>> saveImage 파라미터 - Bucket: {}, Key: {}", bucketName, key);
+            if (imageUrl.startsWith("data:image")) {
+                // Base64 이미지 처리
+                int commaIndex = imageUrl.indexOf(",");
+                contentType = imageUrl.substring(5, commaIndex).split(";")[0];
+                byte[] imageData = Base64.getDecoder().decode(imageUrl.substring(commaIndex + 1));
+                inputStream = new ByteArrayInputStream(imageData);
 
-        } catch (UnsupportedEncodingException | AmazonS3Exception e) {
-            log.error(">>> Error occurred while saving image to S3", e);
-            throw new ImageSaveException("이미지 저장 중 오류가 발생했습니다: " + e.getMessage());
+                // 파일명 생성
+                String extension = getExtensionFromContentType(contentType);
+                fileName = UUID.randomUUID().toString() + extension;
+            } else {
+                // URL 이미지 처리
+                URL url = new URL(imageUrl);
+                URLConnection urlConnection = url.openConnection();
+                contentType = urlConnection.getContentType();
+                inputStream = urlConnection.getInputStream();
 
-        } catch (IllegalArgumentException e) {
-            log.error(">>> Invalid request: URL 형식 오류", e);
-            throw new InvalidRequestException("잘못된 요청입니다. URL 형식이 올바르지 않습니다. : " + e);
+                // 파일명 생성
+                String extension = getExtensionFromContentType(contentType);
+                fileName = UUID.randomUUID().toString() + extension;
+            }
+
+            // S3에 업로드
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentType(contentType);
+            metadata.setContentLength(inputStream.available());
+
+            // S3에 업로드 요청 생성
+            PutObjectRequest request = new PutObjectRequest(bucketName, fileName, inputStream, metadata);
+            amazonS3.putObject(request);
+
+            System.out.println("===> S3에 이미지 업로드 성공: " + fileName);
+
+            return fileName;
+
+        } catch (MalformedURLException e) {
+            log.error(">>> Invalid image URL format: {}", imageUrl, e);
+            throw new RuntimeException(">>> Invalid image URL format.", e);
+        } catch (IOException e) {
+            log.error(">>> Failed to open URL connection for image: {}", imageUrl, e);
+            throw new RuntimeException(">>> Failed to open URL connection for image.", e);
+        } catch (AmazonServiceException e) {
+            log.error(">>> Amazon S3 service error: {}", e.getMessage(), e);
+            throw new RuntimeException(">>> Amazon S3 service error.", e);
+        } catch (SdkClientException e) {
+            log.error(">>> S3 client error: {}", e.getMessage(), e);
+            throw new RuntimeException(">>> S3 client error.", e);
+        } catch (Exception e) {
+            throw new RuntimeException("-=-=-=> 이미지를 S3에 업로드하는 동안 오류가 발생했습니다.", e);
         }
     }
+
+    public String getExtensionFromContentType(String contentType) {
+        switch (contentType) {
+            case "image/jpeg":
+                return ".jpg";
+            case "image/png":
+                return ".png";
+            case "image/gif":
+                return ".gif";
+            case "image/webp":
+                return ".webp";
+            default:
+                throw new IllegalArgumentException("지원하지 않는 이미지 형식: " + contentType);
+        }
+    }
+
+
+    @Override
+    @Transactional
+    public void saveImage(String sourceUrl, String imageUrl, Long directoryId) {
+        boolean isImage = imageRepository.existsBySourceUrl(sourceUrl);
+
+        if (isImage)
+            throw new EntityIsFoundException("이미 해당 이미지 데이터가 존재합니다");
+
+        Image image = Image.convertToEntity(sourceUrl, imageUrl, directoryId);
+        imageRepository.save(image);
+    }
+
+//    @Override
+//    public Long getImageId(String sourceUrl) {
+//        return Optional.ofNullable(imageRepository.findBySourceUrl(sourceUrl))
+//                .map(Image::getImageId)  // Image 객체에서 imageId 추출
+//                .orElse(0L); // 값이 없을 경우 0L 반환
+//    }
+
 }

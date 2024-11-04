@@ -1,9 +1,15 @@
 package com.singlebungle.backend.domain.image.service;
 
-import org.springframework.http.ResponseEntity;
+import com.singlebungle.backend.domain.image.dto.request.ImageWebRequestDTO;
 import org.springframework.stereotype.Service;
 
-@Service
+import java.util.List;
+
+
 public interface ImageService {
-    void saveImage(String url);
+
+    String uploadImageFromUrlToS3(String url);
+    void saveImage(String sourceUrl, String imageUrl, Long directoryId);
+//    Long getImageId(String sourceUrl);
+
 }

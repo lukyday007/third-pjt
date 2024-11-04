@@ -19,4 +19,21 @@ public class Keyword extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "keyword_id", unique = true, nullable = false)
     private Long keywordId;
+
+    @Column(name = "keyword_name", unique = true, nullable = false)
+    private String keywordName;
+
+    @Column(name = "use_count")
+    private int useCount = 0;
+
+    // createdAt
+    // updatedAt
+
+    public static Keyword convertToEntity(String keyword) {
+        Keyword kw = new Keyword();
+        kw.setKeywordName(keyword);
+
+        return kw;
+    }
+
 }

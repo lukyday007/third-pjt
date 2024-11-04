@@ -30,6 +30,7 @@ public class User extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
+    @Builder.Default
     private Status status = Status.ACTIVE;
 
     public static User convertToEntity(UserInfoRequestDTO dto) {

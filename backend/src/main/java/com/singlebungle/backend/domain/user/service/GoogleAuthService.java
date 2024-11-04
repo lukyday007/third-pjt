@@ -1,5 +1,6 @@
 package com.singlebungle.backend.domain.user.service;
 
+import com.singlebungle.backend.domain.directory.service.DirectoryService;
 import com.singlebungle.backend.domain.user.dto.request.AuthRequestDTO;
 import com.singlebungle.backend.domain.user.entity.User;
 import com.singlebungle.backend.domain.user.repository.UserRepository;
@@ -29,6 +30,7 @@ public class GoogleAuthService implements AuthService {
     private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
     private final JwtTokenRepository jwtTokenRepository;
+    private final DirectoryService directoryService;
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
@@ -89,7 +91,10 @@ public class GoogleAuthService implements AuthService {
                 .profileImagePath(userInfo.getProfileImagePath())
                 .build();
 
-        return userService.oauthSignup(authRequestDTO);
+        User user = userService.oauthSignup(authRequestDTO); // 사용자 생성
+        directoryService.createDefaultDirectories(user); // 기본 디렉토리 생성
+
+        return user;
     }
 
     // 리다이렉트 URL 생성 메소드

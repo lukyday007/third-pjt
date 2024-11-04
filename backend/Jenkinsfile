@@ -75,19 +75,50 @@ pipeline {
                 }
             }
         }
-        // stage('Deploy with deploy_backend.sh') {
-        //     steps {
-        //         script {
-        //             // SSH 키를 사용하여 원격 서버에 연결하고 deploy_backend.sh 실행
-        //             sh """
-        //                 ssh -o StrictHostKeyChecking=no -i /var/jenkins_home/.ssh/jenkins_rsa ${REMOTE_USER}@${REMOTE_HOST} "
-        //                 cd ${REMOTE_DIR} &&
-        //                 ./deploy_backend.sh
-        //                 "
-        //             """
-        //         }
-        //     }
-        // }
+        stage('Deploy with Docker Compose') {
+            steps {
+                script {
+                    // SSH 키를 사용하여 원격 서버에 연결하고 명령을 실행
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i /var/jenkins_home/.ssh/jenkins_rsa ${REMOTE_USER}@${REMOTE_HOST} '
+                        cd ${REMOTE_DIR} &&
+                        docker-compose stop backend &&
+                        docker-compose rm -f backend &&
+                        docker-compose up -d backend
+                        '
+                    """
+                }
+            }
+        }
+        stage('Notification') {
+            steps{
+                echo 'jenkins notification!'
+            }
+            post {
+                success {
+                    script {
+                        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+                        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+                        mattermostSend(color: 'good',
+                            message: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|Details>)",
+                            endpoint: 'https://meeting.ssafy.com/hooks/nhgr1zq9rfrbzn3xsmcipbqjmr',
+                            channel: 'Jenkins_Build_Result'
+                                )
+                    }
+                }
+                failure {
+                    script {
+                        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+                        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+                        mattermostSend(color: 'danger',
+                            message: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|Details>)",
+                            endpoint: 'https://meeting.ssafy.com/hooks/nhgr1zq9rfrbzn3xsmcipbqjmr',
+                            channel: 'Jenkins_Build_Result'
+                                )
+                    }
+                }
+            }
+        }
     }
 
     post {
