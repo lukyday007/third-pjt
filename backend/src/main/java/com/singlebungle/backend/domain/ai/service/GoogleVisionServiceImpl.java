@@ -1,7 +1,9 @@
 package com.singlebungle.backend.domain.ai.service;
 
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.vision.v1.*;
 import com.google.protobuf.ByteString;
+import com.singlebungle.backend.global.config.GoogleVisionConfig;
 import com.singlebungle.backend.global.exception.InvalidApiUrlException;
 import com.singlebungle.backend.global.exception.InvalidImageException;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +22,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GoogleVisionServiceImpl implements GoogleVisionService {
 
+    private final GoogleVisionConfig googleVisionConfig;
+
+    @Override
+    public ImageAnnotatorClient createVisionClient() throws IOException {
+        GoogleCredentials credentials = googleVisionConfig.getGoogleCredentials();
+        ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
+                .setCredentialsProvider(() -> credentials)
+                .build();
+
+        return ImageAnnotatorClient.create(settings);
+    }
+
     @Override
     public boolean detectSafeSearchGoogleVision(Image image) throws IOException {
 
@@ -29,7 +42,7 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
                 .setImage(image)
                 .build();
 
-        try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
+        try (ImageAnnotatorClient client = createVisionClient()) {
             BatchAnnotateImagesResponse response = client.batchAnnotateImages(Collections.singletonList(request));
             List<AnnotateImageResponse> responses = response.getResponsesList();
 
@@ -119,7 +132,7 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
                 .setImage(image)
                 .build();
 
-        try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
+        try (ImageAnnotatorClient client = createVisionClient()) {
             BatchAnnotateImagesResponse response = client.batchAnnotateImages(Collections.singletonList(request));
             AnnotateImageResponse res = response.getResponsesList().get(0);
 
