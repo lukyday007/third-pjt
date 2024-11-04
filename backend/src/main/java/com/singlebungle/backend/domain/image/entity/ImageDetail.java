@@ -29,7 +29,6 @@ public class ImageDetail {  // 이미지 디테일 조회용 (목록)
     private Keyword keyword;
 
 
-
     public static ImageDetail convertToEntity(Image image, Keyword keyword) {
         ImageDetail imageDetail = new ImageDetail();
         imageDetail.setImage(image);
