@@ -65,6 +65,7 @@ dependencies {
 	implementation 'com.amazonaws:aws-java-sdk-s3:1.11.1000'
 	implementation 'software.amazon.awssdk:s3:2.20.80'
 	implementation 'software.amazon.awssdk:auth:2.20.80'
+	implementation 'javax.xml.bind:jaxb-api:2.3.1'		// base64 처리
 
 	// 테스트 의존성
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
