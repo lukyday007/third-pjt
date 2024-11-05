@@ -1,16 +1,16 @@
 package com.singlebungle.backend.domain.directory.entity;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.singlebungle.backend.domain.user.entity.User;
 import com.singlebungle.backend.global.model.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter @Setter
+@Builder
 @Table(name = "directory")
 public class Directory extends BaseTimeEntity {
 
@@ -18,12 +18,12 @@ public class Directory extends BaseTimeEntity {
     @Column(name = "directory_id", unique = true, nullable = false)
     private Long directoryId;
 
-//    // 유저 번호
-//    @ManyToOne
-//    @JoinColumn(name = "user_id", nullable = false)
-//    private User user;
+    // 유저 번호
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    // 디렉토리 명
+    // 디렉토리명
     @Column(name = "directory_name")
     private String name;
 
@@ -45,7 +45,6 @@ public class Directory extends BaseTimeEntity {
 
         return directory;
     }
-
     // 디렉토리 순서 번경
 
 
