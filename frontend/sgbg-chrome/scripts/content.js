@@ -15,12 +15,7 @@ try {
 }
 
 // 폴더 임시 변수 -> 차후 api 요청해서 받는것으로 수정
-let directoryInfos
-directoryInfos = [
-  { directoryId: 1, directoryName: '싱글벙글 모음' },
-  { directoryId: 2, directoryName: '훌쩍훌쩍 모음' },
-  { directoryId: 3, directoryName: '오싹오싹 모음' },
-]
+let directoryInfos = []
 
 let imageSaveRequestDto = {
   webUrl: '',

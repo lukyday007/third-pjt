@@ -29,7 +29,7 @@ async function fetchDirectoryList() {
 
     const data = await response.json()
     const directoryInfos = data.directories
-    console.log(directoryInfos)
+
     return directoryInfos
   } catch (e) {
     console.log('fetchDirectoryError: ', e)
