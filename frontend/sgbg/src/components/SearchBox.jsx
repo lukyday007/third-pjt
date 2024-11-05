@@ -15,6 +15,25 @@ const dummyKeywords = [
   "가보",
 ]
 
+// 태그 컬러 일단 여기에...
+const colorPairs = [
+  { background: "rgba(251, 216, 210, 1)", text: "rgba(239, 92, 68, 1)" },
+  { background: "rgba(252, 229, 214, 1)", text: "rgba(240, 148, 86, 1)" },
+  { background: "rgba(255, 231, 194, 1)", text: "rgba(255, 153, 0, 1)" },
+  { background: "rgba(255, 238, 194, 1)", text: "rgba(255, 184, 0, 1)" },
+  { background: "rgba(228, 251, 210, 1)", text: "rgba(143, 239, 67, 1)" },
+  { background: "rgba(206, 238, 223, 1)", text: "rgba(50, 182, 122, 1)" },
+  { background: "rgba(194, 228, 214, 1)", text: "rgba(4, 145, 86, 1)" },
+  { background: "rgba(194, 244, 255, 1)", text: "rgba(0, 209, 255, 1)" },
+  { background: "rgba(210, 236, 251, 1)", text: "rgba(67, 176, 239, 1)" },
+  { background: "rgba(199, 233, 249, 1)", text: "rgba(23, 165, 231, 1)" },
+  { background: "rgba(210, 219, 251, 1)", text: "rgba(67, 105, 239, 1)" },
+  { background: "rgba(225, 194, 255, 1)", text: "rgba(128, 0, 255, 1)" },
+  { background: "rgba(231, 210, 251, 1)", text: "rgba(153, 67, 239, 1)" },
+  { background: "rgba(250, 210, 251, 1)", text: "rgba(235, 67, 239, 1)" },
+  { background: "rgba(255, 194, 216, 1)", text: "rgba(255, 0, 92, 1)" },
+]
+
 const s = {
   Container: styled.div`
     display: flex;
@@ -30,14 +49,12 @@ const s = {
     display: flex;
     align-items: center;
     gap: 10px;
-    width: 100%;
   `,
   SearchInput: styled.input`
     background-color: inherit;
     border: none;
     outline: none;
     font-size: 16px;
-    width: 100%;
 
     /* 크롬 기본 스타일 초기화 (기본 x 스타일 제거) */
     &::-webkit-search-decoration,
@@ -58,6 +75,10 @@ const s = {
     align-items: center;
     gap: 3px;
     white-space: nowrap;
+    background-color: ${(props) => props.bgColor};
+    color: ${(props) => props.textColor};
+    padding: 5px 10px;
+    border-radius: 8px;
   `,
   ResultsArea: styled.div`
     display: flex;
@@ -119,9 +140,12 @@ const SearchBox = () => {
           searchKeywords.filter((keyword) => keyword !== firstKeyword)
         )
       } else {
-        setSearchKeywords([...searchKeywords, firstKeyword])
+        const { background, text } = getRandomColorPair()
+        setSearchKeywords([
+          ...searchKeywords,
+          { keyword: firstKeyword, background, text },
+        ])
       }
-
       setQuery("")
       setFilteredKeywords([])
     } else if (
@@ -137,18 +161,33 @@ const SearchBox = () => {
     setSearchKeywords(searchKeywords.filter((_, i) => i !== index))
   }
 
+  const getRandomColorPair = () => {
+    const randomIndex = Math.floor(Math.random() * colorPairs.length)
+    return colorPairs[randomIndex]
+  }
+
   return (
     <s.Container>
       <s.SearchArea>
         <SearchIcon />
         {searchKeywords.length > 0 && (
           <s.KeywordArea>
-            {searchKeywords.map((keyword, index) => (
-              <s.KeywordItem>
-                <KeywordCancleIcon onClick={removeTag} />
-                {keyword}
-              </s.KeywordItem>
-            ))}
+            {searchKeywords.map((item, index) => {
+              return (
+                <s.KeywordItem
+                  key={index}
+                  bgColor={item.background}
+                  textColor={item.text}
+                >
+                  <KeywordCancleIcon
+                    onClick={removeTag}
+                    bgColor={item.background}
+                    textColor={item.text}
+                  />
+                  {item.keyword}
+                </s.KeywordItem>
+              )
+            })}
           </s.KeywordArea>
         )}
         <s.SearchInput
