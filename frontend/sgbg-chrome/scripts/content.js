@@ -91,6 +91,13 @@ async function showModal(event) {
   // 기존 Modal Overlay 제거
   removeExistingOverlay()
 
+  // 디렉토리 불러오기
+  const fetchedDirectoryList = await fetchDirectoryList()
+
+  if (fetchedDirectoryList) {
+    directoryInfos = [...fetchedDirectoryList]
+  }
+
   // overlay 요소 추가
   const overlay = document.createElement('div')
   overlay.id = 'save-modal-overlay'
