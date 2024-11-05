@@ -1,3 +1,5 @@
+const BASE_API_URL = 'http://localhost:8080/api'
+
 // 로고 이미지 URL 정의 변수
 let logoUrl
 let logoSadUrl
@@ -12,12 +14,6 @@ try {
   createFolderIconUrl = chrome.runtime.getURL('images/create-folder-icon.svg')
 } catch (e) {
   console.error('(싱글벙글) 이미지 URL 로드 실패: ', e)
-}
-
-let imageSaveRequestDto = {
-  webUrl: '',
-  imageUrl: '',
-  directoryId: 0,
 }
 
 // 드래그 동작 초기화 함수
@@ -75,7 +71,7 @@ function removeExistingOverlay() {
 async function showModal(event) {
   // 현재 탭 정보를 받아와서 출력 (임시 확인용) ##################################################
   const currentTabUrl = await getCurrentTab()
-  imageSaveRequestDto.webUrl = currentTabUrl
+  imageSaveRequestDto.sourceUrl = currentTabUrl
   console.log(imageSaveRequestDto)
 
   // 기존 Modal Overlay 제거
@@ -264,8 +260,7 @@ function showAlertModal(imgSrc, isSaved) {
   const responseImage = modal.querySelector('.modal-response-img')
 
   // 저장한 이미지 src로 띄우기
-  // 현재는 임시로 logoUrl, 차후 API 완성되면 imgSrc 로 변경 ##################################################
-  responseImage.src = logoUrl
+  responseImage.src = imgSrc
   responseImage.alt = '저장 이미지'
 
   // 결과 이미지
