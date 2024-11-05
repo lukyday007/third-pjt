@@ -1,5 +1,10 @@
 const BASE_API_URL = 'http://localhost:8080/api'
 
+// 폴더 임시 변수 -> 차후 api 요청해서 받는것으로 수정
+let directoryInfos = []
+
+let newDirectoryName = ''
+
 // 스토리지에서 액세스 토큰을 불러와서 반환
 async function getAccessTokenFromStorage() {
   return new Promise((resolve, reject) => {

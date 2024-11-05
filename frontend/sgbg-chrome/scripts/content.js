@@ -14,16 +14,11 @@ try {
   console.error('(싱글벙글) 이미지 URL 로드 실패: ', e)
 }
 
-// 폴더 임시 변수 -> 차후 api 요청해서 받는것으로 수정
-let directoryInfos = []
-
 let imageSaveRequestDto = {
   webUrl: '',
   imageUrl: '',
   directoryId: 0,
 }
-
-let newDirectoryName = ''
 
 // 드래그 동작 초기화 함수
 function initDrag(dropArea) {
@@ -181,8 +176,8 @@ async function showModal(event) {
   document.body.appendChild(overlay)
 }
 
+// 폴더 만들기 모달 제거 함수
 function removeExistingFolderModal() {
-  // 기존 모달 제거
   const existingModal = document.querySelector('#create-folder-modal')
 
   if (existingModal) {
