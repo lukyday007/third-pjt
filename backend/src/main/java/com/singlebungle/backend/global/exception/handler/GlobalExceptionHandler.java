@@ -2,6 +2,7 @@ package com.singlebungle.backend.global.exception.handler;
 
 import com.singlebungle.backend.global.exception.*;
 import com.singlebungle.backend.global.exception.model.ExceptionResponseDto;
+import com.singlebungle.backend.global.model.BaseResponseBody;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -155,5 +156,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    // UserNotFoundException을 처리하는 핸들러
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<BaseResponseBody> handleUserNotFoundException(UserNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(BaseResponseBody.of(404, ex.getMessage()));
+    }
 
 }
