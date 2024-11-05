@@ -4,6 +4,5 @@ public interface DirectoryService {
 
     void saveDirectory(String name);
 
-
 }
 

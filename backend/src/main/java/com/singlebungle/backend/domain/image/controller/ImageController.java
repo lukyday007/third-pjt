@@ -11,7 +11,7 @@ import com.singlebungle.backend.domain.image.service.ImageDetailService;
 import com.singlebungle.backend.domain.image.service.ImageManagementService;
 import com.singlebungle.backend.domain.image.service.ImageService;
 import com.singlebungle.backend.domain.keyword.service.KeywordService;
-//import com.singlebungle.backend.domain.search.service.SearchService;
+import com.singlebungle.backend.domain.search.service.SearchService;
 import com.singlebungle.backend.global.exception.InvalidImageException;
 import com.singlebungle.backend.global.model.BaseResponseBody;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +36,7 @@ public class ImageController {
     private final GoogleVisionService googleVisionService;
     private final ImageService imageService;
     private final KeywordService keywordService;
-//    private final SearchService searchService;
+    private final SearchService searchService;
     private final ImageDetailService imageDetailService;
     private final ImageManagementService imageManagementService;
 
@@ -76,7 +76,7 @@ public class ImageController {
                 // 이미지 디테일 데이터 생성, 저장
                 imageDetailService.saveImageDetail(sourceUrl, filename, keywordAndLabels.getKeywords());
                 // 테그 생성, 저장
-//                searchService.saveTags(keywordAndLabels.getTags(), filename);
+                searchService.saveTags(keywordAndLabels.getTags(), filename);
 
             }
 
