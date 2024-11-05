@@ -11,7 +11,7 @@ public interface DirectoryService {
 
     List<Directory> createDirectory(String directoryName, String token);
 
-}
+
     List<Directory> updateDirectoryName(Long directoryId, String directoryName, String token);
 
     List<Directory> getUserDirectories(String token);
