@@ -3,7 +3,7 @@ package com.singlebungle.backend.domain.ai.service;
 import com.singlebungle.backend.domain.ai.dto.request.ChatGPTRequest;
 import com.singlebungle.backend.domain.ai.dto.response.ChatGPTResponse;
 import com.singlebungle.backend.domain.ai.dto.response.KeywordAndLabels;
-import com.singlebungle.backend.domain.search.service.SearchService;
+//import com.singlebungle.backend.domain.search.service.SearchService;
 import com.singlebungle.backend.global.exception.InvalidApiUrlException;
 import com.singlebungle.backend.global.exception.InvalidResponseException;
 import com.singlebungle.backend.global.exception.UnAuthorizedApiKeyException;
@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class OpenaiServiceImpl implements OpenaiService {
 
-    private final SearchService searchService;
+//    private final SearchService searchService;
     private final WebClient openAiConfig;  // WebClient 빈을 openAiConfig로 주입받음
 
     public List<String> tags;
