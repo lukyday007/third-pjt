@@ -20,7 +20,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["./scripts/content.js", "./scripts/dragDropHandler.js"],
+      "js": ["./scripts/content.js", "./scripts/dragDropHandler.js", "./scripts/directoryHandler.js"],
       "css": ["./scripts/content.css", "styles.css"],
       "type": "module"
     }
