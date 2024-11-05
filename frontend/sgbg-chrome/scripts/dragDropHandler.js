@@ -16,11 +16,21 @@ function initializeDragAndDrop() {
 
 function handleDragStart(event) {
   // 이미지라면 드래그 중 감지 변수를 true로 설정하고, 현재 커서 위치를 저장
-  if (event.target.tagName === 'IMG') {
-    isDragging = true
-    startX = event.clientX
-    startY = event.clientY
+  if (event.target.tagName !== 'IMG') {
+    return
   }
+
+  console.log('드래그 이미지 정보: ', event.target)
+
+  if (event.target.src) {
+    const dragImgSrc = event.target.src
+
+    imageSaveRequestDto.imageUrl = dragImgSrc
+  }
+
+  isDragging = true
+  startX = event.clientX
+  startY = event.clientY
 
   console.log(event.clientX, event.clientY)
 }
@@ -47,16 +57,18 @@ function handleDragEnter(event) {
   // 드롭 가능 영역 감지
   const dropArea = event.target.closest('.modal-droppable')
 
-  if (dropArea) {
-    // 중첩 카운팅 방식 사용 - 사용하지 않았을 때 하위 요소에 접근시 dragLeave 이벤트가 발생
-    if (!dropArea.dataset.dragCounter) {
-      // modal-droppable의 하위 요소에 접근할 때 카운터를 추가하고, 0이면 벗어나는 개념
-      dropArea.dataset.dragCounter = 1
-      dropArea.classList.add('drag-over')
-      dropArea.style.cursor = 'copy'
-    } else {
-      dropArea.dataset.dragCounter++
-    }
+  if (!dropArea) {
+    return
+  }
+
+  // 중첩 카운팅 방식 사용 - 사용하지 않았을 때 하위 요소에 접근시 dragLeave 이벤트가 발생
+  if (!dropArea.dataset.dragCounter) {
+    // modal-droppable의 하위 요소에 접근할 때 카운터를 추가하고, 0이면 벗어나는 개념
+    dropArea.dataset.dragCounter = 1
+    dropArea.classList.add('drag-over')
+    dropArea.style.cursor = 'copy'
+  } else {
+    dropArea.dataset.dragCounter++
   }
 }
 
@@ -76,21 +88,28 @@ function handleDrop(event) {
   // 드롭 가능 영역 감지
   const dropArea = event.target.closest('.modal-droppable')
 
-  if (dropArea) {
-    if (dropArea.id === 'directory-create-area') {
-      fetchDirectoryList()
-      showCreateFolderModal(event)
-    } else if (dropArea.classList.contains('modal-folder-area') || dropArea.classList.contains('modal-drop-box')) {
-      if (dropArea.dataset.directoryId === '0') {
-        testImageAlert(undefined, false)
-      } else {
-        testImageAlert(undefined, true)
-      }
-    }
-    event.preventDefault()
-    console.log(dropArea)
-    initDrag(dropArea)
+  if (!dropArea) {
+    return
   }
+
+  // 폴더 만들기 드롭
+  if (dropArea.id === 'directory-create-area') {
+    // fetchDirectoryList()
+    showCreateFolderModal(event)
+  } else if (dropArea.classList.contains('modal-folder-area') || dropArea.classList.contains('modal-drop-box')) {
+    // 이미지 저장 이벤트
+
+    if (dropArea.dataset.directoryId) {
+      saveDirectoryId = dropArea.dataset.directoryId
+      setImageSaveRequestDto(saveDirectoryId)
+    }
+
+    handleSaveImage(imageSaveRequestDto)
+  }
+
+  event.preventDefault()
+  console.log(dropArea)
+  initDrag(dropArea)
 }
 
 // 드래그 퇴장 이벤트 - 추가했던 drag-over 요소 삭제
@@ -98,13 +117,15 @@ function handleDragLeave(event) {
   // 드롭 가능 영역 감지
   const dropArea = event.target.closest('.modal-droppable')
 
-  if (dropArea) {
-    // 중첩 카운터에 -1을 하고, 카운터가 0이 되면 drag-over 클래스 삭제
-    dropArea.dataset.dragCounter--
+  if (!dropArea) {
+    return
+  }
 
-    if (dropArea.dataset.dragCounter == 0) {
-      initDrag(dropArea)
-    }
+  // 중첩 카운터에 -1을 하고, 카운터가 0이 되면 drag-over 클래스 삭제
+  dropArea.dataset.dragCounter--
+
+  if (dropArea.dataset.dragCounter == 0) {
+    initDrag(dropArea)
   }
 }
 
@@ -112,7 +133,6 @@ function handleDragLeave(event) {
 // drop 이벤트 후에도 drag-end 이벤트가 반드시 호출된다.
 // drop -> dragover -> dragend 순으로 종료되어
 // dragend 이벤트에서 cursor 및 스타일 관련 이벤트 처리가 필요하다.
-// 차후 여기에 이미지 저장 이벤트 추가
 function handleDragEnd(event) {
   console.log('dragend', isDragging, startX, startY)
   isDragging = false

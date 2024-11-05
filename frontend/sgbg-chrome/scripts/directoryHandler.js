@@ -1,6 +1,4 @@
-const BASE_API_URL = 'http://localhost:8080/api'
-
-// 폴더 임시 변수 -> 차후 api 요청해서 받는것으로 수정
+// 폴더 정보 변수
 let directoryInfos = []
 
 let newDirectoryName = ''
@@ -47,7 +45,7 @@ async function postCreateDirectory(directoryName) {
   try {
     const accessToken = await getAccessTokenFromStorage()
 
-    const requestDto = {
+    const requestBody = {
       directoryName: directoryName,
     }
 
@@ -57,7 +55,7 @@ async function postCreateDirectory(directoryName) {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestDto),
+      body: JSON.stringify(requestBody),
     })
 
     if (response.ok) {
