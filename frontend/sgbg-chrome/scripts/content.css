@@ -210,6 +210,8 @@ ul {
 
 .modal-create-folder-img {
   width: 50px;
+
+  cursor: pointer;
 }
 
 .alert-modal {

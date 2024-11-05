@@ -54,6 +54,12 @@ async function postCreateDirectory(directoryName) {
       body: JSON.stringify(requestDto),
     })
 
+    if (response.ok) {
+      console.log('디렉토리 생성 완료')
+    } else {
+      throw new Error('디렉토리 생성 실패')
+    }
+
     return response
   } catch (e) {
     return e

@@ -72,6 +72,15 @@ function calcModalCoord(clientX, clientY) {
   return { left, top }
 }
 
+// 기존 Modal Overlay 제거
+function removeExistingOverlay() {
+  const existingOverlay = document.querySelector('#save-modal-overlay')
+
+  if (existingOverlay) {
+    existingOverlay.remove()
+  }
+}
+
 // 모달 표시 함수
 async function showModal(event) {
   // 현재 탭 정보를 받아와서 출력 (임시 확인용) ##################################################
@@ -79,18 +88,8 @@ async function showModal(event) {
   imageSaveRequestDto.webUrl = currentTabUrl
   console.log(imageSaveRequestDto)
 
-  // // 모달이 있다면 기존 모달 제거
-  // const existingModal = document.querySelector('#save-modal')
-
-  // if (existingModal) {
-  //   existingModal.remove()
-  // }
-
-  const existingOverlay = document.querySelector('#save-modal-overlay')
-
-  if (existingOverlay) {
-    existingOverlay.remove()
-  }
+  // 기존 Modal Overlay 제거
+  removeExistingOverlay()
 
   // overlay 요소 추가
   const overlay = document.createElement('div')
@@ -137,7 +136,7 @@ async function showModal(event) {
   </div>
   `
 
-  //   이미지 요소 생성 및 모달에 추가
+  // 이미지 요소 생성 및 모달에 추가
   const logo = modal.querySelector('.modal-drop-logo')
   logo.src = logoUrl
   logo.alt = '로고'
@@ -180,13 +179,18 @@ async function showModal(event) {
   document.body.appendChild(overlay)
 }
 
-async function showCreateFolderModal(event) {
+function removeExistingFolderModal() {
   // 기존 모달 제거
   const existingModal = document.querySelector('#create-folder-modal')
 
   if (existingModal) {
     existingModal.remove()
   }
+}
+
+async function showCreateFolderModal(event) {
+  // 기존 모달 제거
+  removeExistingFolderModal()
 
   // 모달 요소 추가
   const modal = document.createElement('div')
@@ -207,7 +211,6 @@ async function showCreateFolderModal(event) {
 
   // input 바인딩
   modal.addEventListener('input', (event) => {
-    console.log(event.target.value)
     newDirectoryName = event.target.value
   })
 
@@ -215,12 +218,8 @@ async function showCreateFolderModal(event) {
   const createFolderIcon = modal.querySelector('.modal-create-folder-img')
   createFolderIcon.src = createFolderIconUrl
 
-  createFolderIcon.addEventListener('click', async () => {
-    if (newDirectoryName) {
-      await postCreateDirectory(newDirectoryName)
-      newDirectoryName = ''
-    }
-  })
+  // 생성된 폴더 아이콘에 클릭 이벤트 리스너 추가
+  createFolderIcon.addEventListener('click', handleClickCreateFolderIcon)
 
   document.body.appendChild(modal)
 }
@@ -228,7 +227,6 @@ async function showCreateFolderModal(event) {
 // 현재 탭의 정보 url을 받아오기
 // 탭 정보는 background.js 혹은 popup.js에서만 읽어올 수 있다.
 // background.js에 메세지를 보내서 탭 정보를 받아온다
-
 function getCurrentTab() {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage({ action: 'getCurrentTab' }, (response) => {
@@ -305,4 +303,20 @@ function showAlertModal(imgSrc, isSaved) {
 
 function testImageAlert(imgSrc, isSaved) {
   showAlertModal(logoSadUrl, isSaved)
+}
+
+// 폴더 아이콘 핸들러
+async function handleClickCreateFolderIcon() {
+  // 디렉토리 이름을 설정한 경우 폴더 생성 요청 후 변수 초기화, 창 닫기
+  if (newDirectoryName) {
+    await postCreateDirectory(newDirectoryName)
+
+    // 디렉토리 이름 변수 초기화
+    newDirectoryName = ''
+
+    // 이미지 저장
+
+    // 창 닫기
+    removeExistingFolderModal()
+  }
 }

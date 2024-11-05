@@ -125,18 +125,8 @@ function handleDragEnd(event) {
     initDrag(dropArea)
   })
 
-  // // 모달 닫기
-  // const existingModal = document.querySelector('#save-modal')
-
-  // if (existingModal) {
-  //   existingModal.remove()
-  // }
-
-  const existingOverlay = document.querySelector('#save-modal-overlay')
-
-  if (existingOverlay) {
-    existingOverlay.remove()
-  }
+  // Overlay 삭제
+  removeExistingOverlay()
 }
 
 initializeDragAndDrop()
