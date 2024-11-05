@@ -12,7 +12,6 @@ import KeywordDecreaseIcon from "../asset/images/MainPage/KeywordDecreaseIcon.sv
 const rotateImage = keyframes`
   100% {
     transform: rotate(360deg);
-    /* transform-origin: 50% 50%; */
   }
 `
 

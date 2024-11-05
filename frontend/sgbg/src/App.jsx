@@ -5,8 +5,8 @@ import GlobalStyle from "./GlobalStyles"
 import SideBar from "./components/SideBar"
 import SearchBar from "./components/SearchBar"
 import ImgPage from "./pages/ImgPage"
-
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
+import { useLocation, Navigate, Route, Routes } from "react-router-dom"
+import LoginPage from "./pages/LoginPage"
 
 const s = {
   Container: styled.div`
@@ -21,22 +21,23 @@ const s = {
 }
 
 function App() {
+  const location = useLocation()
+  const isLoginPage = location.pathname === "/login"
   return (
     <div className="App">
       <GlobalStyle />
       <s.Container>
-        <SideBar />
+        {!isLoginPage && <SideBar />}
+        {/* <SideBar /> */}
         <s.ContentArea>
-          <SearchBar />
+          {!isLoginPage && <SearchBar />}
+          {/* <SearchBar /> */}
           <Routes>
             <Route path="/" element={<MainPage />} />
-            <Route path="/image" element={<ImgPage />} />
+            <Route path="image" element={<ImgPage />} />
+            <Route path="login" element={<LoginPage />} />
           </Routes>
         </s.ContentArea>
-        {/* <BrowserRouter> */}
-        {/* </BrowserRouter> */}
-        {/* <MainPage /> */}
-        {/* <ImgPage /> */}
       </s.Container>
     </div>
   )

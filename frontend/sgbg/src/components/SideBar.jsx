@@ -93,6 +93,9 @@ const SideBar = () => {
   const handleImageButtonClick = () => {
     navigate(`/image`)
   }
+  const handleEmailClick = () => {
+    navigate(`/login`)
+  }
 
   return (
     <>
@@ -115,7 +118,7 @@ const SideBar = () => {
               alt="borami"
               width="36px"
             />
-            <s.Email>kke0402@naver.com</s.Email>
+            <s.Email onClick={handleEmailClick}>kke0402@naver.com</s.Email>
           </s.UserInfoArea>
           <s.FolderCaption>기본</s.FolderCaption>
           <s.FolderArea>

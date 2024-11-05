@@ -15,7 +15,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:build": "electron-builder"
   },
   "dependencies": {
     "@egjs/react-infinitegrid": "^4.12.0",
