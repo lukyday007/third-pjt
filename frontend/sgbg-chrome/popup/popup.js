@@ -43,10 +43,15 @@ async function setLoggedIn() {
 
 // 개발 임시 로그아웃 이벤트
 function setLoggedOut() {
+  // 로그인 상태 제거
   chrome.storage.local.set({ isLoggedIn: false })
-  chrome.storage.local.remove('userInfo', () => {
-    console.log('useinfo 삭제')
-  })
+  // 유저 정보 삭제
+  chrome.storage.local.remove('userInfo', () => {})
+  // 액세스 토큰 삭제
+  chrome.storage.local.remove('accessToken', () => {})
+  // 서버에 로그아웃 요청
+  chrome.runtime.sendMessage({ action: 'postLogout' })
+  // 버튼 로그아웃 설정
   setButtonsLoggedOut()
 }
 
