@@ -21,7 +21,6 @@ public class ImageWebRequestDTO {
     private String imageUrl;
 
     @NotNull(message = "directoryId를 입력해주세요.")
-    @Schema(description = "directoryStatus")
     @Builder.Default
     private Long directoryId = 0L;
 
