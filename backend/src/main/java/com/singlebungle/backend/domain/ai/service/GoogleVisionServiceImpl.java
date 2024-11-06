@@ -70,7 +70,7 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
 
                 // 2개 이상일 경우 false 반환
                 if (count >= 2) {
-                    log.warn(">>> 이미지 안전성 판별 결과 두 개 이상의 항목이 부적절함에 해당됩니다.");
+                    log.warn(">>> 이미지 안전성 판별 결과 두 개 이상의 항목이 부적절함에 해당됩니다. : " + count);
                     return false;
                 }
             }
