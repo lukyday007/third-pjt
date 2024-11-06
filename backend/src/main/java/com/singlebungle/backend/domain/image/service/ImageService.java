@@ -12,7 +12,7 @@ import java.util.Map;
 public interface ImageService {
 
     String uploadImageFromUrlToS3(String url);
-    void saveImage(String sourceUrl, String imageUrl, Long directoryId);
+    void saveImage(Long userId, String sourceUrl, String imageUrl, Long directoryId);
 
     Map<String, Object> getImageList(ImageListGetRequestDTO requestDTO);
 

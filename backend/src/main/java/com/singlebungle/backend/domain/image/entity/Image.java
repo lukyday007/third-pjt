@@ -28,20 +28,16 @@ public class Image extends BaseTimeEntity {
     @Column(name = "source_url", columnDefinition = "TEXT", nullable = false)
     private String sourceUrl;
 
-    @Column(name = "directory_id", nullable = false)
-    private Long directoryId;
-
     private int count;
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
     // 웹에서 저장할 때
-    public static Image convertToEntity(String sourceUrl, String imageUrl, Long directoryId) {
+    public static Image convertToEntity(String sourceUrl, String imageUrl) {
         Image image = new Image();
         image.setSourceUrl(sourceUrl);
         image.setImageUrl(imageUrl);
-        image.setDirectoryId(directoryId);
 
         return image;
     }

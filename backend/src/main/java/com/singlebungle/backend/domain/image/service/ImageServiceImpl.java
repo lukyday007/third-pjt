@@ -5,15 +5,21 @@ import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.singlebungle.backend.domain.directory.entity.Directory;
+import com.singlebungle.backend.domain.directory.repository.DirectoryRepository;
 import com.singlebungle.backend.domain.image.dto.request.ImageListGetRequestDTO;
 import com.singlebungle.backend.domain.image.dto.response.ImageInfoResponseDTO;
 import com.singlebungle.backend.domain.image.entity.Image;
 import com.singlebungle.backend.domain.image.entity.ImageDetail;
+import com.singlebungle.backend.domain.image.entity.ImageManagement;
 import com.singlebungle.backend.domain.image.repository.ImageDetailRepository;
+import com.singlebungle.backend.domain.image.repository.ImageManagementRepository;
 import com.singlebungle.backend.domain.image.repository.ImageManagementRepositorySupport;
 import com.singlebungle.backend.domain.image.repository.ImageRepository;
 import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
+import com.singlebungle.backend.domain.user.entity.User;
+import com.singlebungle.backend.domain.user.repository.UserRepository;
 import com.singlebungle.backend.global.exception.EntityIsFoundException;
 import com.singlebungle.backend.global.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -38,9 +44,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ImageServiceImpl implements ImageService {
 
+    private final UserRepository userRepository;
     private final ImageRepository imageRepository;
     private final ImageDetailRepository imageDetailRepository;
+    private final ImageManagementRepository imageManagementRepository;
     private final ImageManagementRepositorySupport imageManagementRepositorySupport;
+    private final DirectoryRepository directoryRepository;
     private final KeywordRepository keywordRepository;
     private final AmazonS3 amazonS3;
 
@@ -125,14 +134,28 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     @Transactional
-    public void saveImage(String sourceUrl, String imageUrl, Long directoryId) {
-        boolean isImage = imageRepository.existsBySourceUrl(sourceUrl);
+    public void saveImage(Long userId, String sourceUrl, String imageUrl, Long directoryId) {
+        // user
+        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("해당하는 유저 데이터가 존재하지 않습니다. :" + userId));
 
+        // image
+        boolean isImage = imageRepository.existsBySourceUrl(sourceUrl);
         if (isImage)
             throw new EntityIsFoundException("이미 해당 이미지 데이터가 존재합니다");
-
-        Image image = Image.convertToEntity(sourceUrl, imageUrl, directoryId);
+        Image image = Image.convertToEntity(sourceUrl, imageUrl);
         imageRepository.save(image);
+
+        // directory => 디폴트 일 때 처리
+        Directory directory;
+        if (directoryId == 0) {
+            int status = 0;
+            directory =  directoryRepository.findByUserAndStatus(user, status);
+        } else {
+            directory = directoryRepository.findById(directoryId).orElseThrow(() -> new EntityNotFoundException("해당 디렉토리 데이터가 존재하지 않습니다. " + directoryId));
+        }
+
+        ImageManagement imageManagement = ImageManagement.convertToEntity(user, image, directory);
+        imageManagementRepository.save(imageManagement);
     }
 
 
