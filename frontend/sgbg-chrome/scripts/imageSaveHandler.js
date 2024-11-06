@@ -45,6 +45,7 @@ async function postSaveImage(requestBody) {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),
     })
