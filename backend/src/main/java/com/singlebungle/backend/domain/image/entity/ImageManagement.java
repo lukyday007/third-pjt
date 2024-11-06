@@ -1,6 +1,7 @@
 package com.singlebungle.backend.domain.image.entity;
 
 import com.singlebungle.backend.domain.directory.entity.Directory;
+import com.singlebungle.backend.domain.user.entity.User;
 import com.singlebungle.backend.global.model.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -22,9 +23,9 @@ public class ImageManagement extends BaseTimeEntity {  // 디렉토리 목록 �
     private Long imageManagementId;
 
 //    // 유저 번호
-//    @ManyToOne
-//    @JoinColumn(name = "user_id", nullable = false)
-//    private User user;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     // 이미지 번호
     @ManyToOne
@@ -40,8 +41,9 @@ public class ImageManagement extends BaseTimeEntity {  // 디렉토리 목록 �
 
 
     // 엔티티 생성
-    public static ImageManagement convertToEntity (Image image, Directory directory) {
+    public static ImageManagement convertToEntity (User user, Image image, Directory directory) {
         ImageManagement imageManagement = new ImageManagement();
+        imageManagement.setUser(user);
         imageManagement.setImage(image);
         imageManagement.setDirectory(directory);
 

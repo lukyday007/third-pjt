@@ -1,16 +1,21 @@
 package com.singlebungle.backend.domain.image.controller;
 
+import com.singlebungle.backend.domain.ai.dto.response.KeywordAndLabels;
 import com.singlebungle.backend.domain.ai.service.GoogleVisionService;
 import com.singlebungle.backend.domain.ai.service.OpenaiService;
 import com.singlebungle.backend.domain.image.dto.request.ImageAppRequestDTO;
 import com.singlebungle.backend.domain.image.dto.request.ImageIdDeleteRequestDTO;
 import com.singlebungle.backend.domain.image.dto.request.ImageListGetRequestDTO;
+import com.singlebungle.backend.domain.image.dto.request.ImageWebRequestDTO;
 import com.singlebungle.backend.domain.image.dto.response.ImageInfoResponseDTO;
 import com.singlebungle.backend.domain.image.service.ImageDetailService;
 import com.singlebungle.backend.domain.image.service.ImageManagementService;
 import com.singlebungle.backend.domain.image.service.ImageService;
 import com.singlebungle.backend.domain.keyword.service.KeywordService;
+import com.singlebungle.backend.domain.search.service.SearchService;
+import com.singlebungle.backend.domain.user.service.UserService;
 import com.singlebungle.backend.global.exception.InvalidImageException;
+import com.singlebungle.backend.global.exception.model.NoTokenRequestException;
 import com.singlebungle.backend.global.model.BaseResponseBody;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,54 +35,64 @@ import java.util.Map;
 @RequestMapping("/images")
 public class ImageController {
 
+    private final UserService userService;
     private final OpenaiService openaiService;
     private final GoogleVisionService googleVisionService;
     private final ImageService imageService;
     private final KeywordService keywordService;
+    private final SearchService searchService;
     private final ImageDetailService imageDetailService;
     private final ImageManagementService imageManagementService;
 
     @PostMapping("/web")
     @Operation(summary = "웹 이미지 저장", description = "웹에서 새로운 이미지를 등록합니다.")
     public ResponseEntity<BaseResponseBody> saveFromWeb(
-            @RequestParam("sourceUrl") String sourceUrl,
-            @RequestParam("imageUrl") String imageUrl,
-            @RequestParam(value = "directoryId", required = false, defaultValue = "0") String directoryIdStr
-            ) {
-        try {
-            Long directoryId = Long.parseLong(directoryIdStr);
+            @RequestBody ImageWebRequestDTO requestDTO,
+            @Parameter(description = "JWT")
+            @RequestHeader(value = "Authorization") String token
+    ) {
 
-            // google vision api
-            List<String> labels = googleVisionService.analyzeImage(imageUrl);
+        Long userId = 0L;
+        if (token != null) {
+            userId = userService.getUserByToken(token);
+        } else {
+            throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
+        }
+        try {
+            Long directoryId = requestDTO.getDirectoryId();
+
+            // google vision api -> 라벨 번역 안됨
+            List<String> labels = googleVisionService.analyzeImage(requestDTO.getImageUrl());
 
 //            if (labels == null) {
 //                throw new InvalidImageException();
 //            }
 
             // chatgpt api
-            List<String> keywords = openaiService.requestImageAnalysis(imageUrl, labels);
-            if (keywords == null) {
+            KeywordAndLabels keywordAndLabels = openaiService.requestImageAnalysis(requestDTO.getImageUrl(), labels);
+
+            if (keywordAndLabels.getKeywords() == null) {
 
                 throw new InvalidImageException();
 
             } else {
 
                 // s3 이미지 저장
-                String filename = imageService.uploadImageFromUrlToS3(imageUrl);
+                String filename = imageService.uploadImageFromUrlToS3(requestDTO.getImageUrl());
 
                 // 이미지 데이터 생성, 저장
-                imageService.saveImage(sourceUrl, filename, directoryId);
+                imageService.saveImage(requestDTO.getWebUrl(), filename, directoryId);
                 // 키워드 데이터 생성, 저장
-                keywordService.saveKeyword(keywords);
+                keywordService.saveKeyword(keywordAndLabels.getKeywords());
                 // 이미지 디테일 데이터 생성, 저장
-                imageDetailService.saveImageDetail(sourceUrl, filename, keywords);
+                imageDetailService.saveImageDetail(requestDTO.getWebUrl(), filename, keywordAndLabels.getKeywords());
+                // 테그 생성, 저장
+                searchService.saveTags(keywordAndLabels.getTags(), filename);
+
             }
 
-            /*
-             라벨 데이터 저장
-            */
-            //
-//            log.info(">>> [POST] /images/web - 요청 dto : {}", requestDTO.toString());
+
+            log.info(">>> [POST] /images/web - 요청 dto : {}", requestDTO.toString());
 
         } catch (Exception e) {
             throw new RuntimeException(">>> imageController - 웹 이미지 저장을 실패했습니다. " + e);
@@ -90,11 +105,21 @@ public class ImageController {
     @PostMapping("/app")
     @Operation(summary = "앱 이미지 저장", description = "앱에서 이미지를 등록합니다.")
     public ResponseEntity<BaseResponseBody> saveFromApp(
-            @RequestBody ImageAppRequestDTO requestDTO
+            @RequestBody ImageAppRequestDTO requestDTO,
+            @Parameter(description = "JWT")
+            @RequestHeader(value = "Authorization") String token
             ) {
-        log.info(">>> [POST] /images/app - 요청 dto : {}", requestDTO.toString());
+        Long userId = 0L;
+        if (token != null) {
+            userId = userService.getUserByToken(token);
+        } else {
+            throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
+        }
 
-        imageManagementService.saveImageManagement(requestDTO.getImageId(), requestDTO.getDirectoryId());
+
+        log.info(">>> [POST] /images/app - 요청 dto : {}, userId : {}", requestDTO.toString(), userId);
+
+        imageManagementService.saveImageManagement(userId, requestDTO.getImageId(), requestDTO.getDirectoryId());
 
         return ResponseEntity.status(201).body(BaseResponseBody.of(201, "앱 이미지를 저장했습니다."));
     }
@@ -114,12 +139,18 @@ public class ImageController {
             @Parameter(description = "키워드")
             @RequestParam(value = "keyword", required = false) String keyword,
             @Parameter(description = "정렬기준 (0: 최신, 1: 오래 된, 2: 랜덤")
-            @RequestParam(value = "sort", required = false, defaultValue = "0") int sort
-//            @Parameter(description = "JWT", required = false)
-//            @RequestHeader(value = "Authorization", required = false) String token
-
+            @RequestParam(value = "sort", required = false, defaultValue = "0") int sort,
+            @Parameter(description = "JWT")
+            @RequestHeader(value = "Authorization") String token
     ) {
-        log.info(">>> [GET] /images/my - 요청 파라미터: directoryId - {}, page - {}, size - {}, keyword - {}, sort - {}", directoryId, page, size, keyword, sort);
+        Long userId = 0L;
+        if (token != null) {
+            userId = userService.getUserByToken(token);
+        } else {
+            throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
+        }
+
+        log.info(">>> [GET] /images/my - 요청 파라미터: userId - {}, directoryId - {}, page - {}, size - {}, keyword - {}, sort - {}", userId, directoryId, page, size, keyword, sort);
 
         ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(directoryId, page, size, keyword, sort);
         Map<String, Object> imageList = imageService.getImageList(requestDTO);
@@ -140,12 +171,19 @@ public class ImageController {
             @Parameter(description = "키워드")
             @RequestParam(value = "keyword", required = false) String keyword,
             @Parameter(description = "정렬기준 (0: 최신, 1: 오래 된, 2: 랜덤")
-            @RequestParam(value = "sort", required = false, defaultValue = "0") int sort
-//            @Parameter(description = "JWT", required = false)
-//            @RequestHeader(value = "Authorization", required = false) String token
+            @RequestParam(value = "sort", required = false, defaultValue = "0") int sort,
+            @Parameter(description = "JWT")
+            @RequestHeader(value = "Authorization", required = false) String token
 
     ) {
-        log.info(">>> [GET] /images/feed - 요청 파라미터:  page - {}, size - {}, keyword - {}, sort - {}" , page, size, keyword, sort);
+        Long userId = 0L;
+        if (token != null) {
+            userId = userService.getUserByToken(token);
+        } else {
+            throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
+        }
+
+        log.info(">>> [GET] /images/feed - 요청 파라미터:  userId - {}, page - {}, size - {}, keyword - {}, sort - {}" , userId, page, size, keyword, sort);
 
         ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(page, size, keyword, sort);
         Map<String, Object> imageList = imageService.getImageList(requestDTO);
@@ -155,12 +193,20 @@ public class ImageController {
 
 
     // /images/{imageId}
-    //
     @GetMapping(value = "/{imageId}")
     @Operation(summary = "이미지 상세 조회", description = "해당 이미지를 상세 조회합니다.")
     public ResponseEntity<ImageInfoResponseDTO> getImage(
-        @PathVariable Long imageId
+        @PathVariable Long imageId,
+        @Parameter(description = "JWT")
+        @RequestHeader(value = "Authorization", required = false) String token
     ) {
+        Long userId = 0L;
+        if (token != null) {
+            userId = userService.getUserByToken(token);
+        } else {
+            throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
+        }
+
         log.info(">>> [GET] /images/{} - 요청 파라미터: imageId - {}", imageId, imageId);
         ImageInfoResponseDTO imageInfo = imageService.getImageInfo(imageId);
 
@@ -169,10 +215,18 @@ public class ImageController {
 
     // imageId: “List<Long>”
     @DeleteMapping()
-    @Operation(summary = "뉴스 좋아요 취소", description = "해당 뉴스 좋아요를 취소합니다.")
+    @Operation(summary = "이미지 삭제", description = "해당 이미지를 삭제합니다..")
     public ResponseEntity<BaseResponseBody> deleteImages(
-            @RequestBody ImageIdDeleteRequestDTO requestDTO
-            ) {
+            @RequestBody ImageIdDeleteRequestDTO requestDTO,
+            @Parameter(description = "JWT")
+            @RequestHeader(value = "Authorization", required = false) String token
+    ) {
+        Long userId = 0L;
+        if (token != null) {
+            userId = userService.getUserByToken(token);
+        } else {
+            throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
+        }
 
         log.info(">>> [DELETE] /images 삭제요청하는 이미지Id - {}", Arrays.toString(requestDTO.getImageDetailIds().toArray()));
 

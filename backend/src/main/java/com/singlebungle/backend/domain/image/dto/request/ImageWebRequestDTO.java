@@ -2,13 +2,11 @@ package com.singlebungle.backend.domain.image.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@Builder
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Schema(title = "IMAGE_WEB_REQ : 이미지 웹 요청 DTO")
@@ -24,6 +22,7 @@ public class ImageWebRequestDTO {
 
     @NotNull(message = "directoryId를 입력해주세요.")
     @Schema(description = "directoryId")
-    private int directoryId;
+    @Builder.Default
+    private Long directoryId = 0L;
 
 }
