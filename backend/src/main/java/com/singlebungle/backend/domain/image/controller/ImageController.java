@@ -212,6 +212,7 @@ public class ImageController {
         return ResponseEntity.status(200).body(imageInfo);
     }
 
+
     // imageId: “List<Long>”
     @DeleteMapping()
     @Operation(summary = "이미지 삭제", description = "해당 이미지를 삭제합니다..")
