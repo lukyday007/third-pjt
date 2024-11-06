@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -94,18 +95,26 @@ public class DirectoryServiceImpl implements DirectoryService {
         // 상태가 1인 디렉토리만 순서를 변경하려는 디렉토리로 필터링
         List<Directory> directoriesToUpdate = directoryRepository.findAllById(directorySequence).stream()
                 .filter(directory -> directory.getStatus() == 1)  // 상태가 1인 디렉토리만
-                .toList();
+                .collect(Collectors.toList());
+
+        // Map을 사용하여 디렉토리 ID를 키로, 디렉토리 객체를 값으로 저장
+        Map<Long, Directory> directoryMap = directoriesToUpdate.stream()
+                .collect(Collectors.toMap(Directory::getDirectoryId, directory -> directory));
 
         // 상태가 1인 디렉토리만 순서 변경
-        for (int i = 0; i < directoriesToUpdate.size(); i++) {
-            Directory directory = directoriesToUpdate.get(i);
-            directory.setOrder(i + 1);  // 순서 설정
-            directoryRepository.save(directory);
+        for (int i = 0; i < directorySequence.size(); i++) {
+            Long directoryId = directorySequence.get(i);
+            Directory directory = directoryMap.get(directoryId);
+            if (directory != null) {
+                directory.setOrder(i + 1);  // 순서 설정
+                directoryRepository.save(directory);
+            }
         }
 
         // 순서가 변경된 디렉토리를 포함해 유저의 모든 디렉토리 목록을 순서대로 반환
         return directoryRepository.findAllByUserOrderByOrderAsc(user);
     }
+
 
     public List<Directory> deleteDirectory(Long directoryId, String token) {
         Long userId = jwtProvider.getUserIdFromToken(token);
