@@ -28,6 +28,7 @@ public class Directory extends BaseTimeEntity {
     private String name;
 
     // 디렉토리 순서
+    @Builder.Default
     @Column(name = "directory_order")
     private int order = 0;
 
