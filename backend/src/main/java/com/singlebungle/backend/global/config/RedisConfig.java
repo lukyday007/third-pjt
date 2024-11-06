@@ -42,8 +42,8 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate() {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
+    public RedisTemplate<String, String> redisTemplate() {
+        RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory());
         return template;
     }
@@ -57,8 +57,8 @@ public class RedisConfig {
     }
 
     @Bean(name = "redisKeywordTemplate")
-    public RedisTemplate<String, Object> redisKeywordTemplate() {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
+    public RedisTemplate<String, String> redisKeywordTemplate() {
+        RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(redisKeywordConnectionFactory());
         return template;
     }
@@ -72,24 +72,10 @@ public class RedisConfig {
     }
 
     @Bean(name = "redisUserTemplate")
-    public RedisTemplate<String, Object> redisUserTemplate() {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
+    public RedisTemplate<String, String> redisUserTemplate() {
+        RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(redisUserConnectionFactory());
         return template;
     }
-
-
-
-//    @Bean
-//    public RedisConnectionFactory redisConnectionFactory() {
-//        RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
-//        redisConfig.setHostName(host);
-//        redisConfig.setPort(port);
-//
-////        redisConfig.setDatabase(databaseIndex); // 데이터베이스 인덱스 설정
-////        redisConfig.setPassword(RedisPassword.of(password)); // 인증 설정
-//
-//        return new LettuceConnectionFactory(redisConfig);
-//    }
 
 }

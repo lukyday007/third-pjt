@@ -34,10 +34,14 @@ public class ImageManagement extends BaseTimeEntity {  // 디렉토리 목록 �
 
     // 현재 디렉토리 번호 (활성화)
     @ManyToOne
-    @JoinColumn(name = "directory_id", nullable = false)
-    private Directory directory;
+    @JoinColumn(name = "cur_directory_id", nullable = false)
+    private Directory curDirectory;
 
     // 이전 디렉토리 번호 (비활성화)
+    @ManyToOne
+    @JoinColumn(name = "prev_directory_id")
+    private Directory prevDirectory;
+
 
 
     // 엔티티 생성
@@ -45,7 +49,18 @@ public class ImageManagement extends BaseTimeEntity {  // 디렉토리 목록 �
         ImageManagement imageManagement = new ImageManagement();
         imageManagement.setUser(user);
         imageManagement.setImage(image);
-        imageManagement.setDirectory(directory);
+        imageManagement.setCurDirectory(directory);
+
+        return imageManagement;
+    }
+
+    // 이미지 폴더 이동
+    public static ImageManagement converToEntity(User user, Image image, Directory curDirectory, Directory prevDirectory) {
+        ImageManagement imageManagement = new ImageManagement();
+        imageManagement.setUser(user);
+        imageManagement.setImage(image);
+        imageManagement.setCurDirectory(curDirectory);
+        imageManagement.setPrevDirectory(prevDirectory);
 
         return imageManagement;
     }

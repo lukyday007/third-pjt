@@ -72,11 +72,9 @@ public class ImageController {
             KeywordAndLabels keywordAndLabels = openaiService.requestImageAnalysis(requestDTO.getImageUrl(), labels);
 
             if (keywordAndLabels.getKeywords() == null) {
-
                 throw new InvalidImageException();
 
             } else {
-
                 // s3 이미지 저장
                 String filename = imageService.uploadImageFromUrlToS3(requestDTO.getImageUrl());
 
@@ -90,7 +88,6 @@ public class ImageController {
                 searchService.saveTags(keywordAndLabels.getTags(), filename);
 
             }
-
 
             log.info(">>> [POST] /images/web - 요청 dto : {}", requestDTO.toString());
 
@@ -115,7 +112,6 @@ public class ImageController {
         } else {
             throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
         }
-
 
         log.info(">>> [POST] /images/app - 요청 dto : {}, userId : {}", requestDTO.toString(), userId);
 

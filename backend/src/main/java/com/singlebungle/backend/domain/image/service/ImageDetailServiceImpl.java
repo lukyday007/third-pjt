@@ -31,14 +31,12 @@ public class ImageDetailServiceImpl implements ImageDetailService {
         Image image = imageRepository.findBySourceUrlAndImageUrl(sourceUrl, imageUrl)
                 .orElseThrow(() -> new EntityNotFoundException("해당 이미지 데이터가 존재하지 않습니다."));
 
-
         // 키워드 조회
         for (String name : keywords) {
             boolean isKeyword = keywordRepository.existsByKeywordName(name);
 
             if (isKeyword) {
                 Keyword kw = keywordRepository.findByKeywordName(name);
-
                 // ImageDetail 생성, 저장
                 ImageDetail imageDetail = ImageDetail.convertToEntity(image, kw);
                 imageDetailRepository.save(imageDetail);
