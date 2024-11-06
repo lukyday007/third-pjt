@@ -8,6 +8,41 @@ async function getCurrentTab() {
   return tab
 }
 
+// 우클릭 컨텍스트 메뉴바 항목 추가
+chrome.runtime.onInstalled.addListener(() => {
+  // 우클릭 메뉴 생성
+  chrome.contextMenus.create({
+    id: 'saveImage',
+    title: '싱글벙글에 이미지 저장',
+    contexts: ['image'],
+  })
+
+  // 메뉴 클릭시 동작 정의
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    const sourceUrl = tab.url
+    const imageUrl = info.srcUrl
+
+    if (info.menuItemId === 'saveImage' && sourceUrl && imageUrl) {
+      const saveImageRequestBody = {
+        sourceUrl: sourceUrl,
+        imageUrl: imageUrl,
+        directoryId: 0,
+      }
+
+      // 현재 탭에서 content.js의 함수 실행
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: (saveImageRequestBody) => {
+          // content.js의 함수 실행
+          handleSaveImage(saveImageRequestBody)
+        },
+        // 함수에 전달할 인자 설정
+        args: [saveImageRequestBody],
+      })
+    }
+  })
+})
+
 // 메세지 리스너 정의 - 현재 탭 정보 가져오기
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'getCurrentTab') {

@@ -24,7 +24,8 @@
         "./scripts/content.js",
         "./scripts/dragDropHandler.js",
         "./scripts/directoryHandler.js",
-        "./scripts/imageSaveHandler.js"
+        "./scripts/imageSaveHandler.js",
+        "./scripts/keyDownHandler.js"
       ],
       "css": ["./scripts/content.css", "styles.css"],
       "type": "module"
@@ -36,5 +37,5 @@
       "matches": ["<all_urls>"]
     }
   ],
-  "permissions": ["activeTab", "scripting", "storage", "tabs", "identity"]
+  "permissions": ["activeTab", "scripting", "storage", "tabs", "identity", "contextMenus"]
 }
