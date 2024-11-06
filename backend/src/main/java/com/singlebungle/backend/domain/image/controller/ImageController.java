@@ -162,7 +162,7 @@ public class ImageController {
     // feed?page=”int”&size=”int”&keyword=”string”&sort=”int”
     // sort : 0 - 최신 / 1 - 오래된 / 2 - 랜덤
     @GetMapping("/feed")
-    @Operation(summary = "디렉토리 안 이미지 조회", description = "디렉토리 내의 이미지를 조회합니다.")
+    @Operation(summary = "홈 피드 이미지 조회", description = "홈 피드의 이미지를 조회합니다.")
     public ResponseEntity<Map<String, Object>> getImageListFromFeed(
             @Parameter(description = "페이지 번호")
             @RequestParam(value = "page", required = false, defaultValue = "1") int page,
@@ -212,6 +212,7 @@ public class ImageController {
 
         return ResponseEntity.status(200).body(imageInfo);
     }
+
 
     // imageId: “List<Long>”
     @DeleteMapping()

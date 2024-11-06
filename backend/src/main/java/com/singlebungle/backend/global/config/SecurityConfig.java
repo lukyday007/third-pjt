@@ -70,11 +70,9 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
         config.addAllowedOrigin("https://k11b205.p.ssafy.io");
         config.addAllowedOrigin("http://localhost:3000");
-        config.addAllowedOrigin("http://localhost:8080");
         config.addAllowedOrigin("https://plogbucket.s3.ap-northeast-2.amazonaws.com/**");
         config.addAllowedOriginPattern("https://plogbucket.s3.ap-northeast-2.amazonaws.com/**");
         config.addAllowedOriginPattern("http://localhost:3000");
-        config.addAllowedOriginPattern("http://localhost:8080");
         config.addAllowedOriginPattern("https://k11b205.p.ssafy.io");
         config.addAllowedOriginPattern("*");
         config.addAllowedHeader("*");
