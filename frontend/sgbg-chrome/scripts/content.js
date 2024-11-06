@@ -1,4 +1,4 @@
-const BASE_API_URL = 'http://localhost:8080/api'
+const BASE_API_URL = 'https://k11b205.p.ssafy.io/api'
 
 // 로고 이미지 URL 정의 변수
 let logoUrl
