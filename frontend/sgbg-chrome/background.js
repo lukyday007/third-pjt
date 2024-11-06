@@ -1,4 +1,4 @@
-const BASE_API_URL = 'http://localhost:8080/api'
+const BASE_API_URL = 'https://k11b205.p.ssafy.io/api'
 
 // 현재 탭의 URL 정보 받아오기
 async function getCurrentTab() {
