@@ -1,7 +1,6 @@
 package com.singlebungle.backend.domain.image.service;
 
 import com.singlebungle.backend.domain.image.dto.request.ImageIdDeleteRequestDTO;
-import com.singlebungle.backend.domain.image.dto.request.ImageWebRequestDTO;
 
 import java.util.List;
 

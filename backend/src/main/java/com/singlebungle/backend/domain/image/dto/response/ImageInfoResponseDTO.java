@@ -15,13 +15,13 @@ import java.util.List;
 @Schema(title="IMAGE_INFO_RES : 이미지 정보 반환 DTO")
 public class ImageInfoResponseDTO {
 
-    @Schema(description = "이미지 id")
+    @Schema(description = "이미지 id", required = true)
     private Long imageId;
 
-    @Schema(description = "이미지 url")
+    @Schema(description = "이미지 url", required = true)
     private String imageUrl;
 
-    @Schema(description = "출처 url")
+    @Schema(description = "출처 url", required = true)
     private String sourceUrl;
 
     @Schema(description = "키워드")

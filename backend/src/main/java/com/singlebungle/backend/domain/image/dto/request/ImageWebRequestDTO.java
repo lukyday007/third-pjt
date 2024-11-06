@@ -13,15 +13,15 @@ import lombok.*;
 public class ImageWebRequestDTO {
 
     @NotNull(message = "web url을 입력해주세요.")
-    @Schema(description = "source url")
+    @Schema(description = "source url", required = true)
     private String sourceUrl;
 
     @NotNull(message = "image url을 입력해주세요.")
-    @Schema(description = "image url")
+    @Schema(description = "image url", required = true)
     private String imageUrl;
 
     @NotNull(message = "directoryId를 입력해주세요.")
-    @Schema(description = "directory id")
+    @Schema(description = "directory id", required = true)
     @Builder.Default
     private Long directoryId = 0L;
 
