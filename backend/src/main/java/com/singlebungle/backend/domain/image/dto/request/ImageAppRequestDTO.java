@@ -15,11 +15,11 @@ import lombok.Setter;
 public class ImageAppRequestDTO {
 
     @NotNull(message = "imageId을 입력해주세요.")
-    @Schema(description = "imageId")
+    @Schema(description = "imageId", required = true)
     private Long imageId;
 
     @NotNull(message = "directoryId를 입력해주세요.")
-    @Schema(description = "directoryId")
+    @Schema(description = "directoryId", required = true)
     private Long directoryId;
 
 }
