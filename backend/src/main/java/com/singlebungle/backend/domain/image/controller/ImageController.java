@@ -21,6 +21,7 @@ import com.singlebungle.backend.global.model.BaseResponseBody;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +49,7 @@ public class ImageController {
     @PostMapping("/web")
     @Operation(summary = "웹 이미지 저장", description = "웹에서 새로운 이미지를 등록합니다.")
     public ResponseEntity<BaseResponseBody> saveFromWeb(
-            @RequestBody ImageWebRequestDTO requestDTO,
+            @RequestBody @Valid ImageWebRequestDTO requestDTO,
             @Parameter(description = "JWT")
             @RequestHeader(value = "Authorization") String token
     ) {
