@@ -52,6 +52,8 @@ public class ImageController {
             @RequestHeader(value = "Authorization") String token
     ) {
 
+        log.info(">>> api/images/web 요청 파라미터 - sourceUrl : {}, imageUrl : {}, directoryId : {}", requestDTO.getSourceUrl(), requestDTO.getImageUrl(), requestDTO.getDirectoryId());
+
         Long userId = 0L;
         if (token != null) {
             userId = userService.getUserByToken(token);
