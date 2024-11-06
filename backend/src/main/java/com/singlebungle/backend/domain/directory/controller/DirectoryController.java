@@ -28,10 +28,7 @@ public class DirectoryController {
             @RequestBody DirectoryRequestDTO request,
             @RequestHeader("Authorization") String token) {
         List<Directory> directories = directoryService.createDirectory(request.getDirectoryName(), token);
-        List<DirectoryResponseDTO> response = directories.stream()
-                .map(directory -> new DirectoryResponseDTO(directory.getDirectoryId(), directory.getName()))
-                .collect(Collectors.toList());
-        return ResponseEntity.status(HttpStatus.CREATED).body(new DirectoryListResponseDTO(response));
+        return buildDirectoryResponse(directories, HttpStatus.CREATED);
     }
 
     // 디렉토리 이름 수정
@@ -40,21 +37,14 @@ public class DirectoryController {
             @RequestBody DirectoryUpdateRequestDTO request,
             @RequestHeader("Authorization") String token) {
         List<Directory> directories = directoryService.updateDirectoryName(request.getDirectoryId(), request.getDirectoryName(), token);
-        List<DirectoryResponseDTO> response = directories.stream()
-                .map(directory -> new DirectoryResponseDTO(directory.getDirectoryId(), directory.getName()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(new DirectoryListResponseDTO(response));
+        return buildDirectoryResponse(directories, HttpStatus.OK);
     }
 
     // 디렉토리 목록 조회
     @GetMapping
     public ResponseEntity<?> getUserDirectories(@RequestHeader("Authorization") String token) {
         List<Directory> directories = directoryService.getUserDirectories(token);
-        List<DirectoryResponseDTO> response = directories.stream()
-                .filter(directory -> directory.getStatus() == 1)  // status가 1인 디렉토리만 필터링
-                .map(directory -> new DirectoryResponseDTO(directory.getDirectoryId(), directory.getName()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(new DirectoryListResponseDTO(response));
+        return buildDirectoryResponse(directories, HttpStatus.OK);
     }
 
     // 디렉토리 순서 변경
@@ -63,10 +53,7 @@ public class DirectoryController {
             @RequestBody DirectorySequenceRequestDTO request,
             @RequestHeader("Authorization") String token) {
         List<Directory> directories = directoryService.updateDirectorySequence(request.getDirectorySequence(), token);
-        List<DirectoryResponseDTO> response = directories.stream()
-                .map(directory -> new DirectoryResponseDTO(directory.getDirectoryId(), directory.getName()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(new DirectoryListResponseDTO(response));
+        return buildDirectoryResponse(directories, HttpStatus.OK);
     }
 
     // 디렉토리 삭제
@@ -75,9 +62,15 @@ public class DirectoryController {
             @PathVariable Long directoryId,
             @RequestHeader("Authorization") String token) {
         List<Directory> directories = directoryService.deleteDirectory(directoryId, token);
+        return buildDirectoryResponse(directories, HttpStatus.OK);
+    }
+
+    // 중복되는 디렉토리 필터링 및 변환 처리 로직을 하나의 메서드로 추출
+    private ResponseEntity<?> buildDirectoryResponse(List<Directory> directories, HttpStatus status) {
         List<DirectoryResponseDTO> response = directories.stream()
+                .filter(directory -> directory.getStatus() == 1)  // 상태가 1인 디렉토리만 필터링
                 .map(directory -> new DirectoryResponseDTO(directory.getDirectoryId(), directory.getName()))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(new DirectoryListResponseDTO(response));
+        return ResponseEntity.status(status).body(new DirectoryListResponseDTO(response));
     }
 }
