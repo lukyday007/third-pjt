@@ -15,4 +15,6 @@ public interface UserService {
     void userSignOut(String token);
 
     UserInfoResponseDTO getUserInfoById(Long userId);
+
+    Long getUserByToken(String token);
 }

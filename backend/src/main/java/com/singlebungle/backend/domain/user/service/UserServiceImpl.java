@@ -102,4 +102,13 @@ public class UserServiceImpl implements UserService {
         return UserInfoResponseDTO.convertToDTO(user);
     }
 
+    @Override
+    public Long getUserByToken(String token) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        return jwtProvider.getUserIdFromToken(token);
+    }
+
 }
