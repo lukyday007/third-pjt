@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -90,15 +91,19 @@ public class DirectoryServiceImpl implements DirectoryService {
         Long userId = jwtProvider.getUserIdFromToken(token);
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        for (int i = 0; i < directorySequence.size(); i++) {
-            Long directoryId = directorySequence.get(i);
-            Directory directory = directoryRepository.findByDirectoryIdAndUser(directoryId, user)
-                    .orElseThrow(() -> new EntityNotFoundException("Directory not found"));
+        // 상태가 1인 디렉토리만 순서를 변경하려는 디렉토리로 필터링
+        List<Directory> directoriesToUpdate = directoryRepository.findAllById(directorySequence).stream()
+                .filter(directory -> directory.getStatus() == 1)  // 상태가 1인 디렉토리만
+                .toList();
 
-            directory.setOrder(i + 1); // 순서 설정
+        // 상태가 1인 디렉토리만 순서 변경
+        for (int i = 0; i < directoriesToUpdate.size(); i++) {
+            Directory directory = directoriesToUpdate.get(i);
+            directory.setOrder(i + 1);  // 순서 설정
             directoryRepository.save(directory);
         }
 
+        // 순서가 변경된 디렉토리를 포함해 유저의 모든 디렉토리 목록을 순서대로 반환
         return directoryRepository.findAllByUserOrderByOrderAsc(user);
     }
 
@@ -135,7 +140,7 @@ public class DirectoryServiceImpl implements DirectoryService {
         Directory trashDirectory = Directory.builder()
                 .name("휴지통")
                 .user(user)
-                .order(1)
+                .order(0)
                 .status(2)
                 .build();
 
