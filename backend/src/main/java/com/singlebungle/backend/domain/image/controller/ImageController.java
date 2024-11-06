@@ -53,22 +53,11 @@ public class ImageController {
             @RequestHeader(value = "Authorization") String token
     ) {
 
-        log.info(">>> [POST] api/images/web 요청 파라미터 - sourceUrl : {}, imageUrl : {}, directoryId : {}", requestDTO.getSourceUrl(), requestDTO.getImageUrl(), requestDTO.getDirectoryId());
-
         Long userId = 0L;
         if (token != null) {
             userId = userService.getUserByToken(token);
         } else {
             throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
-        }
-
-        // sourceUrl 유효성 검사
-        if (requestDTO.getSourceUrl() == null || !requestDTO.getSourceUrl().startsWith("http")) {
-            throw new IllegalArgumentException("sourceUrl은 http로 시작해야 합니다.");
-        }
-
-        if (requestDTO.getImageUrl() == null || requestDTO.getImageUrl().isEmpty()) {
-            throw new InvalidRequestException("Image URL이 null이거나 비어 있습니다.");
         }
 
         try {
