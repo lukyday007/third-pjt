@@ -45,6 +45,7 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
         QImageManagement qImageManagement = QImageManagement.imageManagement;
 
         // directoryId 필터링
+        // todo 디폴트, 노멀 상태만 가져오게 처리
         BooleanBuilder builder = new BooleanBuilder();
         if (requestDTO.getDirectoryId() != null)
             builder.and(qImageManagement.curDirectory.directoryId.eq(requestDTO.getDirectoryId()));
