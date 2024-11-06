@@ -48,7 +48,7 @@ public class ImageController {
     @PostMapping("/web")
     @Operation(summary = "웹 이미지 저장", description = "웹에서 새로운 이미지를 등록합니다.")
     public ResponseEntity<BaseResponseBody> saveFromWeb(
-            @RequestBody ImageWebRequestDTO requestDTO,
+            @RequestBody @Valid ImageWebRequestDTO requestDTO,
             @Parameter(description = "JWT")
             @RequestHeader(value = "Authorization") String token
     ) {
