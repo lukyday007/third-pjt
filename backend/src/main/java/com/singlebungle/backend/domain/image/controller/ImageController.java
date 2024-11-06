@@ -15,6 +15,7 @@ import com.singlebungle.backend.domain.keyword.service.KeywordService;
 import com.singlebungle.backend.domain.search.service.SearchService;
 import com.singlebungle.backend.domain.user.service.UserService;
 import com.singlebungle.backend.global.exception.InvalidImageException;
+import com.singlebungle.backend.global.exception.InvalidRequestException;
 import com.singlebungle.backend.global.exception.model.NoTokenRequestException;
 import com.singlebungle.backend.global.model.BaseResponseBody;
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,7 +53,7 @@ public class ImageController {
             @RequestHeader(value = "Authorization") String token
     ) {
 
-        log.info(">>> api/images/web 요청 파라미터 - sourceUrl : {}, imageUrl : {}, directoryId : {}", requestDTO.getSourceUrl(), requestDTO.getImageUrl(), requestDTO.getDirectoryId());
+        log.info(">>> [POST] api/images/web 요청 파라미터 - sourceUrl : {}, imageUrl : {}, directoryId : {}", requestDTO.getSourceUrl(), requestDTO.getImageUrl(), requestDTO.getDirectoryId());
 
         Long userId = 0L;
         if (token != null) {
@@ -60,6 +61,11 @@ public class ImageController {
         } else {
             throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
         }
+
+        if (requestDTO.getImageUrl() == null || requestDTO.getImageUrl().isEmpty()) {
+            throw new InvalidRequestException("Image URL이 null이거나 비어 있습니다.");
+        }
+
         try {
             Long directoryId = requestDTO.getDirectoryId();
 
