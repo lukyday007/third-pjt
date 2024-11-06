@@ -22,7 +22,8 @@ public class SearchServiceImpl implements SearchService {
     public void saveTags(List<String> tags, String imageUrl) {
 
         // imageUrl 기준으로 중복 여부 체크
-        if (searchRepository.existsByTagInfo_ImageUrl(imageUrl)) {
+        Boolean exists = searchRepository.existsByTagInfo_ImageUrl(imageUrl);
+        if (exists != null && exists) {
             return;
         }
 

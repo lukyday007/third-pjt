@@ -13,8 +13,8 @@ import lombok.*;
 public class ImageWebRequestDTO {
 
     @NotNull(message = "web url을 입력해주세요.")
-    @Schema(description = "web url")
-    private String webUrl;
+    @Schema(description = "source url")
+    private String sourceUrl;
 
     @NotNull(message = "image url을 입력해주세요.")
     @Schema(description = "image url")

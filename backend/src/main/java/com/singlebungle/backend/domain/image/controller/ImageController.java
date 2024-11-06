@@ -79,11 +79,11 @@ public class ImageController {
                 String filename = imageService.uploadImageFromUrlToS3(requestDTO.getImageUrl());
 
                 // 이미지 데이터 생성, 저장
-                imageService.saveImage(requestDTO.getWebUrl(), filename, directoryId);
+                imageService.saveImage(requestDTO.getSourceUrl(), filename, directoryId);
                 // 키워드 데이터 생성, 저장
                 keywordService.saveKeyword(keywordAndLabels.getKeywords());
                 // 이미지 디테일 데이터 생성, 저장
-                imageDetailService.saveImageDetail(requestDTO.getWebUrl(), filename, keywordAndLabels.getKeywords());
+                imageDetailService.saveImageDetail(requestDTO.getSourceUrl(), filename, keywordAndLabels.getKeywords());
                 // 테그 생성, 저장
                 searchService.saveTags(keywordAndLabels.getTags(), filename);
 

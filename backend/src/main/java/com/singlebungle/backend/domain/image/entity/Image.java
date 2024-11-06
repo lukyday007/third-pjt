@@ -25,7 +25,7 @@ public class Image extends BaseTimeEntity {
     @Column(name = "image_url", nullable = false )
     private String imageUrl;
 
-    @Column(name = "source_url", nullable = false)
+    @Column(name = "source_url", columnDefinition = "TEXT", nullable = false)
     private String sourceUrl;
 
     @Column(name = "directory_id", nullable = false)
