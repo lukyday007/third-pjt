@@ -20,7 +20,6 @@ import com.singlebungle.backend.global.exception.model.NoTokenRequestException;
 import com.singlebungle.backend.global.model.BaseResponseBody;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +60,11 @@ public class ImageController {
             userId = userService.getUserByToken(token);
         } else {
             throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
+        }
+
+        // sourceUrl 유효성 검사
+        if (requestDTO.getSourceUrl() == null || !requestDTO.getSourceUrl().startsWith("http")) {
+            throw new IllegalArgumentException("sourceUrl은 http로 시작해야 합니다.");
         }
 
         if (requestDTO.getImageUrl() == null || requestDTO.getImageUrl().isEmpty()) {
@@ -111,7 +115,7 @@ public class ImageController {
     @PostMapping("/app")
     @Operation(summary = "앱 이미지 저장", description = "앱에서 이미지를 등록합니다.")
     public ResponseEntity<BaseResponseBody> saveFromApp(
-            @RequestBody ImageAppRequestDTO requestDTO,
+            @RequestBody @Valid ImageAppRequestDTO requestDTO,
             @Parameter(description = "JWT")
             @RequestHeader(value = "Authorization") String token
             ) {
