@@ -3,7 +3,7 @@ let isBacktickPressed = false
 
 document.addEventListener('keydown', backTickKeyDownHandler)
 document.addEventListener('keyup', backTickKeyUpHandler)
-document.addEventListener('click', backTickClickHandler)
+document.addEventListener('click', backTickClickHandler, true)
 
 // ` 키를 눌렀을 때 설정
 function backTickKeyDownHandler(event) {

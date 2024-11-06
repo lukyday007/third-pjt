@@ -301,12 +301,17 @@ function testImageAlert(imgSrc, isSaved) {
 async function handleClickCreateFolderIcon() {
   // 디렉토리 이름을 설정한 경우 폴더 생성 요청 후 변수 초기화, 창 닫기
   if (newDirectoryName) {
-    await postCreateDirectory(newDirectoryName)
+    const directories = await postCreateDirectory(newDirectoryName)
+
+    const newDirectoryId = directories.directories.at(-1).directoryId
+
+    if (newDirectoryId) {
+      imageSaveRequestDto.directoryId = newDirectoryId
+      handleSaveImage(imageSaveRequestDto)
+    }
 
     // 디렉토리 이름 변수 초기화
     newDirectoryName = ''
-
-    // 이미지 저장
 
     // 창 닫기
     removeExistingFolderModal()
