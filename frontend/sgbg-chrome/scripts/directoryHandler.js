@@ -64,7 +64,10 @@ async function postCreateDirectory(directoryName) {
       throw new Error('디렉토리 생성 실패')
     }
 
-    return response
+    data = await response.json()
+    console.log(data)
+
+    return data
   } catch (e) {
     return e
   }
