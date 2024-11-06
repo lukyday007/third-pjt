@@ -47,7 +47,7 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
         // directoryId 필터링
         BooleanBuilder builder = new BooleanBuilder();
         if (requestDTO.getDirectoryId() != null)
-            builder.and(qImageManagement.directory.directoryId.eq(requestDTO.getDirectoryId()));
+            builder.and(qImageManagement.curDirectory.directoryId.eq(requestDTO.getDirectoryId()));
 
         // 키워드 검색
         if (requestDTO.getKeyword() != null && !requestDTO.getKeyword().isEmpty()) {
