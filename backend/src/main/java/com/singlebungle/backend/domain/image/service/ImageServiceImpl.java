@@ -139,9 +139,10 @@ public class ImageServiceImpl implements ImageService {
         User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("해당하는 유저 데이터가 존재하지 않습니다. :" + userId));
 
         // image
-        boolean isImage = imageRepository.existsBySourceUrl(sourceUrl);
+        boolean isImage = imageRepository.existsByImageUrl(imageUrl);
         if (isImage)
             throw new EntityIsFoundException("이미 해당 이미지 데이터가 존재합니다");
+
         Image image = Image.convertToEntity(sourceUrl, imageUrl);
         imageRepository.save(image);
 
