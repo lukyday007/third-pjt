@@ -51,6 +51,7 @@ public class DirectoryController {
     public ResponseEntity<?> getUserDirectories(@RequestHeader("Authorization") String token) {
         List<Directory> directories = directoryService.getUserDirectories(token);
         List<DirectoryResponseDTO> response = directories.stream()
+                .filter(directory -> directory.getStatus() == 1)  // status가 1인 디렉토리만 필터링
                 .map(directory -> new DirectoryResponseDTO(directory.getDirectoryId(), directory.getName()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(new DirectoryListResponseDTO(response));

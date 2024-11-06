@@ -14,6 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -66,22 +69,9 @@ public class UserController {
         return ResponseEntity.status(200).body(BaseResponseBody.of(200, "로그아웃이 완료되었습니다."));
     }
 
-//    @PostMapping("/refresh-token")
-//    public ResponseEntity<TokenResponseDTO> reissueToken(
-//            @CookieValue(value = "refreshToken", required = false) String refreshToken) {
-//
-//        if (refreshToken == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-//                    .body(new TokenResponseDTO("Refresh token is missing or invalid"));
-//        }
-//
-//        String newAccessToken = userService.reissueAccessToken(refreshToken);
-//        return ResponseEntity.ok(new TokenResponseDTO(newAccessToken));
-//    }
-
     @Operation(summary = "액세스 토큰 재발급", description = "쿠키에 저장된 리프레시 토큰을 사용하여 새로운 액세스 토큰을 재발급합니다.")
     @PostMapping("/refresh-token")
-    public ResponseEntity<TokenInfo> refreshAccessToken(
+    public ResponseEntity<Map<String, String>> refreshAccessToken(
             @CookieValue(value = "refreshToken", required = false) String refreshToken) {
         // 리프레시 토큰이 없으면 예외 처리
         if (refreshToken == null) {
@@ -94,7 +84,11 @@ public class UserController {
         // 액세스 토큰 재발급
         TokenInfo tokenInfo = jwtProvider.regenerateAccessToken(userId, refreshToken);
 
-        return ResponseEntity.ok(tokenInfo);
+        // "accessToken"을 키로 하는 Map을 생성하여 반환
+        Map<String, String> response = new HashMap<>();
+        response.put("accessToken", tokenInfo.getAccessToken());
+
+        return ResponseEntity.ok(response);
     }
 
 }

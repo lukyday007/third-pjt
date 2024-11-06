@@ -27,6 +27,11 @@ public class DirectoryServiceImpl implements DirectoryService {
         Long userId = jwtProvider.getUserIdFromToken(token);
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+        // 디렉토리 이름 중복 체크
+        if (directoryRepository.existsByNameAndUser(directoryName, user)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 동일한 이름의 디렉토리가 존재합니다.");
+        }
+
         int order = directoryRepository.findMaxOrderByUser(user) + 1;
 
         Directory directory = Directory.builder()
@@ -46,6 +51,11 @@ public class DirectoryServiceImpl implements DirectoryService {
 
         Directory directory = directoryRepository.findByDirectoryIdAndUser(directoryId, user)
                 .orElseThrow(() -> new EntityNotFoundException("Directory not found"));
+
+        // 디렉토리 이름 중복 체크 (수정하려는 디렉토리 제외)
+        if (directoryRepository.existsByNameAndUser(directoryName, user) && !directory.getName().equals(directoryName)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 동일한 이름의 디렉토리가 존재합니다.");
+        }
 
         if (directory.getStatus() == 0 || directory.getStatus() == 2) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "이 디렉토리는 이름을 변경할 수 없습니다.");
