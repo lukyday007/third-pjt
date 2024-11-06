@@ -251,3 +251,23 @@ async function setUserInfoAtStorage(userInfo) {
     return false
   }
 }
+
+// 로그아웃 메세지 리스너 정의
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'postLogout') {
+    postLogout()
+  }
+})
+
+async function postLogout() {
+  const accessToken = await getAccessTokenFromStorage()
+
+  const LOGOUT_URL = BASE_API_URL + '/users/logout'
+
+  fetch(LOGOUT_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+}
