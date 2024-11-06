@@ -29,13 +29,10 @@ chrome.runtime.onInstalled.addListener(() => {
         directoryId: 0,
       }
 
-      console.log('리퀘스트바디: ', saveImageRequestBody)
-
       // 현재 탭에서 content.js의 함수 실행
       chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: (saveImageRequestBody) => {
-          console.log(saveImageRequestBody)
           // content.js의 함수 실행
           handleSaveImage(saveImageRequestBody)
         },
