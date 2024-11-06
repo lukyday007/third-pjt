@@ -35,7 +35,6 @@ async function fetchDirectoryList() {
 
     return directoryInfos
   } catch (e) {
-    console.log('fetchDirectoryError: ', e)
     return e
   }
 }
@@ -59,13 +58,11 @@ async function postCreateDirectory(directoryName) {
     })
 
     if (response.ok) {
-      console.log('디렉토리 생성 완료')
     } else {
       throw new Error('디렉토리 생성 실패')
     }
 
     data = await response.json()
-    console.log(data)
 
     return data
   } catch (e) {

@@ -12,23 +12,24 @@ function setImageSaveRequestDto(newDirectoryId) {
 
 // 이미지 저장 함수
 async function handleSaveImage(requestBody) {
+  // requestBody를 깊은 복사하여 개별 요청마다 독립된 객체 생성
+  const requestBodyCopy = JSON.parse(JSON.stringify(requestBody))
+
   let isSaved = false
-  let imgSrc = requestBody.imageUrl
+  let imgSrc = requestBodyCopy.imageUrl
 
   try {
-    const response = await postSaveImage(requestBody)
+    const response = await postSaveImage(requestBodyCopy)
 
     if (!response.ok) {
       throw new Error('이미지 저장 실패')
     }
   } catch (e) {
-    console.log(e)
-
     return showAlertModal(imgSrc, isSaved)
   }
 
   isSaved = true
-  imgSrc = requestBody.imageUrl
+  imgSrc = requestBodyCopy.imageUrl
 
   return showAlertModal(imgSrc, isSaved)
 }
@@ -49,8 +50,6 @@ async function postSaveImage(requestBody) {
       },
       body: JSON.stringify(requestBody),
     })
-
-    console.log(response)
 
     return response
   } catch (e) {
