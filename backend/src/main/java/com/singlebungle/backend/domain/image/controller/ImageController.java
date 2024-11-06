@@ -79,7 +79,7 @@ public class ImageController {
                 String filename = imageService.uploadImageFromUrlToS3(requestDTO.getImageUrl());
 
                 // 이미지 데이터 생성, 저장
-                imageService.saveImage(requestDTO.getSourceUrl(), filename, directoryId);
+                imageService.saveImage(userId, requestDTO.getSourceUrl(), filename, directoryId);
                 // 키워드 데이터 생성, 저장
                 keywordService.saveKeyword(keywordAndLabels.getKeywords());
                 // 이미지 디테일 데이터 생성, 저장
@@ -136,6 +136,8 @@ public class ImageController {
             @RequestParam(value = "keyword", required = false) String keyword,
             @Parameter(description = "정렬기준 (0: 최신, 1: 오래 된, 2: 랜덤")
             @RequestParam(value = "sort", required = false, defaultValue = "0") int sort,
+            @Parameter(description = "휴지통 여부 확인")
+            @RequestParam(value = "bin", required = false, defaultValue = "false") Boolean isBin,
             @Parameter(description = "JWT")
             @RequestHeader(value = "Authorization") String token
     ) {
@@ -148,7 +150,7 @@ public class ImageController {
 
         log.info(">>> [GET] /images/my - 요청 파라미터: userId - {}, directoryId - {}, page - {}, size - {}, keyword - {}, sort - {}", userId, directoryId, page, size, keyword, sort);
 
-        ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(directoryId, page, size, keyword, sort);
+        ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(userId,  directoryId, page, size, keyword, sort, isBin);
         Map<String, Object> imageList = imageService.getImageList(requestDTO);
 
         return ResponseEntity.status(200).body(imageList);
@@ -180,7 +182,7 @@ public class ImageController {
 
         log.info(">>> [GET] /images/feed - 요청 파라미터:  userId - {}, page - {}, size - {}, keyword - {}, sort - {}" , userId, page, size, keyword, sort);
 
-        ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(page, size, keyword, sort);
+        ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(userId, page, size, keyword, sort);
         Map<String, Object> imageList = imageService.getImageList(requestDTO);
 
         return ResponseEntity.status(200).body(imageList);

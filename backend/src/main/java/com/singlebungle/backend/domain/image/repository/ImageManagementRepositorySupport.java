@@ -11,6 +11,7 @@ import com.singlebungle.backend.domain.image.entity.ImageManagement;
 import com.singlebungle.backend.domain.image.entity.QImage;
 import com.singlebungle.backend.domain.image.entity.QImageDetail;
 import com.singlebungle.backend.domain.image.entity.QImageManagement;
+import com.singlebungle.backend.domain.user.entity.QUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Repository;
@@ -32,48 +33,53 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
 
     public Map<String, Object> findImageList(ImageListGetRequestDTO requestDTO) {
 
-        /*
-            private Long directoryId;
-            private int page;
-            private int size;
-            private String keyword;
-            private int sort;
-        */
-
+        QUser qUser = QUser.user;
         QImage qImage = QImage.image;
         QImageDetail qImageDetail = QImageDetail.imageDetail;
         QImageManagement qImageManagement = QImageManagement.imageManagement;
 
-        // directoryId 필터링
-        // todo 디폴트, 노멀 상태만 가져오게 처리
         BooleanBuilder builder = new BooleanBuilder();
-        if (requestDTO.getDirectoryId() != null)
-            builder.and(qImageManagement.curDirectory.directoryId.eq(requestDTO.getDirectoryId()));
 
-        // 키워드 검색
+        // 유저 정보 필터링 - User 엔티티를 조인하여 userId 조건 추가
+        builder.and(qImageManagement.user.userId.eq(requestDTO.getUserId()));
+
+        Boolean status = requestDTO.getIsBin();
+        if (status) {
+            builder.and(qImageManagement.curDirectory.status.eq(2)); // 휴지통
+        } else {
+            if (requestDTO.getDirectoryId() == null || requestDTO.getDirectoryId() == 0) {
+                builder.and(qImageManagement.curDirectory.status.eq(0));
+            } else {
+                builder.and(qImageManagement.curDirectory.directoryId.eq(requestDTO.getDirectoryId()));
+            }
+        }
+
         if (requestDTO.getKeyword() != null && !requestDTO.getKeyword().isEmpty()) {
-            builder.and(qImageDetail.keyword.keywordName.containsIgnoreCase(requestDTO.getKeyword()));  // containsIgnoreCase : 대소문자를 구분하지 않고 해당 글자를 포함할 때
+            builder.and(qImageDetail.keyword.keywordName.containsIgnoreCase(requestDTO.getKeyword()));
         }
 
         JPAQuery<ImageListGetResponseDTO> query = queryFactory
                 .select(Projections.constructor(ImageListGetResponseDTO.class,
-                        QImageManagement.imageManagement.imageManagementId,
-                        QImageManagement.imageManagement.image.imageUrl
-                        ))
+                        qImageManagement.imageManagementId,
+                        qImageManagement.image.imageUrl))
                 .from(qImageManagement)
                 .leftJoin(qImageManagement.image, qImage)
+                .leftJoin(qImageManagement.user, qUser)  // User와 조인 추가
                 .where(builder);
 
-        // 정렬 조건문
-        if (requestDTO.getSort() == 0) {
-            query.orderBy(qImageManagement.createdAt.desc());  // 조회수 순 정렬
-            log.info(">>> 정렬 조건: 최신 순");
-        } else if (requestDTO.getSort() == 1) {
-            query.orderBy(qImageManagement.createdAt.asc());  // 오래된 순 정렬
-            log.info(">>> 정렬 조건: 오래된 순");
-        } else if (requestDTO.getSort() == 2) {
-            query.orderBy(Expressions.numberTemplate(Double.class, "RAND()").asc());
-            log.info(">>> 정렬 조건: 랜덤 순");
+        switch (requestDTO.getSort()) {
+            case 0:
+                query.orderBy(qImageManagement.createdAt.desc());
+                log.info(">>> 정렬 조건: 최신 순");
+                break;
+            case 1:
+                query.orderBy(qImageManagement.createdAt.asc());
+                log.info(">>> 정렬 조건: 오래된 순");
+                break;
+            case 2:
+                query.orderBy(Expressions.numberTemplate(Double.class, "RAND()").asc());
+                log.info(">>> 정렬 조건: 랜덤 순");
+                break;
         }
 
         List<ImageListGetResponseDTO> imageList = query
@@ -82,7 +88,6 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
                 .fetch();
 
         Long totalCount = query.fetchCount();
-        // 페이지 세기 && 사진 갯수
         int totalPage = (int) ((totalCount + requestDTO.getSize() - 1) / requestDTO.getSize());
 
         Map<String, Object> result = new HashMap<>();
@@ -91,5 +96,6 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
 
         return result;
     }
+
 
 }
