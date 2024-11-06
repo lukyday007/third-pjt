@@ -24,12 +24,17 @@ public class DirectoryServiceImpl implements DirectoryService {
     private final JwtProvider jwtProvider;
 
     public List<Directory> createDirectory(String directoryName, String token) {
+        // 디렉토리 이름이 null인 경우 예외 처리
+        if (directoryName == null || directoryName.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "디렉토리 이름은 필수입니다.");
+        }
+
         Long userId = jwtProvider.getUserIdFromToken(token);
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         // 디렉토리 이름 중복 체크
         if (directoryRepository.existsByNameAndUser(directoryName, user)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 동일한 이름의 디렉토리가 존재합니다.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 동일한 이름의 디렉토리가 존재합니다.");
         }
 
         int order = directoryRepository.findMaxOrderByUser(user) + 1;
@@ -46,6 +51,11 @@ public class DirectoryServiceImpl implements DirectoryService {
     }
 
     public List<Directory> updateDirectoryName(Long directoryId, String directoryName, String token) {
+        // 디렉토리 이름이 null 또는 빈 문자열인 경우 예외 처리
+        if (directoryName == null || directoryName.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "디렉토리 이름은 필수입니다.");
+        }
+
         Long userId = jwtProvider.getUserIdFromToken(token);
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -54,13 +64,15 @@ public class DirectoryServiceImpl implements DirectoryService {
 
         // 디렉토리 이름 중복 체크 (수정하려는 디렉토리 제외)
         if (directoryRepository.existsByNameAndUser(directoryName, user) && !directory.getName().equals(directoryName)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 동일한 이름의 디렉토리가 존재합니다.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 동일한 이름의 디렉토리가 존재합니다.");
         }
 
+        // 디렉토리 상태가 0 또는 2인 경우 이름 변경 불가
         if (directory.getStatus() == 0 || directory.getStatus() == 2) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "이 디렉토리는 이름을 변경할 수 없습니다.");
         }
 
+        // 디렉토리 이름 변경
         directory.setName(directoryName);
         directoryRepository.save(directory);
 
