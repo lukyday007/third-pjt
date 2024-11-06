@@ -32,7 +32,7 @@ public class Directory extends BaseTimeEntity {
     @Column(name = "directory_order")
     private int order = 0;
 
-    // 상태 enum (default, nomal, bin)
+    // 상태  (default : 0, nomal : 1, bin : 2)
     @Column(name = "status")
     private int status;
 

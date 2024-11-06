@@ -28,11 +28,16 @@ public class ImageManagementServiceImpl implements ImageManagementService {
 
         User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("해당 유저 데이터가 존재하지 않습니다. :" + userId));
         Image image = imageRepository.findById(imageId).orElseThrow(() -> new EntityNotFoundException("해당 이미지 데이터가 존재하지 않습니다. :" + imageId));
-        Directory directory = directoryRepository.findById(directoryId).orElseThrow(() -> new EntityNotFoundException("해당 디렉터리 데이터가 존재하지 않습니다. :" + directoryId));
+        Directory directory;
 
+        if (directoryId != 0L) {
+            directory = directoryRepository.findById(directoryId).orElseThrow(() -> new EntityNotFoundException("해당 디렉터리 데이터가 존재하지 않습니다. :" + directoryId));
+        } else {
+            int status = 0;
+            directory = directoryRepository.findByUserAndStatus(user, status);
+        }
 
         ImageManagement imageManagement = ImageManagement.convertToEntity(user, image, directory);
-
         imageManagementRepository.save(imageManagement);
     }
 }
