@@ -73,29 +73,31 @@ pipeline {
                 script {
                     def version = "1.0.${env.BUILD_NUMBER}"
                     
-                    // 기존 태그 삭제 (이미 존재할 경우 대비)
-                    sh """
-                    curl --request DELETE \
-                    --header "PRIVATE-TOKEN: ${env.PRIVATE_TOKEN}" \
-                    "https://gitlab.com/api/v4/projects/${env.PROJECT_ID}/repository/tags/v${version}" || true
-                    """
+                    withCredentials([string(credentialsId: 'PRIVATE_TOKEN', variable: 'TOKEN'), string(credentialsId: 'PROJECT_ID', variable: 'PROJ_ID')]) {
+                        // 기존 태그 삭제
+                        sh """
+                        curl --request DELETE \
+                        --header "PRIVATE-TOKEN: $TOKEN" \
+                        "https://gitlab.com/api/v4/projects/$PROJ_ID/repository/tags/v${version}" || true
+                        """
+                        
+                        // GitLab 릴리스 생성
+                        sh """
+                        curl --request POST \
+                        --header "PRIVATE-TOKEN: $TOKEN" \
+                        --data "name=Release v${version}" \
+                        --data "tag_name=v${version}" \
+                        --data "description=Electron app release" \
+                        "https://gitlab.com/api/v4/projects/$PROJ_ID/releases"
+                        """
                     
-                    // GitLab 릴리스 생성
-                    sh """
-                    curl --request POST \
-                    --header "PRIVATE-TOKEN: ${env.PRIVATE_TOKEN}" \
-                    --data "name=Release v${version}" \
-                    --data "tag_name=v${version}" \
-                    --data "description=Electron app release" \
-                    "https://gitlab.com/api/v4/projects/${env.PROJECT_ID}/releases"
-                    """
-                    
-                    // Electron 설치 파일 업로드 (동적으로 파일 이름 지정)
-                    sh """
-                    curl --request POST --header "PRIVATE-TOKEN: ${env.PRIVATE_TOKEN}" \
-                    --form "file=@frontend/sgbg/release/${version}/sgbg_${version}.exe" \
-                    "https://gitlab.com/api/v4/projects/${env.PROJECT_ID}/uploads"
-                    """
+                        // Electron 설치 파일 업로드 (동적으로 파일 이름 지정)
+                        sh """
+                        curl --request POST --header "PRIVATE-TOKEN: $TOKEN" \
+                        --form "file=@frontend/sgbg/release/1.0.0/sgbg_1.0.0.exe" \
+                        "https://gitlab.com/api/v4/projects/$PROJ_ID/uploads"
+                        """
+                    }
                 }
             }
         }
