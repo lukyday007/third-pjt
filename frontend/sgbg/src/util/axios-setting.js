@@ -41,7 +41,7 @@ export const authAxios = () => {
           return axios(originalRequest)
         } catch (refreshError) {
           // 토큰 없애야될거같은자리
-          window.location.href = "http://localhost:5173/#/login"
+          // window.location.href = "http://localhost:5173/#/login"
           return Promise.reject(error)
         }
       }

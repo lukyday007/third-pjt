@@ -5,7 +5,6 @@ const jwt = authAxios()
 // 내 폴더 목록 조회
 export const getDirectoryList = async (success, fail) => {
   const response = await jwt.get("/directories").then(success).catch(fail)
-
   return response
 }
 
