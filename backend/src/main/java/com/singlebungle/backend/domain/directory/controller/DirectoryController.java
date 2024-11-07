@@ -65,6 +65,13 @@ public class DirectoryController {
         return buildDirectoryResponse(directories, HttpStatus.OK);
     }
 
+    // 디렉토리 휴지통 삭제
+    @DeleteMapping("/bin")
+    public ResponseEntity<?> deleteImagesInBinDirectory(@RequestHeader("Authorization") String token) {
+        directoryService.deleteImagesInBinDirectory(token);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
     // 중복되는 디렉토리 필터링 및 변환 처리 로직을 하나의 메서드로 추출
     private ResponseEntity<?> buildDirectoryResponse(List<Directory> directories, HttpStatus status) {
         List<DirectoryResponseDTO> response = directories.stream()

@@ -150,7 +150,8 @@ public class ImageServiceImpl implements ImageService {
         Directory directory;
         if (directoryId == 0) {
             int status = 0;
-            directory =  directoryRepository.findByUserAndStatus(user, status);
+            directory =  directoryRepository.findByUserAndStatus(user, status)
+                    .orElseThrow(() -> new IllegalStateException("디렉토리가 존재하지 않습니다."));;
         } else {
             directory = directoryRepository.findById(directoryId).orElseThrow(() -> new EntityNotFoundException("해당 디렉토리 데이터가 존재하지 않습니다. " + directoryId));
         }
