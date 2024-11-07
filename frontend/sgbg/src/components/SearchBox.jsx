@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { act, useState } from "react"
 import styled from "styled-components"
 import SearchIcon from "../asset/images/SearchBox/searchIcon.svg?react"
 import KeywordIcon from "../asset/images/SearchBox/keywordIcon.svg?react"
@@ -82,6 +82,7 @@ const s = {
     font-size: 16px;
     padding: 7px;
     height: 34px;
+    flex-grow: 1;
 
     /* 크롬 기본 스타일 초기화 (기본 x 스타일 제거) */
     &::-webkit-search-decoration,
@@ -108,8 +109,7 @@ const s = {
     border-radius: 8px;
   `,
   ResultsArea: styled.div`
-    display: flex;
-    flex-direction: column;
+    display: ${(props) => (props.visible ? "block" : "none")};
     position: absolute;
     top: 60px;
     left: 0;
@@ -126,23 +126,22 @@ const s = {
     padding: 8px 12px;
     gap: 5px;
     cursor: pointer;
+    background-color: ${(props) =>
+      props.isActive ? "#e0f7fa" : "transparent"};
     &:hover {
       background-color: #f0f0f0;
     }
-    ${(props) =>
-      props.first &&
-      `
-      background-color: #e0f7fa;
-      font-weight: bold;
-    `}
   `,
 }
 
 const SearchBox = () => {
   const [query, setQuery] = useState("")
-  const [filteredKeywords, setFilteredKeywords] = useState([])
-  const [searchKeywords, setSearchKeywords] = useState([])
+  const [filteredKeywords, setFilteredKeywords] = useState([]) // 자동완성 키워드
+  const [searchKeywords, setSearchKeywords] = useState([]) // 검색창 키워드
+  const [isDropdownVisible, setDropdownVisible] = useState(false) // 자동완성 드롭다운
+  const [activeIndex, setActiveIndex] = useState(0) // 자동완성 인덱스
 
+  // 검색하기
   const handleSearch = (e) => {
     const input = e.target.value
     setQuery(input)
@@ -152,42 +151,61 @@ const SearchBox = () => {
     if (input) {
       const results = dummyKeywords.filter((keyword) => keyword.includes(input))
       setFilteredKeywords(results)
+      setDropdownVisible(true)
+      setActiveIndex(0)
     } else {
       setFilteredKeywords([])
+      setDropdownVisible(false)
     }
   }
 
-  // 엔터해서 키워드 검색
+  // 키워드 검색창
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && filteredKeywords.length > 0) {
-      const firstKeyword = filteredKeywords[0]
-
-      if (searchKeywords.includes(firstKeyword)) {
-        setSearchKeywords(
-          searchKeywords.filter((keyword) => keyword !== firstKeyword)
-        )
+    //아래로 이동
+    if (e.key === "ArrowDown") {
+      setActiveIndex((prevIndex) => (prevIndex + 1) % filteredKeywords.length)
+      //위로 이동
+    } else if (e.key === "ArrowUp") {
+      setActiveIndex(
+        (prevIndex) =>
+          (prevIndex - 1 + filteredKeywords.length) % filteredKeywords.length
+      )
+      // 엔터 클릭 시 검색, 중복이면 삭제
+    } else if (e.key === "Enter") {
+      const selectedKeyword = filteredKeywords[activeIndex]
+      if (searchKeywords.some((item) => item.keyword === selectedKeyword)) {
+        removeTag(selectedKeyword) // 중복 키워드 제거
       } else {
-        const { background, text } = getRandomColorPair()
-        setSearchKeywords([
-          ...searchKeywords,
-          { keyword: firstKeyword, background, text },
-        ])
+        addTag(selectedKeyword) // 새 키워드 추가
       }
       setQuery("")
       setFilteredKeywords([])
+      setDropdownVisible(false)
+      // 키워드 백스페이스 지우기
     } else if (
       e.key === "Backspace" &&
       query === "" &&
       searchKeywords.length > 0
     ) {
       setSearchKeywords(searchKeywords.slice(0, -1))
+      // 자동완성 끄기
+    } else if (e.key === "Escape") {
+      setDropdownVisible(false)
     }
   }
 
-  const removeTag = (index) => {
-    setSearchKeywords(searchKeywords.filter((_, i) => i !== index))
+  // 키워드 추가
+  const addTag = (keyword) => {
+    const { background, text } = getRandomColorPair()
+    setSearchKeywords([...searchKeywords, { keyword, background, text }])
   }
 
+  // 키워드 삭제
+  const removeTag = (keyword) => {
+    setSearchKeywords(searchKeywords.filter((item) => item.keyword !== keyword))
+  }
+
+  //색깔 랜덤으로 고르기
   const getRandomColorPair = () => {
     const randomIndex = Math.floor(Math.random() * colorPairs.length)
     return colorPairs[randomIndex]
@@ -207,7 +225,7 @@ const SearchBox = () => {
                   textColor={item.text}
                 >
                   <KeywordCancleIcon
-                    onClick={() => removeTag(index)}
+                    onClick={() => removeTag(item.keyword)}
                     fillPrimary={item.text}
                     fillSecondary={item.background}
                   />
@@ -225,16 +243,19 @@ const SearchBox = () => {
           onKeyDown={handleKeyDown}
         />
       </s.SearchArea>
-      {filteredKeywords.length > 0 && (
-        <s.ResultsArea>
-          {filteredKeywords.map((keyword, index) => (
-            <s.ResultItem key={index} first={index === 0}>
-              <KeywordIcon />
-              {keyword}
-            </s.ResultItem>
-          ))}
-        </s.ResultsArea>
-      )}
+
+      <s.ResultsArea visible={isDropdownVisible}>
+        {filteredKeywords.map((keyword, index) => (
+          <s.ResultItem
+            key={index}
+            isActive={index === activeIndex}
+            onMouseDown={() => addTag(keyword)}
+          >
+            <KeywordIcon />
+            {keyword}
+          </s.ResultItem>
+        ))}
+      </s.ResultsArea>
     </s.Container>
   )
 }
