@@ -89,7 +89,7 @@ const MainPage = () => {
   // const code = new URLSearchParams(useLocation().search).get("code")
 
   const params = new URLSearchParams(window.location.search)
-  const code = params.get("code")
+  const code = encodeURIComponent(params.get("code"))
   const googleLogin = async (code) => {
     googleSignIn(
       code,
@@ -104,7 +104,8 @@ const MainPage = () => {
   }
 
   useEffect(() => {
-    console.log("search", code)
+    // console.log("search", encodeURIComponent(code))
+    console.log("decode", code)
     if (code) {
       googleLogin(code)
     }
