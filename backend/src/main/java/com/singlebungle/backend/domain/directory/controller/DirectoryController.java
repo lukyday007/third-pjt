@@ -67,7 +67,7 @@ public class DirectoryController {
         return buildDirectoryResponse(directories, HttpStatus.OK);
     }
 
-    // 디렉토리 휴지통 삭제
+    // 휴지통 비우기
     @DeleteMapping("/bin")
     public ResponseEntity<?> deleteImagesInBinDirectory(@RequestHeader("Authorization") String token) {
         directoryService.deleteImagesInBinDirectory(token);
