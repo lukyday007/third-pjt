@@ -7,6 +7,7 @@ import SearchBar from "./components/SearchBar"
 import ImgPage from "./pages/ImgPage"
 import { useLocation, Navigate, Route, Routes } from "react-router-dom"
 import LoginPage from "./pages/LoginPage"
+import LoginCallBackPage from "./pages/LoginCallBackPage"
 
 const s = {
   Container: styled.div`
@@ -22,7 +23,8 @@ const s = {
 
 function App() {
   const location = useLocation()
-  const isLoginPage = location.pathname === "/login"
+  const isLoginPage =
+    location.pathname === "/login" || location.pathname === "/login-callback"
   return (
     <div className="App">
       <GlobalStyle />
@@ -36,6 +38,7 @@ function App() {
             <Route path="/" element={<MainPage />} />
             <Route path="image" element={<ImgPage />} />
             <Route path="login" element={<LoginPage />} />
+            <Route path="login-callback" element={<LoginCallBackPage />} />
           </Routes>
         </s.ContentArea>
       </s.Container>
