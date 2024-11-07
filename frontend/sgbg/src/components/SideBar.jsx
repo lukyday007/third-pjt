@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import styled from "styled-components"
 import HomeIcon from "../asset/images/SideBar/HomeIcon.svg?react"
 import SideBarToggleIcon from "../asset/images/SideBar/SideBarToggleIcon.svg?react"
@@ -12,6 +12,7 @@ import TrashBinIcon from "../asset/images/SideBar/TrashBinIcon.svg?react"
 
 import TestImage from "../asset/images/TestImage.png"
 import { useNavigate } from "react-router-dom"
+import { getDirectoryList } from "../lib/api/directory-api"
 
 const s = {
   Test: styled.div`
@@ -79,6 +80,13 @@ const s = {
 
 const SideBar = () => {
   const [isSideBarOpen, setIsSideBarOpen] = useState(true)
+  // 디렉토리 리스트 정보
+  const [directoryInfos, setDirectoryInfos] = useState([])
+
+  // 컴포넌트가 로드될 때 요청
+  useEffect(() => {
+    fetchDirectoryInfos()
+  }, [])
 
   const toggleSideBar = () => {
     setIsSideBarOpen((prev) => !prev)
@@ -95,6 +103,19 @@ const SideBar = () => {
   }
   const handleEmailClick = () => {
     navigate(`/login`)
+  }
+
+  // 디렉토리 목록 조회 함수
+  const fetchDirectoryInfos = async () => {
+    let fetchedData = await getDirectoryList()
+
+    if (!fetchedData) {
+      return
+    }
+
+    const fetchedDirectoryInfos = fetchedData.data.directories
+
+    setDirectoryInfos(fetchedDirectoryInfos)
   }
 
   return (
@@ -130,6 +151,16 @@ const SideBar = () => {
             <s.FolderTitle>기본폴더</s.FolderTitle>
           </s.FolderArea>
           <s.FolderCaption>내 폴더</s.FolderCaption>
+          {directoryInfos ? (
+            directoryInfos.map((directoryInfo) => (
+              <s.FolderArea key={directoryInfo.directoryId}>
+                <CommonFolderIcon />
+                <s.FolderTitle>{directoryInfo.directoryName}</s.FolderTitle>
+              </s.FolderArea>
+            ))
+          ) : (
+            <></>
+          )}
           <s.FolderArea>
             <CommonFolderIcon />
             <s.FolderTitle>싱글벙글한 이미지</s.FolderTitle>
