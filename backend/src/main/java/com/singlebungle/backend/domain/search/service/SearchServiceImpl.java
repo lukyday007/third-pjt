@@ -23,9 +23,10 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public void saveTags(List<String> tags, String imageUrl) {
 
+        List<SearchDocument> imageUrlList = searchRepository.findDocumentsByTagInfo_ImageUrl(imageUrl);
+
         // imageUrl 기준으로 중복 여부 체크
-        boolean exists = Boolean.TRUE.equals(searchRepository.existsByTagInfo_ImageUrl(imageUrl));
-        if (exists) {
+        if (imageUrlList != null || !imageUrlList.isEmpty()) {
             log.warn(">>> saveTag - 이미 저장된 태그입니다.");
             return;
         }

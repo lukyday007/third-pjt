@@ -38,12 +38,17 @@ public class KeywordServiceImpl implements KeywordService {
             if (isKeyword) {
                 // Redis에서 현재 curCnt 값 가져오기
                 String curCntStr = (String) keywordTemplate.opsForHash().get("keyword:" + name, "curCnt");
-                // curCnt 값 증가 및 업데이트
-                int curCnt = Integer.parseInt(curCntStr.toString()) + 1;
-                keywordTemplate.opsForHash().put("keyword:" + name, "curCnt", String.valueOf(curCnt));
+                if (curCntStr == null) {
+                    // curCnt가 없는 경우 초기값 설정
+                    keywordTemplate.opsForHash().put("keyword:" + name, "curCnt", "1");
+                } else {
+                    int curCnt = Integer.parseInt(curCntStr) + 1;
+                    keywordTemplate.opsForHash().put("keyword:" + name, "curCnt", String.valueOf(curCnt));
+                }
 
                 continue;
             }
+            System.out.println("=======>> 저기서 걸림??");
 
             // 키워드 저장
             Keyword kw = Keyword.convertToEntity(name);
