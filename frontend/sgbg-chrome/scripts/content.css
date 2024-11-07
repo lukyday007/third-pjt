@@ -333,7 +333,7 @@ ul {
 
   margin: 0 5px;
 
-  background-color: rgba(0, 0, 0, 0.5);
+  background-image: linear-gradient(rgba(51, 51, 51, 0.7), rgba(51, 51, 51, 0.7));
 
   width: 60px;
   height: 60px;
@@ -359,6 +359,8 @@ ul {
 
   max-width: 54px;
   max-height: 54px;
+
+  border-radius: 4px;
 }
 
 @keyframes rotate_image {

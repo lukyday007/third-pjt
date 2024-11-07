@@ -25,8 +25,6 @@ async function setLoggedIn() {
   try {
     const { email, profileImagePath } = await getUserInfoFromStorage()
 
-    console.log(email, profileImagePath)
-
     const profileBtn = document.querySelector('#profile-btn')
     const profileImg = profileBtn.querySelector('.pop-logo')
     const profileTitle = profileBtn.querySelector('.pop-title')
@@ -34,7 +32,7 @@ async function setLoggedIn() {
     profileImg.src = profileImagePath
     profileTitle.innerText = email
   } catch (e) {
-    console.log('로그인 실패', e)
+    throw new Error('로그인 실패', e)
   }
 
   chrome.storage.local.set({ isLoggedIn: true })
@@ -93,10 +91,7 @@ function startLogin() {
       return
     }
 
-    console.log('message response: ', response)
-
     if (response && response.success) {
-      console.log('userInfo:', response)
       setLoggedIn()
     } else {
       console.error('JWT fetch 실패')

@@ -15,7 +15,7 @@ try {
   createFolderIconUrl = chrome.runtime.getURL('images/create-folder-icon.svg')
   saveSpinnerIconUrl = chrome.runtime.getURL('images/save-spinner.svg')
 } catch (e) {
-  console.error('(싱글벙글) 이미지 URL 로드 실패: ', e)
+  throw new Error('(싱글벙글) 이미지 URL 로드 실패: ', e)
 }
 
 // 드래그 동작 초기화 함수
@@ -74,7 +74,6 @@ async function showModal(event) {
   // 현재 탭 정보를 받아와서 출력 (임시 확인용) ##################################################
   const currentTabUrl = await getCurrentTab()
   imageSaveRequestDto.sourceUrl = currentTabUrl
-  console.log(imageSaveRequestDto)
 
   // 기존 Modal Overlay 제거
   removeExistingOverlay()
@@ -226,10 +225,10 @@ function getCurrentTab() {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage({ action: 'getCurrentTab' }, (response) => {
       if (response.tab) {
-        console.log('현재 탭:', response.tab)
+        // 현재 탭 url을 반환
         resolve(response.tab.url)
       } else {
-        console.log('탭 불러오기 실패')
+        // 탭 불러오기 실패 동작
         reject(new Error('탭 불러오기 실패'))
       }
     })

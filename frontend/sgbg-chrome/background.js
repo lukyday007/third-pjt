@@ -51,7 +51,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ tab })
       })
       .catch((e) => {
-        console.error('탭 정보 불러오기 실패', e)
+        // 탭 불러오기 실패
         sendResponse({ error: e.message })
       })
 
@@ -62,10 +62,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // 메세지 리스너 정의 - 구글 로그인 요청
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('background.js -> message 받음')
   if (message.action === 'startGoogleLogin') {
-    console.log('background.js -> startGoogleLogin 받음')
-
     // chrome.runtime.onMessage.addListener 내에서는 비동기 함수 처리가 안돼서, 별도로 구분
     handleGoogleLogin(sendResponse)
 
@@ -110,14 +107,14 @@ async function fetchOauthCode() {
   // 구글 로그인 URL을 백엔드 서버에 요청
   const GOOGLE_OAUTH_URL = await fetch(SPRING_LOGIN_URL)
     .then((response) => {
-      console.log(response)
       return response.text()
     })
     .then((data) => {
-      console.log(data)
       return data
     })
-    .catch((e) => console.log())
+    .catch((e) => {
+      throw new Error('구글 로그인  URL 불러오기 실패', e)
+    })
 
   // 팝업에서 요청을 보낸 뒤, 새 창에서 크롬 로그인 동작 시작
   return new Promise((resolve, reject) => {
@@ -129,10 +126,6 @@ async function fetchOauthCode() {
       // 새 창에서 구글 로그인 동작 후 redirect url에서 Google oauth code 파싱
       function (redirectUrl) {
         if (redirectUrl) {
-          // 성공 여부 확인 console
-          console.log('Google 로그인 성공')
-          console.log('redirectUrl: ', redirectUrl)
-
           // redirect URI에서 code 파싱
           const oauthCode = new URL(redirectUrl).searchParams.get('code')
 
@@ -167,7 +160,6 @@ async function fetchJwtToken(oauthCode) {
 
   try {
     const response = await fetch(urlWithParams)
-    console.log(response)
 
     if (!response.ok) {
       throw new Error({ message: 'jwt token fetch error' })
@@ -176,23 +168,19 @@ async function fetchJwtToken(oauthCode) {
     const data = await response.json()
     const accessToken = data['access-token']
 
-    console.log('accessToken: ', accessToken)
-
     return accessToken
   } catch (e) {
-    console.log('fetchJwtToken 에러: ', e)
+    throw new Error('fetchJwtToken 에러: ', e)
   }
 }
 
 // JWT 토큰을 chrome storage에 저장
 function setAccessTokenAtStorage(accessToken) {
   try {
-    chrome.storage.local.set({ accessToken: accessToken }, function () {
-      console.log('JWT token 저장 완료:', accessToken)
-    })
+    chrome.storage.local.set({ accessToken: accessToken }, function () {})
     return true
   } catch (e) {
-    console.log(e)
+    throw new Error('액세스 토큰 로컬 스토리지 등록 실패', e)
     return false
   }
 }
@@ -207,8 +195,6 @@ async function getAccessTokenFromStorage() {
     if (!accessToken) {
       return new Error({ message: 'access Token 읽어오기 실패' })
     }
-
-    console.log('스토리지에서 가져온 토큰: ', accessToken)
 
     return accessToken
   } catch (e) {
@@ -235,19 +221,17 @@ async function fetchUserInfo() {
 
     return data
   } catch (e) {
-    console.log('fetchUserInfo 에러: ', e)
+    throw new Error('fetchUserInfo 에러: ', e)
   }
 }
 
 // 유저 정보 저장
 async function setUserInfoAtStorage(userInfo) {
   try {
-    chrome.storage.local.set({ userInfo: userInfo }, () => {
-      console.log('userInfo 저장 완료: ', userInfo)
-    })
+    chrome.storage.local.set({ userInfo: userInfo }, () => {})
     return true
   } catch (e) {
-    console.log(e)
+    throw new Error('유저 정보 설정 실패', e)
     return false
   }
 }
