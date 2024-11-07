@@ -83,7 +83,7 @@ public class DirectoryController {
     }
 
     // 이미지 휴지통으로 이동 또는 복원
-    @PatchMapping
+    @PatchMapping("/bin")
     public ResponseEntity<?> handleImages(
             @RequestParam(defaultValue = "true") Boolean toTrash,  // 기본값은 true
             @RequestBody List<Long> imageIds,  // 요청 Body로 이미지 아이디 목록 받기
