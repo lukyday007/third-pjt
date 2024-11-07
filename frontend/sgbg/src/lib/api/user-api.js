@@ -8,5 +8,5 @@ export const getLoginUrl = async (success, fail) => {
 }
 
 export const googleSignIn = async (code, success, fail) => {
-  await local.get(`/oauth2/google?code=${code}`).then(success).catch(fail)
+  await local.get(`/oauth2/code/google?code=${code}`).then(success).catch(fail)
 }
