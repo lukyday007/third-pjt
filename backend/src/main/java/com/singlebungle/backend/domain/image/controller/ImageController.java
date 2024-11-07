@@ -184,7 +184,7 @@ public class ImageController {
 
         log.info(">>> [GET] /images/feed - 요청 파라미터:  userId - {}, page - {}, size - {}, keyword - {}, sort - {}" , userId, page, size, keyword, sort);
 
-        ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(userId, page, size, keyword, sort);
+        ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(page, size, keyword, sort);
         Map<String, Object> imageList = imageService.getImageListFromFeed(requestDTO);
 
         return ResponseEntity.status(200).body(imageList);

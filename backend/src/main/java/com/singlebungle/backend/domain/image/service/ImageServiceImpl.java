@@ -12,10 +12,7 @@ import com.singlebungle.backend.domain.image.dto.response.ImageInfoResponseDTO;
 import com.singlebungle.backend.domain.image.entity.Image;
 import com.singlebungle.backend.domain.image.entity.ImageDetail;
 import com.singlebungle.backend.domain.image.entity.ImageManagement;
-import com.singlebungle.backend.domain.image.repository.ImageDetailRepository;
-import com.singlebungle.backend.domain.image.repository.ImageManagementRepository;
-import com.singlebungle.backend.domain.image.repository.ImageManagementRepositorySupport;
-import com.singlebungle.backend.domain.image.repository.ImageRepository;
+import com.singlebungle.backend.domain.image.repository.*;
 import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
 import com.singlebungle.backend.domain.user.entity.User;
@@ -46,6 +43,7 @@ public class ImageServiceImpl implements ImageService {
 
     private final UserRepository userRepository;
     private final ImageRepository imageRepository;
+    private final ImageRepositorySupport imageRepositorySupport;
     private final ImageDetailRepository imageDetailRepository;
     private final ImageManagementRepository imageManagementRepository;
     private final ImageManagementRepositorySupport imageManagementRepositorySupport;
@@ -171,7 +169,7 @@ public class ImageServiceImpl implements ImageService {
     @Override
     public Map<String, Object> getImageListFromFeed(ImageListGetRequestDTO requestDTO) {
 
-        return imageManagementRepositorySupport.findImageListFromFeed(requestDTO);
+        return imageRepositorySupport.findImageListFromFeed(requestDTO);
     }
 
 

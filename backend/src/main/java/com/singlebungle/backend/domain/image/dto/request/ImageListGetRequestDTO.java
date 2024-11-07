@@ -19,7 +19,7 @@ public class ImageListGetRequestDTO {
     private int sort;
     private Boolean isBin;
 
-    public ImageListGetRequestDTO(Long userId, int page, int size, String keyword, int sort) {
+    public ImageListGetRequestDTO(int page, int size, String keyword, int sort) {
         this.userId = userId;
         this.page = page;
         this.size = size;
