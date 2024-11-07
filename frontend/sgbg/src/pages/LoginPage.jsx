@@ -4,6 +4,7 @@ import LoginButton from "../asset/images/LoginPage/LoginButton.svg?react"
 import LoginButtonSmall from "../asset/images/LoginPage/LoginButtonSmall.svg?react"
 import SingBung from "../asset/images/MainPage/SingBung.svg?react"
 import BigSingBung from "../asset/images/LoginPage/BigSingBung.svg?react"
+import { getLoginUrl } from "../lib/api/user-api"
 
 const s = {
   Container: styled.div`
@@ -43,6 +44,19 @@ const LoginPage = () => {
   const handleClickSingBung = () => {
     setSize((prev) => prev + 100)
   }
+
+  const loginButtonClick = async () => {
+    getLoginUrl(
+      (resp) => {
+        console.log("resp", resp.data)
+        window.location.href = `${resp.data}`
+      },
+      (error) => {
+        console.log("error", error)
+      }
+    )
+  }
+
   return (
     <s.Container>
       <s.LoginArea>
@@ -58,7 +72,7 @@ const LoginPage = () => {
         <s.Caption style={{ marginBottom: "36px" }}>
           지금 바로 싱글벙글과 함께 웹서핑의 재미를 두 배로 늘려보세요!
         </s.Caption>
-        <LoginButton style={{ cursor: "pointer" }} />
+        <LoginButton style={{ cursor: "pointer" }} onClick={loginButtonClick} />
       </s.LoginArea>
       <s.ImageArea>
         <s.SingBungImage>
