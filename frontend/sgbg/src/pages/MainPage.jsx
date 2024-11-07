@@ -86,8 +86,10 @@ const s = {
 const MainPage = () => {
   const navigate = useNavigate()
 
-  const code = new URLSearchParams(useLocation().search).get("code")
+  // const code = new URLSearchParams(useLocation().search).get("code")
 
+  const params = new URLSearchParams(window.location.search)
+  const code = params.get("code")
   const googleLogin = async (code) => {
     googleSignIn(
       code,
