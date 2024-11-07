@@ -86,16 +86,16 @@ const s = {
 const MainPage = () => {
   const navigate = useNavigate()
 
-  // const code = new URLSearchParams(useLocation().search).get("code")
-
   const params = new URLSearchParams(window.location.search)
   const code = encodeURIComponent(params.get("code"))
   const googleLogin = async (code) => {
     googleSignIn(
       code,
       (resp) => {
-        console.log("resp", resp.data)
+        console.log("resp", resp.data["access-token"])
+        localStorage.setItem("accessToken", resp.data["access-token"])
         navigate("/", { replace: true })
+        history.replaceState(null, "", "/#/")
       },
       (error) => {
         console.log("error", error)
