@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import styled, { keyframes } from "styled-components"
 import SingBung from "../asset/images/MainPage/SingBung.svg?react"
 import FirstKeywordIcon from "../asset/images/MainPage/FirstKeywordIcon.svg?react"
@@ -8,6 +8,8 @@ import FourthKeywordIcon from "../asset/images/MainPage/FourthKeywordIcon.svg?re
 import FifthKeywordIcon from "../asset/images/MainPage/FifthKeywordIcon.svg?react"
 import KeywordIncreaseIcon from "../asset/images/MainPage/KeywordIncreaseIcon.svg?react"
 import KeywordDecreaseIcon from "../asset/images/MainPage/KeywordDecreaseIcon.svg?react"
+import { useLocation, useNavigate } from "react-router-dom"
+import { googleSignIn } from "../lib/api/user-api"
 
 const rotateImage = keyframes`
   100% {
@@ -82,6 +84,30 @@ const s = {
 }
 
 const MainPage = () => {
+  const navigate = useNavigate()
+
+  const code = new URLSearchParams(useLocation().search).get("code")
+
+  const googleLogin = async (code) => {
+    googleSignIn(
+      code,
+      (resp) => {
+        console.log("resp", resp.data)
+        navigate("/")
+      },
+      (error) => {
+        console.log("error", error)
+      }
+    )
+  }
+
+  useEffect(() => {
+    console.log("search", code)
+    if (code) {
+      googleLogin(code)
+    }
+  }, [code])
+
   return (
     <s.Container>
       <s.TitleArea>
