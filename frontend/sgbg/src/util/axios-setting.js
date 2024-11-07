@@ -11,7 +11,8 @@ export const authAxios = () => {
       const accessToken = localStorage.getItem("accessToken")
 
       if (accessToken) {
-        config.headers["Authorization"] = `${accessToken}`
+        // Access 토큰 앞에 `Bearer ` 설정
+        config.headers["Authorization"] = `Bearer ${accessToken}`
       }
 
       return config
@@ -36,11 +37,11 @@ export const authAxios = () => {
 
           localStorage.setItem("accessToken", newAccessToken)
 
-          originalRequest.headers.Authorization = `${newAccessToken}`
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
           return axios(originalRequest)
         } catch (refreshError) {
           // 토큰 없애야될거같은자리
-          window.location.href = "/login"
+          // window.location.href = "http://localhost:5173/#/login"
           return Promise.reject(error)
         }
       }

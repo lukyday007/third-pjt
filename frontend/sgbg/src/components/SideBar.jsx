@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import styled from "styled-components"
 import HomeIcon from "../asset/images/SideBar/HomeIcon.svg?react"
 import SideBarToggleIcon from "../asset/images/SideBar/SideBarToggleIcon.svg?react"
@@ -12,6 +12,8 @@ import TrashBinIcon from "../asset/images/SideBar/TrashBinIcon.svg?react"
 
 import TestImage from "../asset/images/TestImage.png"
 import { useNavigate } from "react-router-dom"
+import { getDirectoryList, postCreateDirectory } from "../lib/api/directory-api"
+import CreateFolderModal from "./CreateFolderModal"
 
 const s = {
   Test: styled.div`
@@ -35,6 +37,7 @@ const s = {
     height: 100%;
     flex-direction: column;
     display: ${(props) => (props.$isopen === true ? "flex" : "none")};
+    overflow-y: scroll;
   `,
   HomeIconArea: styled.div`
     display: flex;
@@ -79,9 +82,22 @@ const s = {
 
 const SideBar = () => {
   const [isSideBarOpen, setIsSideBarOpen] = useState(true)
+  // 디렉토리 리스트 정보
+  const [directoryInfos, setDirectoryInfos] = useState([])
+  // 새폴더 모달 열림 여부
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+
+  // 컴포넌트가 로드될 때 요청
+  useEffect(() => {
+    fetchDirectoryInfos()
+  }, [])
 
   const toggleSideBar = () => {
     setIsSideBarOpen((prev) => !prev)
+  }
+
+  const toggleCreateModal = () => {
+    setIsCreateModalOpen((prev) => !prev)
   }
 
   const navigate = useNavigate()
@@ -95,6 +111,48 @@ const SideBar = () => {
   }
   const handleEmailClick = () => {
     navigate(`/login`)
+  }
+
+  const createNewFolder = async (directoryName) => {
+    toggleCreateModal()
+
+    let fetchedData = await postCreateDirectory(
+      { directoryName },
+      (resp) => {
+        return resp.data
+      },
+      (error) => {
+        console.log("error", error)
+      }
+    )
+
+    if (!fetchedData) {
+      return
+    }
+
+    const fetchedDirectoryInfos = fetchedData.directories
+
+    setDirectoryInfos(fetchedDirectoryInfos)
+  }
+
+  // 디렉토리 목록 조회 함수
+  const fetchDirectoryInfos = async () => {
+    let fetchedData = await getDirectoryList(
+      (resp) => {
+        return resp.data
+      },
+      (error) => {
+        console.log("error", error)
+      }
+    )
+
+    if (!fetchedData) {
+      return
+    }
+
+    const fetchedDirectoryInfos = fetchedData.directories
+
+    setDirectoryInfos(fetchedDirectoryInfos)
   }
 
   return (
@@ -130,15 +188,31 @@ const SideBar = () => {
             <s.FolderTitle>기본폴더</s.FolderTitle>
           </s.FolderArea>
           <s.FolderCaption>내 폴더</s.FolderCaption>
+          {directoryInfos ? (
+            directoryInfos.map((directoryInfo) => (
+              <s.FolderArea key={directoryInfo.directoryId}>
+                <CommonFolderIcon />
+                <s.FolderTitle>{directoryInfo.directoryName}</s.FolderTitle>
+              </s.FolderArea>
+            ))
+          ) : (
+            <></>
+          )}
           <s.FolderArea>
             <CommonFolderIcon />
             <s.FolderTitle>싱글벙글한 이미지</s.FolderTitle>
           </s.FolderArea>
           <s.FolderCaption>관리</s.FolderCaption>
-          <s.FolderArea>
+          <s.FolderArea onClick={toggleCreateModal}>
             <CreateFolderIcon />
             <s.FolderTitle>폴더 만들기</s.FolderTitle>
           </s.FolderArea>
+          {isCreateModalOpen && (
+            <CreateFolderModal
+              toggleFunction={toggleCreateModal}
+              createFunction={createNewFolder}
+            />
+          )}
           <s.FolderArea>
             <TrashBinIcon />
             <s.FolderTitle>휴지통</s.FolderTitle>
