@@ -72,7 +72,7 @@ function removeExistingOverlay() {
 // 모달 표시 함수
 async function showModal(event) {
   // 현재 탭 정보를 받아와서 출력 (임시 확인용) ##################################################
-  const currentTabUrl = await getCurrentTab()
+  const currentTabUrl = window.location.href
   imageSaveRequestDto.sourceUrl = currentTabUrl
 
   // 기존 Modal Overlay 제거
@@ -221,19 +221,19 @@ async function showCreateFolderModal(event) {
 // 현재 탭의 정보 url을 받아오기
 // 탭 정보는 background.js 혹은 popup.js에서만 읽어올 수 있다.
 // background.js에 메세지를 보내서 탭 정보를 받아온다
-function getCurrentTab() {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ action: 'getCurrentTab' }, (response) => {
-      if (response.tab) {
-        // 현재 탭 url을 반환
-        resolve(response.tab.url)
-      } else {
-        // 탭 불러오기 실패 동작
-        reject(new Error('탭 불러오기 실패'))
-      }
-    })
-  })
-}
+// function getCurrentTab() {
+//   return new Promise((resolve, reject) => {
+//     chrome.runtime.sendMessage({ action: 'getCurrentTab' }, (response) => {
+//       if (response.tab) {
+//         // 현재 탭 url을 반환
+//         resolve(response.tab.url)
+//       } else {
+//         // 탭 불러오기 실패 동작
+//         reject(new Error('탭 불러오기 실패'))
+//       }
+//     })
+//   })
+// }
 
 // 알림 팝업 모달 띄우기
 function showAlertModal(imgSrc, isSaved) {

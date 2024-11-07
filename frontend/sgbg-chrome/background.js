@@ -1,12 +1,12 @@
 const BASE_API_URL = 'https://k11b205.p.ssafy.io/api'
 
 // 현재 탭의 URL 정보 받아오기
-async function getCurrentTab() {
-  let queryOptions = { active: true, lastFocusedWindow: true }
-  let [tab] = await chrome.tabs.query(queryOptions)
+// async function getCurrentTab() {
+//   let queryOptions = { active: true, lastFocusedWindow: true }
+//   let [tab] = await chrome.tabs.query(queryOptions)
 
-  return tab
-}
+//   return tab
+// }
 
 // 우클릭 컨텍스트 메뉴바 항목 추가
 chrome.runtime.onInstalled.addListener(() => {
@@ -44,21 +44,21 @@ chrome.runtime.onInstalled.addListener(() => {
 })
 
 // 메세지 리스너 정의 - 현재 탭 정보 가져오기
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'getCurrentTab') {
-    getCurrentTab()
-      .then((tab) => {
-        sendResponse({ tab })
-      })
-      .catch((e) => {
-        // 탭 불러오기 실패
-        sendResponse({ error: e.message })
-      })
+// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+//   if (message.action === 'getCurrentTab') {
+//     getCurrentTab()
+//       .then((tab) => {
+//         sendResponse({ tab })
+//       })
+//       .catch((e) => {
+//         // 탭 불러오기 실패
+//         sendResponse({ error: e.message })
+//       })
 
-    // 비동기 처리를 위해 sendResponse 동작이 일어나기 전까지는 true를 반환
-    return true
-  }
-})
+//     // 비동기 처리를 위해 sendResponse 동작이 일어나기 전까지는 true를 반환
+//     return true
+//   }
+// })
 
 // 메세지 리스너 정의 - 구글 로그인 요청
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

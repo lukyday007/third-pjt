@@ -31,7 +31,7 @@ async function backTickClickHandler(event) {
   // 클릭 대상의 이미지 여부 확인
   if (event.target.tagName !== 'IMG') return
 
-  const newSourceUrl = await getCurrentTab()
+  const newSourceUrl = window.location.href
   const newImgUrl = event.target.src
 
   if (newSourceUrl && newImgUrl) {
