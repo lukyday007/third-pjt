@@ -5,12 +5,14 @@ import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
 import com.singlebungle.backend.domain.search.entity.SearchDocument;
 import com.singlebungle.backend.domain.search.repository.SearchRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SearchServiceImpl implements SearchService {
@@ -22,8 +24,9 @@ public class SearchServiceImpl implements SearchService {
     public void saveTags(List<String> tags, String imageUrl) {
 
         // imageUrl 기준으로 중복 여부 체크
-        Boolean exists = searchRepository.existsByTagInfo_ImageUrl(imageUrl);
-        if (exists != null && exists) {
+        boolean exists = Boolean.TRUE.equals(searchRepository.existsByTagInfo_ImageUrl(imageUrl));
+        if (exists) {
+            log.warn(">>> saveTag - 이미 저장된 태그입니다.");
             return;
         }
 

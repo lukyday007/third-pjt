@@ -2,6 +2,7 @@ package com.singlebungle.backend.domain.keyword.service;
 
 import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import java.util.List;
 public class KeywordServiceImpl implements KeywordService {
 
     private final KeywordRepository keywordRepository;
+    private final StringRedisTemplate redisTemplate;
 
     @Override
     @Transactional
