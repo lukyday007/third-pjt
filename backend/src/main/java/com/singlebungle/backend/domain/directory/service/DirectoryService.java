@@ -1,6 +1,7 @@
 package com.singlebungle.backend.domain.directory.service;
 
 import com.singlebungle.backend.domain.directory.entity.Directory;
+import com.singlebungle.backend.domain.image.entity.ImageManagement;
 import com.singlebungle.backend.domain.user.entity.User;
 
 import java.util.List;
@@ -23,4 +24,10 @@ public interface DirectoryService {
     void createDefaultDirectories(User user);
 
     void deleteImagesInBinDirectory(String token);
+
+    List<ImageManagement> moveImagesToDirectory(List<Long> imageIds, Long directoryId, String token);
+
+    List<ImageManagement> moveImagesToTrash(List<Long> imageIds, String token);
+
+    List<ImageManagement> restoreImagesFromTrash(List<Long> imageIds, String token);
 }

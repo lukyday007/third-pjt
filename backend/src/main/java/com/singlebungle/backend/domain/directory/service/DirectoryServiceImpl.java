@@ -2,7 +2,10 @@ package com.singlebungle.backend.domain.directory.service;
 
 import com.singlebungle.backend.domain.directory.entity.Directory;
 import com.singlebungle.backend.domain.directory.repository.DirectoryRepository;
+import com.singlebungle.backend.domain.image.entity.Image;
+import com.singlebungle.backend.domain.image.entity.ImageManagement;
 import com.singlebungle.backend.domain.image.repository.ImageManagementRepository;
+import com.singlebungle.backend.domain.image.repository.ImageRepository;
 import com.singlebungle.backend.domain.user.entity.User;
 import com.singlebungle.backend.domain.user.repository.UserRepository;
 import com.singlebungle.backend.global.auth.auth.JwtProvider;
@@ -11,8 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +30,7 @@ public class DirectoryServiceImpl implements DirectoryService {
     private final DirectoryRepository directoryRepository;
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
+    private final ImageRepository imageRepository;
     private final ImageManagementRepository imageManagementRepository;
 
     public List<Directory> createDirectory(String directoryName, String token) {
@@ -118,10 +124,11 @@ public class DirectoryServiceImpl implements DirectoryService {
     }
 
 
+    // 디렉토리 삭제
     public List<Directory> deleteDirectory(Long directoryId, String token) {
         Long userId = jwtProvider.getUserIdFromToken(token);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         // 특정 사용자에 대한 디렉토리 조회
         Directory directory = directoryRepository.findByDirectoryIdAndUser(directoryId, user)
@@ -132,11 +139,38 @@ public class DirectoryServiceImpl implements DirectoryService {
             throw new UnsupportedOperationException("기본 디렉토리와 휴지통 디렉토리는 삭제할 수 없습니다.");
         }
 
+        // 디렉토리 내의 이미지들을 휴지통으로 이동 (디렉토리 삭제 전에)
+        moveImagesToTrashByDirectory(directory);
+
         // 디렉토리 삭제
         directoryRepository.delete(directory);
 
         // 삭제 후 사용자 디렉토리 목록 조회
         return directoryRepository.findAllByUserOrderByOrderAsc(user);
+    }
+
+    // 디렉토리 내의 이미지들을 휴지통으로 이동
+    private void moveImagesToTrashByDirectory(Directory directory) {
+        // 해당 디렉토리에 속한 모든 이미지 관리 목록 조회
+        List<ImageManagement> imageManagementList = imageManagementRepository.findByCurDirectory(directory);
+
+        // 휴지통 디렉토리 조회
+        Directory trashDirectory = directoryRepository.findByUserAndStatus(directory.getUser(), 2)
+                .orElseThrow(() -> new EntityNotFoundException("휴지통 디렉토리가 존재하지 않습니다."));
+
+        // 이미지들을 휴지통으로 이동
+        for (ImageManagement imageManagement : imageManagementList) {
+            // 이미지의 prevDirectory와 curDirectory를 수정
+            Directory prevDirectory = imageManagement.getCurDirectory();
+
+            // 현재 디렉토리가 이미 휴지통이 아니라면
+            if (!imageManagement.getCurDirectory().equals(trashDirectory)) {
+                // 이미지를 휴지통으로 이동
+                imageManagement.setPrevDirectory(null);  // prevDirectory를 유지
+                imageManagement.setCurDirectory(trashDirectory);  // 현재 디렉토리를 휴지통으로 변경
+                imageManagementRepository.save(imageManagement); // 변경 사항 저장
+            }
+        }
     }
 
     // 기본 디렉토리 생성 메서드
@@ -158,6 +192,7 @@ public class DirectoryServiceImpl implements DirectoryService {
         directoryRepository.saveAll(Arrays.asList(defaultDirectory, trashDirectory));
     }
 
+    @Transactional
     public void deleteImagesInBinDirectory(String token) {
         Long userId = jwtProvider.getUserIdFromToken(token);
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -169,4 +204,133 @@ public class DirectoryServiceImpl implements DirectoryService {
         // 빈 디렉토리에 연결된 ImageManagement 엔티티 삭제
         imageManagementRepository.deleteByCurDirectory(binDirectory);
     }
+
+    // 이미지 이동 메서드
+    public List<ImageManagement> moveImagesToDirectory(List<Long> imageIds, Long directoryId, String token) {
+        Long userId = jwtProvider.getUserIdFromToken(token);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        // 디렉토리 ID가 0 또는 null인 경우 유저의 기본 디렉토리(status == 0)를 찾음
+        Directory newDirectory;
+        if (directoryId == null || directoryId == 0) {
+            // 유저의 기본 디렉토리(status == 0) 찾아서 설정
+            newDirectory = directoryRepository.findByUserAndStatus(user, 0)
+                    .orElseThrow(() -> new EntityNotFoundException("Default directory not found"));
+        } else {
+            // 유효한 디렉토리 ID가 있는 경우 해당 디렉토리 조회
+            newDirectory = directoryRepository.findById(directoryId)
+                    .orElseThrow(() -> new EntityNotFoundException("Target directory not found"));
+        }
+
+        // 이미지 ID 목록을 Image 객체 목록으로 변환
+        List<Image> images = imageRepository.findAllById(imageIds);
+
+        // 이미지 ID 목록에 해당하는 이미지들을 조회
+        List<ImageManagement> imageManagementList = imageManagementRepository.findByUserAndImageIn(user, images);
+
+        if (imageManagementList.isEmpty()) {
+            throw new EntityNotFoundException("No images found for the specified IDs");
+        }
+
+        // 이미지 디렉토리 이동
+        for (ImageManagement imageManagement : imageManagementList) {
+            Directory prevDirectory = imageManagement.getCurDirectory();
+
+            // 이동할 디렉토리가 현재 디렉토리와 같으면 아무것도 하지 않음
+            if (prevDirectory.equals(newDirectory)) {
+                continue;
+            }
+
+            // 기존 디렉토리에서 현재 디렉토리로 변경
+            imageManagement.setPrevDirectory(prevDirectory);
+            imageManagement.setCurDirectory(newDirectory);
+
+            // 변경 사항 저장
+            imageManagementRepository.save(imageManagement);
+        }
+
+        // 이동한 이미지 목록 반환
+        return imageManagementList;
+    }
+
+    // 이미지들을 휴지통으로 이동
+    public List<ImageManagement> moveImagesToTrash(List<Long> imageIds, String token) {
+        Long userId = jwtProvider.getUserIdFromToken(token);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // 휴지통 디렉토리 조회
+        Directory trashDirectory = directoryRepository.findByUserAndStatus(user, 2)
+                .orElseThrow(() -> new EntityNotFoundException("휴지통 디렉토리가 존재하지 않습니다."));
+
+        // 이미지 아이디 목록을 사용하여 해당 이미지들을 찾기 위해 Image 객체 목록을 가져옴
+        List<Image> images = imageRepository.findAllById(imageIds);
+        if (images.isEmpty()) {
+            throw new EntityNotFoundException("No images found with the provided IDs");
+        }
+
+        // 이미지 관리 목록 조회 (사용자와 해당 이미지 목록으로)
+        List<ImageManagement> imageManagementList = imageManagementRepository.findByUserAndImageIn(user, images);
+
+        List<ImageManagement> movedImages = new ArrayList<>();
+
+        // 각 이미지에 대해 처리
+        for (ImageManagement imageManagement : imageManagementList) {
+            // 현재 디렉토리가 이미 휴지통이 아니면 휴지통으로 이동
+            if (!imageManagement.getCurDirectory().equals(trashDirectory)) {
+                Directory prevDirectory = imageManagement.getCurDirectory();
+                imageManagement.setPrevDirectory(prevDirectory);
+                imageManagement.setCurDirectory(trashDirectory);
+                imageManagementRepository.save(imageManagement);
+                movedImages.add(imageManagement);
+            }
+        }
+
+        return movedImages;
+    }
+
+    // 이미지들을 복원
+    public List<ImageManagement> restoreImagesFromTrash(List<Long> imageIds, String token) {
+        Long userId = jwtProvider.getUserIdFromToken(token);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // 기본 디렉토리 조회 (복원할 디렉토리)
+        Directory defaultDirectory = directoryRepository.findByUserAndStatus(user, 0)
+                .orElseThrow(() -> new EntityNotFoundException("기본 디렉토리가 존재하지 않습니다."));
+
+        // 이미지 아이디 목록을 사용하여 해당 이미지들을 찾기 위해 Image 객체 목록을 가져옴
+        List<Image> images = imageRepository.findAllById(imageIds);
+        if (images.isEmpty()) {
+            throw new EntityNotFoundException("No images found with the provided IDs");
+        }
+
+        // 이미지 관리 목록 조회 (사용자와 해당 이미지 목록으로)
+        List<ImageManagement> imageManagementList = imageManagementRepository.findByUserAndImageIn(user, images);
+
+        List<ImageManagement> restoredImages = new ArrayList<>();
+
+        // 각 이미지에 대해 처리
+        for (ImageManagement imageManagement : imageManagementList) {
+            // 현재 디렉토리가 휴지통인지 확인
+            Directory currentDirectory = imageManagement.getCurDirectory();
+            if (currentDirectory.getStatus() == 2) {  // 휴지통 상태인 경우
+                // 이전 디렉토리로 복원
+                Directory prevDirectory = imageManagement.getPrevDirectory();
+                if (prevDirectory != null) {
+                    // 이전 디렉토리가 존재하면 그 디렉토리로 복원
+                    imageManagement.setCurDirectory(prevDirectory);
+                } else {
+                    // 이전 디렉토리가 없으면 기본 디렉토리로 복원
+                    imageManagement.setCurDirectory(defaultDirectory);
+                }
+                imageManagementRepository.save(imageManagement);
+                restoredImages.add(imageManagement);
+            }
+        }
+
+        return restoredImages;
+    }
+
 }

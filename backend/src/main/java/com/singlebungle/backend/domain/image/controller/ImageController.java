@@ -153,7 +153,7 @@ public class ImageController {
         log.info(">>> [GET] /images/my - 요청 파라미터: userId - {}, directoryId - {}, page - {}, size - {}, keyword - {}, sort - {}", userId, directoryId, page, size, keyword, sort);
 
         ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(userId,  directoryId, page, size, keyword, sort, isBin);
-        Map<String, Object> imageList = imageService.getImageList(requestDTO);
+        Map<String, Object> imageList = imageService.getImageListFromDir(requestDTO);
 
         return ResponseEntity.status(200).body(imageList);
     }
@@ -185,7 +185,7 @@ public class ImageController {
         log.info(">>> [GET] /images/feed - 요청 파라미터:  userId - {}, page - {}, size - {}, keyword - {}, sort - {}" , userId, page, size, keyword, sort);
 
         ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(userId, page, size, keyword, sort);
-        Map<String, Object> imageList = imageService.getImageList(requestDTO);
+        Map<String, Object> imageList = imageService.getImageListFromFeed(requestDTO);
 
         return ResponseEntity.status(200).body(imageList);
     }

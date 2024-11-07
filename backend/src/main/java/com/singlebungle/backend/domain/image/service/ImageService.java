@@ -9,7 +9,8 @@ public interface ImageService {
     String uploadImageFromUrlToS3(String url);
     void saveImage(Long userId, String sourceUrl, String imageUrl, Long directoryId);
 
-    Map<String, Object> getImageList(ImageListGetRequestDTO requestDTO);
+    Map<String, Object> getImageListFromDir(ImageListGetRequestDTO requestDTO);
+    Map<String, Object> getImageListFromFeed(ImageListGetRequestDTO requestDTO);
 
     ImageInfoResponseDTO getImageInfo(Long imageId);
 }
