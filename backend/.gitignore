@@ -26,6 +26,8 @@ bin/
 #### genereated 폴더 제외
 **/src/main/generated
 
+**/config/google-vision-credential.json
+
 ### yml ###
 *.yml
 

@@ -7,6 +7,7 @@ import com.singlebungle.backend.domain.directory.dto.response.DirectoryListRespo
 import com.singlebungle.backend.domain.directory.dto.response.DirectoryResponseDTO;
 import com.singlebungle.backend.domain.directory.entity.Directory;
 import com.singlebungle.backend.domain.directory.service.DirectoryService;
+import com.singlebungle.backend.domain.image.dto.request.ImageManagementIdsRequestDTO;
 import com.singlebungle.backend.domain.image.dto.request.MoveImagesRequestDTO;
 import com.singlebungle.backend.domain.image.entity.ImageManagement;
 import lombok.RequiredArgsConstructor;
@@ -74,30 +75,30 @@ public class DirectoryController {
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
+    // 디렉토리로 이미지 이동
     @PatchMapping("/location")
     public ResponseEntity<?> moveImagesToDirectory(
             @RequestBody MoveImagesRequestDTO request,
             @RequestHeader("Authorization") String token) {
-        List<ImageManagement> result = directoryService.moveImagesToDirectory(request.getImageIds(), request.getDirectoryId(), token);
-        return ResponseEntity.status(HttpStatus.OK).build();
+        List<ImageManagement> result = directoryService.moveImagesToDirectory(request.getImageManagementIds(), request.getDirectoryId(), token);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    // 이미지 휴지통으로 이동 또는 복원
     @PatchMapping("/bin")
     public ResponseEntity<?> handleImages(
-            @RequestParam(defaultValue = "true") Boolean toTrash,  // 기본값은 true
-            @RequestBody List<Long> imageIds,  // 요청 Body로 이미지 아이디 목록 받기
+            @RequestParam(defaultValue = "true") Boolean toTrash,
+            @RequestBody ImageManagementIdsRequestDTO request,
             @RequestHeader("Authorization") String token) {
 
+        List<Long> imageManagementIds = request.getImageManagementIds();
+        List<ImageManagement> images;
+
         if (toTrash) {
-            // 이미지를 휴지통으로 이동
-            List<ImageManagement> movedImages = directoryService.moveImagesToTrash(imageIds, token);
-            return ResponseEntity.status(HttpStatus.OK).build();
+            images = directoryService.moveImagesToTrash(imageManagementIds, token);
         } else {
-            // 이미지를 복원
-            List<ImageManagement> restoredImages = directoryService.restoreImagesFromTrash(imageIds, token);
-            return ResponseEntity.status(HttpStatus.OK).build();
+            images = directoryService.restoreImagesFromTrash(imageManagementIds, token);
         }
+        return ResponseEntity.status(HttpStatus.OK).body(images);
     }
 
     // 중복되는 디렉토리 필터링 및 변환 처리 로직을 하나의 메서드로 추출

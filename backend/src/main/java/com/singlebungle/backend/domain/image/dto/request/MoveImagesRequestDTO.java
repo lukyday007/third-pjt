@@ -8,6 +8,6 @@ import java.util.List;
 @Getter
 @Setter
 public class MoveImagesRequestDTO {
-    private List<Long> imageIds;
+    private List<Long> imageManagementIds; // Image ID 대신 ImageManagement ID로 변경
     private Long directoryId;
 }

@@ -25,9 +25,9 @@ public interface DirectoryService {
 
     void deleteImagesInBinDirectory(String token);
 
-    List<ImageManagement> moveImagesToDirectory(List<Long> imageIds, Long directoryId, String token);
+    List<ImageManagement> moveImagesToDirectory(List<Long> imageManagementIds, Long directoryId, String token);
 
-    List<ImageManagement> moveImagesToTrash(List<Long> imageIds, String token);
+    List<ImageManagement> moveImagesToTrash(List<Long> imageManagementIds, String token);
 
-    List<ImageManagement> restoreImagesFromTrash(List<Long> imageIds, String token);
+    List<ImageManagement> restoreImagesFromTrash(List<Long> imageManagementIds, String token);
 }
