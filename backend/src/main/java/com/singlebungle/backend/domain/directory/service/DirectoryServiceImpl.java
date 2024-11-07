@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
@@ -138,7 +139,7 @@ public class DirectoryServiceImpl implements DirectoryService {
             throw new UnsupportedOperationException("기본 디렉토리와 휴지통 디렉토리는 삭제할 수 없습니다.");
         }
 
-        // 해당 디렉토리와 연결된 이미지들을 모두 휴지통으로 이동
+        // 디렉토리 내의 이미지들을 휴지통으로 이동 (디렉토리 삭제 전에)
         moveImagesToTrashByDirectory(directory);
 
         // 디렉토리 삭제
@@ -159,12 +160,15 @@ public class DirectoryServiceImpl implements DirectoryService {
 
         // 이미지들을 휴지통으로 이동
         for (ImageManagement imageManagement : imageManagementList) {
+            // 이미지의 prevDirectory와 curDirectory를 수정
+            Directory prevDirectory = imageManagement.getCurDirectory();
+
             // 현재 디렉토리가 이미 휴지통이 아니라면
             if (!imageManagement.getCurDirectory().equals(trashDirectory)) {
-                Directory prevDirectory = imageManagement.getCurDirectory();
-                imageManagement.setPrevDirectory(prevDirectory);
-                imageManagement.setCurDirectory(trashDirectory);
-                imageManagementRepository.save(imageManagement);
+                // 이미지를 휴지통으로 이동
+                imageManagement.setPrevDirectory(null);  // prevDirectory를 유지
+                imageManagement.setCurDirectory(trashDirectory);  // 현재 디렉토리를 휴지통으로 변경
+                imageManagementRepository.save(imageManagement); // 변경 사항 저장
             }
         }
     }
@@ -188,6 +192,7 @@ public class DirectoryServiceImpl implements DirectoryService {
         directoryRepository.saveAll(Arrays.asList(defaultDirectory, trashDirectory));
     }
 
+    @Transactional
     public void deleteImagesInBinDirectory(String token) {
         Long userId = jwtProvider.getUserIdFromToken(token);
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
