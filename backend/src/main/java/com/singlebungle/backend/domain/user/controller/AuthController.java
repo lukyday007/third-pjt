@@ -89,46 +89,4 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("OAuth2 authentication failed");
         }
     }
-
-//    @GetMapping("/code/google")
-//    public ResponseEntity<?> googleCallback(@RequestParam String code, @RequestParam(required = false) String platform, HttpServletResponse response) {
-//        try {
-//            log.info("Received Google authorization code: {}", code);
-//
-//            String redirectUri;
-//            if ("extension".equals(platform)) {
-//                redirectUri = EXTENSION_REDIRECT_URI;
-//            } else {
-//                redirectUri = LOCAL_REDIRECT_URI;
-//            }
-//
-//            log.info("Redirect URI selected: {}", redirectUri);
-//
-//            // 동적으로 전달된 redirectUri를 사용하여 처리
-//            TokenResponseDTO tokenResponse = googleAuthService.handleLoginOrSignup(code, redirectUri);
-//
-//            if (tokenResponse != null) {
-//                log.info("Google login or signup successful, tokens issued.");
-//
-//                // 리프레시 토큰을 쿠키에 저장
-//                Cookie refreshTokenCookie = new Cookie("refreshToken", tokenResponse.getRefreshToken());
-//                refreshTokenCookie.setHttpOnly(true); // JavaScript에서 접근 불가
-//                refreshTokenCookie.setPath("/"); // 쿠키의 유효 경로 설정
-//                refreshTokenCookie.setMaxAge(60 * 60 * 24 * 30); // 30일 동안 유효
-//                response.addCookie(refreshTokenCookie); // 쿠키를 응답에 추가
-//
-//                // 액세스 토큰을 쿼리 파라미터로 반환
-//                return ResponseEntity.status(HttpStatus.FOUND)
-//                        .header("Location", "https://k11b205.p.ssafy.io/?accessToken=" + tokenResponse.getAccessToken())
-//                        .build();
-//            } else {
-//                log.error("Token response is null, something went wrong.");
-//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                        .body("Something went wrong while processing tokens.");
-//            }
-//        } catch (Exception e) {
-//            log.error("Google OAuth2 authentication failed", e);
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("OAuth2 authentication failed");
-//        }
-//    }
 }
