@@ -8,7 +8,7 @@ import FourthKeywordIcon from "../asset/images/MainPage/FourthKeywordIcon.svg?re
 import FifthKeywordIcon from "../asset/images/MainPage/FifthKeywordIcon.svg?react"
 import KeywordIncreaseIcon from "../asset/images/MainPage/KeywordIncreaseIcon.svg?react"
 import KeywordDecreaseIcon from "../asset/images/MainPage/KeywordDecreaseIcon.svg?react"
-import { useLocation, useNavigate } from "react-router-dom"
+import { replace, useLocation, useNavigate } from "react-router-dom"
 import { googleSignIn } from "../lib/api/user-api"
 
 const rotateImage = keyframes`
@@ -95,7 +95,7 @@ const MainPage = () => {
       code,
       (resp) => {
         console.log("resp", resp.data)
-        navigate("/")
+        navigate("/", { replace: true })
       },
       (error) => {
         console.log("error", error)
@@ -104,9 +104,7 @@ const MainPage = () => {
   }
 
   useEffect(() => {
-    // console.log("search", encodeURIComponent(code))
-    console.log("decode", code)
-    if (code) {
+    if (code !== "null") {
       googleLogin(code)
     }
   }, [code])
