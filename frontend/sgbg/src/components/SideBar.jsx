@@ -36,6 +36,7 @@ const s = {
     height: 100%;
     flex-direction: column;
     display: ${(props) => (props.$isopen === true ? "flex" : "none")};
+    overflow-y: scroll;
   `,
   HomeIconArea: styled.div`
     display: flex;
