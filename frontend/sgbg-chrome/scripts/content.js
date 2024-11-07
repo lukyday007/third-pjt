@@ -5,6 +5,7 @@ let logoUrl
 let logoSadUrl
 let commonFolderIconUrl
 let createFolderIconUrl
+let saveSpinnerIconUrl
 
 // 크롬 확장 경로의 이미지 파일 URl 로드
 try {
@@ -12,6 +13,7 @@ try {
   logoSadUrl = chrome.runtime.getURL('images/singlebungle-sad.svg')
   commonFolderIconUrl = chrome.runtime.getURL('images/common-folder-icon.svg')
   createFolderIconUrl = chrome.runtime.getURL('images/create-folder-icon.svg')
+  saveSpinnerIconUrl = chrome.runtime.getURL('images/save-spinner.svg')
 } catch (e) {
   console.error('(싱글벙글) 이미지 URL 로드 실패: ', e)
 }
@@ -315,5 +317,82 @@ async function handleClickCreateFolderIcon() {
 
     // 창 닫기
     removeExistingFolderModal()
+  }
+}
+
+// 이미지 저장 로딩 스피너
+
+// 이미지 저장중 표시 모달 띄우기
+function showSpinnerModal() {
+  // 이미 존재하는 모달이 있다면 return
+  const existingModal = document.querySelector('#save-spinner-modal')
+
+  if (existingModal) return
+
+  // 모달 생성
+  const newModal = document.createElement('div')
+  newModal.id = 'save-spinner-modal'
+
+  const spinnerContainer = document.createElement('div')
+  spinnerContainer.id = 'save-spinner-container'
+
+  newModal.appendChild(spinnerContainer)
+  document.body.appendChild(newModal)
+}
+
+// 이미지 저장중 표시 모달 삭제하기
+function removeExistingSpinnerModal() {
+  // 이미 존재하는 모달이 있다면 return
+  const existingModal = document.querySelector('#save-spinner-modal')
+
+  if (existingModal) {
+    existingModal.remove()
+  }
+}
+
+// 이미지 저장중 스피너 추가하기
+function appendLoadingSpinner(imgSrc) {
+  showSpinnerModal()
+
+  const spinnerContainer = document.querySelector('#save-spinner-container')
+
+  // 현재 시간으로 고유 ID 설정
+  const areaId = 'spinner-area-' + Date.now()
+
+  saveSpinnerArea = document.createElement('div')
+  saveSpinnerArea.id = areaId
+  saveSpinnerArea.className = 'save-spinner-area'
+  saveSpinnerArea.innerHTML = `
+    <img src="" alt="save-spinner-img" class="save-spinner-img" />
+    <img src="" alt="save-spinner-svg" class="save-spinner-svg" />
+    `
+
+  // 저장 이미지 추가
+  saveSpinnerImg = saveSpinnerArea.querySelector('.save-spinner-img')
+  saveSpinnerImg.src = imgSrc
+
+  // 스피너 아이콘 추가
+  saveSpinnerSvg = saveSpinnerArea.querySelector('.save-spinner-svg')
+  saveSpinnerSvg.src = saveSpinnerIconUrl
+
+  spinnerContainer.appendChild(saveSpinnerArea)
+
+  return areaId
+}
+
+// 이미지 저장중 스피너 제거하기
+function removeLoadingSpinner(areaId) {
+  // 컨테이너를 선택해서 하위에 areaId를 가진 요소 제거
+  const spinnerContainer = document.querySelector('#save-spinner-container')
+
+  const spinnerArea = spinnerContainer.querySelector(`#${areaId}`)
+
+  if (spinnerArea) {
+    spinnerArea.remove()
+  }
+
+  // 남은 스피너가 없다면 모달 제거
+  if (!spinnerContainer.hasChildNodes()) {
+    removeExistingSpinnerModal()
   }
 }
