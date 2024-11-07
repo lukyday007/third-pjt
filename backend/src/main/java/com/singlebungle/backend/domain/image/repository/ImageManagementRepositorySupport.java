@@ -91,8 +91,8 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
         int totalPage = (int) ((totalCount + requestDTO.getSize() - 1) / requestDTO.getSize());
 
         Map<String, Object> result = new HashMap<>();
-        result.put("image-list", imageList);
-        result.put("total-page", totalPage);
+        result.put("imageList", imageList);
+        result.put("totalPage", totalPage);
 
         return result;
     }
@@ -158,8 +158,8 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
         int totalPage = (int) ((totalCount + requestDTO.getSize() - 1) / requestDTO.getSize());
 
         Map<String, Object> result = new HashMap<>();
-        result.put("image-list", imageList);
-        result.put("total-page", totalPage);
+        result.put("imageList", imageList);
+        result.put("totalPage", totalPage);
 
         return result;
     }
