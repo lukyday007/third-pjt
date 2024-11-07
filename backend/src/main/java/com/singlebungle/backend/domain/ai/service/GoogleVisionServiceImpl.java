@@ -53,9 +53,6 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
                 }
 
                 SafeSearchAnnotation annotation = res.getSafeSearchAnnotation();
-                log.info("Adult: {}, Medical: {}, Spoof: {}, Violence: {}, Racy: {}",
-                        annotation.getAdult(), annotation.getMedical(),
-                        annotation.getSpoof(), annotation.getViolence(), annotation.getRacy());
 
                 // 'LIKELY' 또는 'VERY_LIKELY'가 2개 이상인지 검사
                 int count = 0;
@@ -65,11 +62,11 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
                 count += isLikelyOrVeryLikely(annotation.getViolence()) ? 1 : 0;
                 count += isLikelyOrVeryLikely(annotation.getRacy()) ? 1 : 0;
 
-                System.out.println("========== count ==========");
-                System.out.println(count);
-
                 // 2개 이상일 경우 false 반환
                 if (count >= 2) {
+                    log.info("Adult: {}, Medical: {}, Spoof: {}, Violence: {}, Racy: {}",
+                            annotation.getAdult(), annotation.getMedical(),
+                            annotation.getSpoof(), annotation.getViolence(), annotation.getRacy());
                     log.warn(">>> 이미지 안전성 판별 결과 두 개 이상의 항목이 부적절함에 해당됩니다. : " + count);
                     return false;
                 }

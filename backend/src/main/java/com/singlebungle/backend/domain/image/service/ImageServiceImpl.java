@@ -162,9 +162,16 @@ public class ImageServiceImpl implements ImageService {
 
 
     @Override
-    public Map<String, Object> getImageList(ImageListGetRequestDTO requestDTO) {
+    public Map<String, Object> getImageListFromDir(ImageListGetRequestDTO requestDTO) {
 
-        return imageManagementRepositorySupport.findImageList(requestDTO);
+        return imageManagementRepositorySupport.findImageListFromDir(requestDTO);
+    }
+
+
+    @Override
+    public Map<String, Object> getImageListFromFeed(ImageListGetRequestDTO requestDTO) {
+
+        return imageManagementRepositorySupport.findImageListFromFeed(requestDTO);
     }
 
 

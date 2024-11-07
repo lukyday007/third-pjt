@@ -63,6 +63,9 @@ dependencies {
 	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+	// schedule용 재시도
+	implementation 'org.springframework.retry:spring-retry:1.3.1'
+
 	// S3 image
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 	implementation 'com.amazonaws:aws-java-sdk-s3:1.11.1000'
@@ -74,7 +77,6 @@ dependencies {
 	// ElasticSearch
 	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 	implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.17.0'
-
 
 	// 테스트 의존성
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

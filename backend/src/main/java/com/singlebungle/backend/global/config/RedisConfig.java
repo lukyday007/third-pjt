@@ -57,8 +57,8 @@ public class RedisConfig {
     }
 
     @Bean(name = "redisKeywordTemplate")
-    public RedisTemplate<String, String> redisKeywordTemplate() {
-        RedisTemplate<String, String> template = new RedisTemplate<>();
+    public RedisTemplate<String, Object> redisKeywordTemplate() {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(redisKeywordConnectionFactory());
         return template;
     }
