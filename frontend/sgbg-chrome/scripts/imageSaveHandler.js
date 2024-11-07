@@ -18,6 +18,8 @@ async function handleSaveImage(requestBody) {
   let isSaved = false
   let imgSrc = requestBodyCopy.imageUrl
 
+  const spinnerAreaId = appendLoadingSpinner(imgSrc)
+
   try {
     const response = await postSaveImage(requestBodyCopy)
 
@@ -25,11 +27,14 @@ async function handleSaveImage(requestBody) {
       throw new Error('이미지 저장 실패')
     }
   } catch (e) {
+    removeLoadingSpinner(spinnerAreaId)
     return showAlertModal(imgSrc, isSaved)
   }
 
   isSaved = true
   imgSrc = requestBodyCopy.imageUrl
+
+  removeLoadingSpinner(spinnerAreaId)
 
   return showAlertModal(imgSrc, isSaved)
 }

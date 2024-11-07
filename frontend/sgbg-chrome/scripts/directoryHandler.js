@@ -35,7 +35,8 @@ async function fetchDirectoryList() {
 
     return directoryInfos
   } catch (e) {
-    return e
+    throw new Error(e)
+    return
   }
 }
 

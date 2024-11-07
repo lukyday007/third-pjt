@@ -25,8 +25,6 @@ async function setLoggedIn() {
   try {
     const { email, profileImagePath } = await getUserInfoFromStorage()
 
-    console.log(email, profileImagePath)
-
     const profileBtn = document.querySelector('#profile-btn')
     const profileImg = profileBtn.querySelector('.pop-logo')
     const profileTitle = profileBtn.querySelector('.pop-title')
@@ -34,7 +32,7 @@ async function setLoggedIn() {
     profileImg.src = profileImagePath
     profileTitle.innerText = email
   } catch (e) {
-    console.log('로그인 실패', e)
+    throw new Error('로그인 실패', e)
   }
 
   chrome.storage.local.set({ isLoggedIn: true })
@@ -57,9 +55,7 @@ function setLoggedOut() {
 
 // 앱 열기 버튼 이벤트
 function openApp() {
-  const message = 'openAppBtn Clicked'
-
-  alert(message)
+  window.open('https://k11b205.p.ssafy.io')
 }
 
 // 로그인 상태에 따라 continue with Google 혹은 프로필 띄우기
@@ -93,10 +89,7 @@ function startLogin() {
       return
     }
 
-    console.log('message response: ', response)
-
     if (response && response.success) {
-      console.log('userInfo:', response)
       setLoggedIn()
     } else {
       console.error('JWT fetch 실패')

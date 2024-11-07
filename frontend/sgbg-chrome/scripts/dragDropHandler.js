@@ -20,8 +20,6 @@ function handleDragStart(event) {
     return
   }
 
-  console.log('드래그 이미지 정보: ', event.target)
-
   if (event.target.src) {
     const dragImgSrc = event.target.src
 
@@ -31,8 +29,6 @@ function handleDragStart(event) {
   isDragging = true
   startX = event.clientX
   startY = event.clientY
-
-  console.log(event.clientX, event.clientY)
 }
 
 function handleDrag(event) {
@@ -108,7 +104,6 @@ function handleDrop(event) {
   }
 
   event.preventDefault()
-  console.log(dropArea)
   initDrag(dropArea)
 }
 
@@ -134,11 +129,9 @@ function handleDragLeave(event) {
 // drop -> dragover -> dragend 순으로 종료되어
 // dragend 이벤트에서 cursor 및 스타일 관련 이벤트 처리가 필요하다.
 function handleDragEnd(event) {
-  console.log('dragend', isDragging, startX, startY)
   isDragging = false
   startX = 0
   startY = 0
-  console.log('dragend', isDragging, startX, startY)
 
   // 커서 및 drag-over 초기화
   document.querySelectorAll('.modal-droppable').forEach((dropArea) => {

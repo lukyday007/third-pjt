@@ -37,5 +37,5 @@
       "matches": ["<all_urls>"]
     }
   ],
-  "permissions": ["activeTab", "scripting", "storage", "tabs", "identity", "contextMenus"]
+  "permissions": ["activeTab", "scripting", "storage", "identity", "contextMenus"]
 }
