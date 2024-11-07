@@ -94,7 +94,7 @@ pipeline {
                         // Electron 설치 파일 업로드 (동적으로 파일 이름 지정)
                         sh """
                         curl --request POST --header "PRIVATE-TOKEN: $TOKEN" \
-                        --form "file=@frontend/sgbg/release/1.0.0/sgbg_1.0.0.exe" \
+                        --form "file=@frontend/sgbg/dist/Sgbg Setup 1.0.0.exe" \
                         "https://gitlab.com/api/v4/projects/$PROJ_ID/uploads"
                         """
                     }
