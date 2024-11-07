@@ -26,7 +26,7 @@ public class AuthController {
     // Google 인증 리다이렉트 URL (크롬 익스텐션)
     private static final String EXTENSION_REDIRECT_URI = "https://fcnagokaapcdhckhnndheebebadioomb.chromiumapp.org/google";
     // 로컬 개발 환경 리다이렉트 URL
-    private static final String LOCAL_REDIRECT_URI = "https://k11b205.p.ssafy.io/login-callback";
+    private static final String LOCAL_REDIRECT_URI = "https://k11b205.p.ssafy.io";
 
 
     @GetMapping("/google/authorize")
