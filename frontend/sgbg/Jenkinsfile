@@ -6,6 +6,8 @@ pipeline {
         REMOTE_USER = 'ubuntu'
         REMOTE_HOST = 'k11b205.p.ssafy.io'
         REMOTE_DIR = '/home/ubuntu/plog'  // 원격 서버에서 프로젝트가 위치한 경로
+        PRIVATE_TOKEN = credentials('PRIVATE_TOKEN')  // GitLab API 토큰
+        PROJECT_ID = credentials('PROJECT_ID')        // GitLab 프로젝트 ID
     }
 
     stages {
@@ -55,6 +57,45 @@ pipeline {
                 dir('frontend/sgbg') {
                     sh 'npm install'
                     sh 'CI=false npm run build'  // CI 환경 변수를 false로 설정
+                }
+            }
+        }
+        stage('Build Electron App') {  // Electron 빌드 단계 추가
+            steps {
+                dir('frontend/sgbg') {
+                    sh 'npm install'
+                    sh 'npm run electron:build'  // electron-builder를 사용해 빌드
+                }
+            }
+        }
+        stage('Create GitLab Release') {
+            steps {
+                script {
+                    def version = "1.0.${env.BUILD_NUMBER}"
+                    
+                    // 기존 태그 삭제 (이미 존재할 경우 대비)
+                    sh """
+                    curl --request DELETE \
+                    --header "PRIVATE-TOKEN: ${env.PRIVATE_TOKEN}" \
+                    "https://gitlab.com/api/v4/projects/${env.PROJECT_ID}/repository/tags/v${version}" || true
+                    """
+                    
+                    // GitLab 릴리스 생성
+                    sh """
+                    curl --request POST \
+                    --header "PRIVATE-TOKEN: ${env.PRIVATE_TOKEN}" \
+                    --data "name=Release v${version}" \
+                    --data "tag_name=v${version}" \
+                    --data "description=Electron app release" \
+                    "https://gitlab.com/api/v4/projects/${env.PROJECT_ID}/releases"
+                    """
+                    
+                    // Electron 설치 파일 업로드 (동적으로 파일 이름 지정)
+                    sh """
+                    curl --request POST --header "PRIVATE-TOKEN: ${env.PRIVATE_TOKEN}" \
+                    --form "file=@frontend/sgbg/release/${version}/sgbg_${version}.exe" \
+                    "https://gitlab.com/api/v4/projects/${env.PROJECT_ID}/uploads"
+                    """
                 }
             }
         }
