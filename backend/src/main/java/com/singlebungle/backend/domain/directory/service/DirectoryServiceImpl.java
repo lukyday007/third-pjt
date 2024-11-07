@@ -2,6 +2,7 @@ package com.singlebungle.backend.domain.directory.service;
 
 import com.singlebungle.backend.domain.directory.entity.Directory;
 import com.singlebungle.backend.domain.directory.repository.DirectoryRepository;
+import com.singlebungle.backend.domain.image.repository.ImageManagementRepository;
 import com.singlebungle.backend.domain.user.entity.User;
 import com.singlebungle.backend.domain.user.repository.UserRepository;
 import com.singlebungle.backend.global.auth.auth.JwtProvider;
@@ -24,6 +25,7 @@ public class DirectoryServiceImpl implements DirectoryService {
     private final DirectoryRepository directoryRepository;
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
+    private final ImageManagementRepository imageManagementRepository;
 
     public List<Directory> createDirectory(String directoryName, String token) {
         // 디렉토리 이름이 null인 경우 예외 처리
@@ -154,5 +156,17 @@ public class DirectoryServiceImpl implements DirectoryService {
                 .build();
 
         directoryRepository.saveAll(Arrays.asList(defaultDirectory, trashDirectory));
+    }
+
+    public void deleteImagesInBinDirectory(String token) {
+        Long userId = jwtProvider.getUserIdFromToken(token);
+        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        // 상태가 2인 유저의 빈 디렉토리 찾기
+        Directory binDirectory = directoryRepository.findByUserAndStatus(user, 2)
+                .orElseThrow(() -> new IllegalStateException("빈 디렉토리가 존재하지 않습니다."));
+
+        // 빈 디렉토리에 연결된 ImageManagement 엔티티 삭제
+        imageManagementRepository.deleteByCurDirectory(binDirectory);
     }
 }

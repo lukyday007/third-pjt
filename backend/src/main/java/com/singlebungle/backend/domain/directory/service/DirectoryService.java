@@ -21,4 +21,6 @@ public interface DirectoryService {
     List<Directory> deleteDirectory(Long directoryId, String token);
 
     void createDefaultDirectories(User user);
+
+    void deleteImagesInBinDirectory(String token);
 }
