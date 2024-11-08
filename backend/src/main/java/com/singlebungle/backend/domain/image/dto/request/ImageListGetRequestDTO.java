@@ -3,46 +3,46 @@ package com.singlebungle.backend.domain.image.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+import java.util.List;
+
 @ToString
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Schema(title="IMAGE_INFO_REQ : 이미지 목록 요청 DTO")
 public class ImageListGetRequestDTO {
 
     private Long userId;
-    private Long directoryId;
+
+    @Builder.Default
+    private Long directoryId = 0L;      // 중요
+
     private int page;
     private int size;
-    private String keyword;
+    private List<String> keywords;      // 중요
     private int sort;
-    private Boolean isBin;
+    private boolean isBin;              // 중요
 
-    public ImageListGetRequestDTO(int page, int size, String keyword, int sort) {
-        this.userId = userId;
+    // getImageListFromFeed
+    public ImageListGetRequestDTO(int page, int size, List<String> keywords, int sort) {
         this.page = page;
         this.size = size;
-        this.keyword = keyword;
+        this.keywords = keywords;
         this.sort = sort;
     }
 
-    public ImageListGetRequestDTO(Long userId, int page, int size, String keyword, int sort, Long directoryId) {
+
+    // getImageListFromDirectory
+    public ImageListGetRequestDTO(Long userId, Long directoryId, int page, int size,  int sort, boolean isBin) {
         this.userId = userId;
         this.page = page;
         this.size = size;
-        this.keyword = keyword;
         this.sort = sort;
         this.directoryId = directoryId;
-    }
-
-    public ImageListGetRequestDTO(int page, int size, String keyword, int sort, Boolean isBin) {
-        this.userId = userId;
-        this.page = page;
-        this.size = size;
-        this.keyword = keyword;
-        this.sort = sort;
         this.isBin = isBin;
     }
+
 
 }

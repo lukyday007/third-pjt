@@ -36,10 +36,14 @@ public class ImageRepositorySupport extends QuerydslRepositorySupport {
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(qImage.isDeleted.eq(false));
 
-        if (requestDTO.getKeyword() != null && !requestDTO.getKeyword().isEmpty()) {
-            builder.and(qImageDetail.keyword.keywordName.containsIgnoreCase(requestDTO.getKeyword()));
+        // 키워드를 OR 조건으로 추가
+        if (requestDTO.getKeywords() != null && !requestDTO.getKeywords().isEmpty()) {
+            BooleanBuilder keywordBuilder = new BooleanBuilder();
+            for (String keyword : requestDTO.getKeywords()) {
+                keywordBuilder.or(qImageDetail.keyword.keywordName.containsIgnoreCase(keyword));
+            }
+            builder.and(keywordBuilder);
         }
-
         JPAQuery<ImageListGetResponseDTO> query = queryFactory
                 .select(Projections.constructor(ImageListGetResponseDTO.class,
                         qImage.imageId,
