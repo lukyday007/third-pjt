@@ -135,7 +135,7 @@ public class ImageController {
             @Parameter(description = "이미지 개수")
             @RequestParam(value = "size", required = false, defaultValue = "10") int size,
             @Parameter(description = "키워드")
-            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "keyword", required = false) String keywordList,
             @Parameter(description = "정렬기준 (0: 최신, 1: 오래 된, 2: 랜덤")
             @RequestParam(value = "sort", required = false, defaultValue = "0") int sort,
             @Parameter(description = "휴지통 여부 확인")
@@ -150,10 +150,18 @@ public class ImageController {
             throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
         }
 
-        log.info(">>> [GET] /images/my - 요청 파라미터: userId - {}, directoryId - {}, page - {}, size - {}, keyword - {}, sort - {}", userId, directoryId, page, size, keyword, sort);
+        log.info(">>> [GET] /images/my - 요청 파라미터: userId - {}, directoryId - {}, page - {}, size - {}, keyword - {}, sort - {}", userId, directoryId, page, size, keywordList, sort);
 
-        ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(userId,  directoryId, page, size, keyword, sort, isBin);
-        Map<String, Object> imageList = imageService.getImageListFromDir(requestDTO);
+        Map<String, Object> imageList;
+
+        if (keywordList != null) {
+            List<String> keywords = Arrays.asList(keywordList.split(","));
+            ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(userId, directoryId, page, size, keywords, sort, isBin);
+            imageList = imageService.getImageListFromDir(requestDTO);
+        } else {
+            ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(userId, directoryId, page, size, sort, isBin);
+            imageList = imageService.getImageListFromDir(requestDTO);
+        }
 
         return ResponseEntity.status(200).body(imageList);
     }
@@ -168,7 +176,7 @@ public class ImageController {
             @Parameter(description = "이미지 개수")
             @RequestParam(value = "size", required = false, defaultValue = "10") int size,
             @Parameter(description = "키워드")
-            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "keyword", required = false) String keywordList,
             @Parameter(description = "정렬기준 (0: 최신, 1: 오래 된, 2: 랜덤")
             @RequestParam(value = "sort", required = false, defaultValue = "0") int sort,
             @Parameter(description = "JWT")
@@ -182,9 +190,11 @@ public class ImageController {
             throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
         }
 
-        log.info(">>> [GET] /images/feed - 요청 파라미터:  userId - {}, page - {}, size - {}, keyword - {}, sort - {}" , userId, page, size, keyword, sort);
+        log.info(">>> [GET] /images/feed - 요청 파라미터:  userId - {}, page - {}, size - {}, keyword - {}, sort - {}" , userId, page, size, keywordList, sort);
 
-        ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(page, size, keyword, sort);
+        List<String> keywords = Arrays.asList(keywordList.split(","));
+
+        ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(page, size, keywords, sort);
         Map<String, Object> imageList = imageService.getImageListFromFeed(requestDTO);
 
         return ResponseEntity.status(200).body(imageList);

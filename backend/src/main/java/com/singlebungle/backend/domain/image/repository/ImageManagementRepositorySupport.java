@@ -43,19 +43,28 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
         // 유저 정보 필터링 - User 엔티티를 조인하여 userId 조건 추가
         builder.and(qImageManagement.user.userId.eq(requestDTO.getUserId()));
 
-        Boolean status = requestDTO.getIsBin();
+        // directoryId 처리
+        boolean status = requestDTO.isBin();
         if (status) {
             builder.and(qImageManagement.curDirectory.status.eq(2)); // 휴지통
         } else {
             if (requestDTO.getDirectoryId() == null || requestDTO.getDirectoryId() == 0) {
                 builder.and(qImageManagement.curDirectory.status.eq(0));
+            } else if (requestDTO.getDirectoryId().equals(-1L)) {
+                builder.and(qImageManagement.curDirectory.status.ne(2));
             } else {
                 builder.and(qImageManagement.curDirectory.directoryId.eq(requestDTO.getDirectoryId()));
             }
         }
 
-        if (requestDTO.getKeyword() != null && !requestDTO.getKeyword().isEmpty()) {
-            builder.and(qImageDetail.keyword.keywordName.containsIgnoreCase(requestDTO.getKeyword()));
+        // 키워드 or 조건으로 처리
+        if (requestDTO.getKeywords() != null && !requestDTO.getKeywords().isEmpty()) {
+            BooleanBuilder keywordBuilder = new BooleanBuilder();
+
+            for (String keyword : requestDTO.getKeywords()) {
+                builder.or(qImageDetail.keyword.keywordName.containsIgnoreCase(keyword));
+            }
+            builder.and(keywordBuilder);
         }
 
         JPAQuery<ImageListGetResponseDTO> query = queryFactory
