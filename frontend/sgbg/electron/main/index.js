@@ -1,4 +1,5 @@
 import { app, BrowserWindow, shell, ipcMain } from "electron"
+import { autoUpdater } from "electron-updater"
 import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
 import path from "node:path"
@@ -83,9 +84,28 @@ async function createWindow() {
     if (url.startsWith("https:")) shell.openExternal(url)
     return { action: "deny" }
   })
+
+  // 자동 업데이트 체크
+  autoUpdater.checkForUpdatesAndNotify()
 }
 
-app.whenReady().then(createWindow)
+// 앱이 준비되면 창 생성 및 업데이트 관련 이벤트 핸들러 설정
+app.whenReady().then(() => {
+  createWindow()
+
+  // 업데이트 진행 상태 이벤트 핸들러 설정
+  autoUpdater.on("update-available", () => {
+    win?.webContents.send("message", "업데이트가 가능합니다. 다운로드 중...")
+  })
+
+  autoUpdater.on("update-downloaded", () => {
+    win?.webContents.send(
+      "message",
+      "업데이트가 완료되었습니다. 앱을 재시작합니다."
+    )
+    autoUpdater.quitAndInstall() // 앱 자동 재시작
+  })
+})
 
 app.on("window-all-closed", () => {
   win = null
