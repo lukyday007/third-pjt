@@ -3,6 +3,7 @@ package com.singlebungle.backend.global.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -65,6 +66,7 @@ public class RedisConfig {
     }
 
     @Bean(name = "redisKeywordTemplate")
+    @Primary
     public RedisTemplate<String, Object> redisKeywordTemplate(RedisConnectionFactory redisKeywordConnectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(redisKeywordConnectionFactory);
