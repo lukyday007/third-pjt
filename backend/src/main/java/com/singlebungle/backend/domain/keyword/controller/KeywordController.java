@@ -21,7 +21,7 @@ public class KeywordController {
     private final UserService userService;
     private final SearchService searchService;
 
-    @PostMapping("/{keyword}")
+    @GetMapping("/{keyword}")
     @Operation(summary = "키워드 검색", description = "키워드를 검색합니다.")
     public ResponseEntity<Map<String, List<String>>> search(
             @PathVariable String keyword,
