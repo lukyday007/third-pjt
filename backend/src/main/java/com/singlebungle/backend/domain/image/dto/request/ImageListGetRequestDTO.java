@@ -17,14 +17,15 @@ public class ImageListGetRequestDTO {
     private Long userId;
 
     @Builder.Default
-    private Long directoryId = 0L;
+    private Long directoryId = 0L;      // 중요
 
     private int page;
     private int size;
-    private List<String> keywords;
+    private List<String> keywords;      // 중요
     private int sort;
-    private boolean isBin;
+    private boolean isBin;              // 중요
 
+    // getImageListFromFeed
     public ImageListGetRequestDTO(int page, int size, List<String> keywords, int sort) {
         this.page = page;
         this.size = size;
@@ -32,15 +33,8 @@ public class ImageListGetRequestDTO {
         this.sort = sort;
     }
 
-    public ImageListGetRequestDTO(Long userId, int page, int size, List<String> keywords, int sort, Long directoryId) {
-        this.userId = userId;
-        this.page = page;
-        this.size = size;
-        this.keywords = keywords;
-        this.sort = sort;
-        this.directoryId = directoryId;
-    }
 
+    // getImageListFromDirectory
     public ImageListGetRequestDTO(Long userId, Long directoryId, int page, int size,  int sort, boolean isBin) {
         this.userId = userId;
         this.page = page;
