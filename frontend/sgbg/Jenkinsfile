@@ -91,14 +91,14 @@ pipeline {
                         sh """
                             curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
                             -H "Content-Type: application/octet-stream" \
-                            --data-binary @"frontend/sgbg/dist/Sgbg Setup 1.0.0.exe" \
+                            --data-binary @"frontend/sgbg/build/Sgbg Setup 1.0.0.exe" \
                             "https://uploads.github.com/repos/${GITHUB_REPO}/releases/${releaseId}/assets?name=Sgbg%20Setup%201.0.0.exe"
                         """
                         
                         sh """
                             curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
                             -H "Content-Type: application/octet-stream" \
-                            --data-binary @frontend/sgbg/dist/latest.yml \
+                            --data-binary @frontend/sgbg/build/latest.yml \
                             "https://uploads.github.com/repos/${GITHUB_REPO}/releases/${releaseId}/assets?name=latest.yml"
                         """
                     }
