@@ -16,14 +16,14 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "electron:build": "electron-builder --win"
+    "electron:build": "electron-builder --win --publish=always"
   },
   "dependencies": {
     "@egjs/react-infinitegrid": "^4.12.0",
     "@reduxjs/toolkit": "^2.3.0",
     "axios": "^1.7.7",
     "electron-reload": "^2.0.0-alpha.1",
-    "electron-updater": "^6.1.8",
+    "electron-updater": "^6.3.9",
     "prop-types": "^15.8.1",
     "react-responsive-masonry": "^2.4.1",
     "react-router-dom": "^6.27.0",
@@ -47,7 +47,16 @@
     "target": [
       {
         "target": "nsis",
-        "arch": ["x64"]
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "jogyubeom",
+        "repo": "SGBG_release"
       }
     ]
   }

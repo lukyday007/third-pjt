@@ -6,8 +6,7 @@ pipeline {
         REMOTE_USER = 'ubuntu'
         REMOTE_HOST = 'k11b205.p.ssafy.io'
         REMOTE_DIR = '/home/ubuntu/plog'  // 원격 서버에서 프로젝트가 위치한 경로
-        PRIVATE_TOKEN = credentials('PRIVATE_TOKEN')  // GitLab API 토큰
-        PROJECT_ID = credentials('PROJECT_ID')        // GitLab 프로젝트 ID
+        GITHUB_REPO = "jogyubeom/SGBG_release"
     }
 
     stages {
@@ -68,34 +67,38 @@ pipeline {
                 }
             }
         }
-        stage('Create GitLab Release') {
+        // GitHub 릴리스 생성 및 설치 파일 업로드 단계
+        stage('Create GitHub Release') {
             steps {
                 script {
                     def version = "1.0.${env.BUILD_NUMBER}"
-                    
-                    withCredentials([usernamePassword(credentialsId: 'gitlab', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                        // 기존 태그 삭제
+
+                    withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
+                        // GitHub 릴리스 생성
+                        def releaseResponse = sh(
+                            script: """
+                                curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
+                                -d '{"tag_name": "v${version}", "name": "Release v${version}", "body": "Electron app release"}' \
+                                https://api.github.com/repos/${GITHUB_REPO}/releases
+                            """,
+                            returnStdout: true
+                        ).trim()
+                        // 릴리스 ID 추출
+                        def releaseId = readJSON(text: releaseResponse).id
+
+                        // 설치 파일 업로드 (latest.yml 포함)
                         sh """
-                        curl --request DELETE \
-                        --user "$GIT_USERNAME:$GIT_PASSWORD" \
-                        "https://gitlab.com/api/v4/projects/${PROJECT_ID}/repository/tags/v${version}" || true
+                            curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
+                            -H "Content-Type: application/octet-stream" \
+                            --data-binary @frontend/sgbg/dist/Sgbg Setup 1.0.0.exe \
+                            "https://uploads.github.com/repos/${GITHUB_REPO}/releases/${releaseId}/assets?name=Sgbg Setup 1.0.0.exe"
                         """
                         
-                        // GitLab 릴리스 생성
                         sh """
-                        curl --request POST \
-                        --user "$GIT_USERNAME:$GIT_PASSWORD" \
-                        --data "name=Release v${version}" \
-                        --data "tag_name=v${version}" \
-                        --data "description=Electron app release" \
-                        "https://gitlab.com/api/v4/projects/${PROJECT_ID}/releases"
-                        """
-                    
-                        // Electron 설치 파일 업로드
-                        sh """
-                        curl --request POST --user "$GIT_USERNAME:$GIT_PASSWORD" \
-                        --form "file=@frontend/sgbg/dist/Sgbg Setup 1.0.0.exe" \
-                        "https://gitlab.com/api/v4/projects/${PROJECT_ID}/uploads"
+                            curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
+                            -H "Content-Type: application/octet-stream" \
+                            --data-binary @frontend/sgbg/dist/latest.yml \
+                            "https://uploads.github.com/repos/${GITHUB_REPO}/releases/${releaseId}/assets?name=latest.yml"
                         """
                     }
                 }
