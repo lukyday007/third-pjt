@@ -12,9 +12,14 @@ import TrashBinIcon from "../asset/images/SideBar/TrashBinIcon.svg?react"
 
 import TestImage from "../asset/images/TestImage.png"
 import { useNavigate } from "react-router-dom"
-import { getDirectoryList, postCreateDirectory } from "../lib/api/directory-api"
+import {
+  deleteDirectory,
+  getDirectoryList,
+  postCreateDirectory,
+} from "../lib/api/directory-api"
 import CreateFolderModal from "./CreateFolderModal"
 import { getUserInfo } from "../lib/api/user-api"
+import FolderRightClickModal from "./FolderRightClickModal"
 
 const s = {
   Test: styled.div`
@@ -89,6 +94,14 @@ const SideBar = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   // 유저 정보
   const [userInfo, setUserInfo] = useState({})
+  // 우클릭 모달 열림 여부
+  const [isRightClickModalOpen, setIsRightClickModalOpen] = useState(false)
+  const [rightClickModalPosition, setRightClickModalPosition] = useState({
+    X: 0,
+    Y: 0,
+  })
+  // 현재 선택된 디렉토리
+  const [selectedDirectory, setSelectedDirectory] = useState(0)
 
   // 컴포넌트가 로드될 때 요청
   useEffect(() => {
@@ -102,6 +115,10 @@ const SideBar = () => {
 
   const toggleCreateModal = () => {
     setIsCreateModalOpen((prev) => !prev)
+  }
+
+  const toggleRightClickModal = () => {
+    setIsRightClickModalOpen((prev) => !prev)
   }
 
   const navigate = useNavigate()
@@ -175,6 +192,35 @@ const SideBar = () => {
     )
   }
 
+  // 우클릭 관리
+  const handleRightClick = (event, id) => {
+    // 우클릭 이벤트 제한
+    event.preventDefault()
+
+    const currentX = event.clientX
+    const currentY = event.clientY
+
+    if (currentX && currentY) {
+      setRightClickModalPosition({ X: currentX, Y: currentY })
+    }
+
+    if (id) {
+      setSelectedDirectory(id)
+      toggleRightClickModal()
+    }
+  }
+
+  // 폴더 삭제
+  const handleDeleteDirectory = async () => {
+    if (!confirm("폴더를 삭제하시겠습니까?")) return
+
+    await deleteDirectory(selectedDirectory, (resp) => {
+      alert("완료")
+      fetchDirectoryInfos()
+    })
+    setSelectedDirectory(0)
+  }
+
   return (
     <>
       <s.Test $isopen={isSideBarOpen}>
@@ -204,28 +250,32 @@ const SideBar = () => {
             <AllImagesIcon />
             <s.FolderTitle>전체 이미지</s.FolderTitle>
           </s.FolderArea>
-          <s.FolderArea>
+          <s.FolderArea onClick={() => handleFolderClick(0)}>
             <DefaultFolderIcon />
             <s.FolderTitle>기본폴더</s.FolderTitle>
           </s.FolderArea>
           <s.FolderCaption>내 폴더</s.FolderCaption>
-          {directoryInfos ? (
+          {isRightClickModalOpen && (
+            <FolderRightClickModal
+              toggleFunction={toggleRightClickModal}
+              position={rightClickModalPosition}
+              openFunction={() => handleFolderClick(selectedDirectory)}
+              deleteFunction={handleDeleteDirectory}
+            />
+          )}
+          {directoryInfos &&
             directoryInfos.map((directoryInfo) => (
               <s.FolderArea
                 key={directoryInfo.directoryId}
                 onClick={() => handleFolderClick(directoryInfo.directoryId)}
+                onContextMenu={(event) =>
+                  handleRightClick(event, directoryInfo.directoryId)
+                }
               >
                 <CommonFolderIcon />
                 <s.FolderTitle>{directoryInfo.directoryName}</s.FolderTitle>
               </s.FolderArea>
-            ))
-          ) : (
-            <></>
-          )}
-          <s.FolderArea>
-            <CommonFolderIcon />
-            <s.FolderTitle>싱글벙글한 이미지</s.FolderTitle>
-          </s.FolderArea>
+            ))}
           <s.FolderCaption>관리</s.FolderCaption>
           <s.FolderArea onClick={toggleCreateModal}>
             <CreateFolderIcon />
