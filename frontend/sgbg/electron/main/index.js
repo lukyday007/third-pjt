@@ -101,7 +101,9 @@ app.whenReady().then(() => {
   autoUpdater.on("update-downloaded", () => {
     win?.webContents.send(
       "message",
-      "업데이트가 완료되었습니다. 앱을 재시작합니다."
+      JSON.stringify({
+        message: "업데이트가 완료되었습니다. 앱을 재시작합니다.",
+      })
     )
     autoUpdater.quitAndInstall() // 앱 자동 재시작
   })
