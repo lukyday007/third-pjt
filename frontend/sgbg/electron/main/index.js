@@ -66,11 +66,11 @@ async function createWindow() {
     console.log("VITE_DEV_SERVER_URL:", VITE_DEV_SERVER_URL)
     win.loadURL(VITE_DEV_SERVER_URL)
     // Open devTool if the app is not packaged
-    win.webContents.openDevTools()
+    // win.webContents.openDevTools()
   } else {
     console.log("프로덕션 모드 - index.html 로드")
     win.loadFile(indexHtml)
-    win.webContents.openDevTools()
+    // win.webContents.openDevTools()
   }
 
   // Test actively push message to the Electron-Renderer
