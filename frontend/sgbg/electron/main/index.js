@@ -57,13 +57,20 @@ async function createWindow() {
     },
   })
 
+  // 경로 확인을 위한 로그 출력
+  console.log("RENDERER_DIST:", RENDERER_DIST)
+  console.log("indexHtml:", indexHtml)
+
   if (VITE_DEV_SERVER_URL) {
     // #298
+    console.log("VITE_DEV_SERVER_URL:", VITE_DEV_SERVER_URL)
     win.loadURL(VITE_DEV_SERVER_URL)
     // Open devTool if the app is not packaged
     win.webContents.openDevTools()
   } else {
-    win.loadFile(`file://${indexHtml}`)
+    console.log("프로덕션 모드 - index.html 로드")
+    win.loadFile(indexHtml)
+    win.webContents.openDevTools()
   }
 
   // Test actively push message to the Electron-Renderer
@@ -115,6 +122,6 @@ ipcMain.handle("open-win", (_, arg) => {
   if (VITE_DEV_SERVER_URL) {
     childWindow.loadURL(`${VITE_DEV_SERVER_URL}#${arg}`)
   } else {
-    childWindow.loadFile(`file://${indexHtml}`, { hash: arg })
+    childWindow.loadFile(indexHtml, { hash: arg })
   }
 })
