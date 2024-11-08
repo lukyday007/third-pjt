@@ -1,15 +1,14 @@
 package com.singlebungle.backend.global.config;
 
-import ch.qos.logback.core.net.ObjectWriter;
 import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,6 +18,7 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Configuration
@@ -48,57 +48,92 @@ public class SchedulerConfig implements SchedulingConfigurer {
         taskRegistrar.setTaskScheduler(threadPoolTaskScheduler);
     }
 
-    // todo 테스트 후 2시간 간격으로 수정
-    @Scheduled(fixedRate = 60 * 1000)  // 2 *60*60*1000 : 2시간마다 실행
+    // todo 테스트 후 2시간 간격으로 수정 2 *60*60*1000 : 2시간마다 실행
+    @Scheduled(fixedRate = 10 * 60 * 1000)
     public void updateKeywordRanking() {
+        try {
+            Set<Object> keywordObjs = keywordTemplate.opsForHash().keys("keyword");
 
-        // 빠른 검색 속도: Set은 중복을 허용하지 않고, contains와 같은 검색 연산이 더 효율적입니다.
-        // 명시적으로 키가 중복되지 않음을 나타냄
-        Set<String> keywords = keywordTemplate.keys("keyword:*");
+            if (keywordObjs != null) {
+                for (Object keywordObj : keywordObjs) {
+                    String fullField = keywordObj.toString();  // 예: "apple:curCnt"
+                    String[] parts = fullField.split(":");
+                    if (parts.length < 2) continue;
 
-        if (keywords != null) {
-            for (Object  keywordObj  : keywords) {
-                String keyword = (String) keywordObj;
-                String prevCntStr = (String) keywordTemplate.opsForHash().get(keyword, "prevCnt");
-                String curCntStr = (String) keywordTemplate.opsForHash().get(keyword, "curCnt");
+                    String keyword = parts[0];
+                    String fieldType = parts[1];
 
-                if (prevCntStr != null && curCntStr != null) {
-                    int prevCnt = Integer.parseInt(prevCntStr);
-                    int curCnt = Integer.parseInt(curCntStr);
-                    int gap = curCnt - prevCnt;
+                    if (fieldType.equals("curCnt")) {
+                        // prevCnt와 curCnt 값 가져오기
+                        String prevCntStr = (String) keywordTemplate.opsForHash().get("keyword", keyword + ":prevCnt");
+                        String curCntStr = (String) keywordTemplate.opsForHash().get("keyword", keyword + ":curCnt");
 
-                    // incrementScore 는 key가 이미 있을 경우 갱신, 없을 경우 add
-                    keywordTemplate.opsForZSet().incrementScore("keyword-ranking:" + keyword, keyword, gap);
-                    keywordTemplate.opsForHash().put(keyword, "prevCnt", String.valueOf(curCnt));
+                        if (prevCntStr != null && curCntStr != null) {
+                            try {
+                                int prevCnt = Integer.parseInt(prevCntStr);
+                                int curCnt = Integer.parseInt(curCntStr);
+                                int gap = curCnt - prevCnt;
+
+                                // ZSet에서 keyword-ranking 업데이트
+                                keywordTemplate.opsForZSet().incrementScore("keyword-ranking", keyword, gap);
+
+                                // prevCnt 값을 curCnt로 갱신
+                                keywordTemplate.opsForHash().put("keyword", keyword + ":prevCnt", String.valueOf(curCnt));
+                            } catch (NumberFormatException e) {
+                                log.error("Number format exception for keyword: {}, prevCnt: {}, curCnt: {}", keyword, prevCntStr, curCntStr, e);
+                            }
+                        }
+                    }
                 }
             }
+        } catch (RedisConnectionFailureException e) {
+            log.error(">>> Redis connection failure while updating keyword ranking.", e);
+        } catch (Exception e) {
+            log.error(">>> Unexpected error occurred during update Keyword Ranking.", e);
         }
     }
 
-    // 12시간 간격으로 sql 갱신
+    // 12시간마다 SQL 데이터베이스와 동기화
     @Transactional
-    @Scheduled(fixedRate = 12 * 60 * 60 * 1000)  // 12시간마다 실행
+    @Scheduled(fixedRate = 12 * 60 * 60 * 1000)
     public void updateSQL() {
-        Set<String> keywords = keywordTemplate.keys("keyword:*");
+        try {
+            Set<Object> keywordObjs = keywordTemplate.opsForHash().keys("keyword");
 
-        if (keywords != null) {
-            for (Object  keywordObj  : keywords) {
-                String keyword = (String) keywordObj;
-                String[] parts = keyword.split(":");
-                String keywordParsed = parts[1];
+            if (keywordObjs != null) {
+                for (Object keywordObj : keywordObjs) {
+                    String fullField = keywordObj.toString();
+                    String[] parts = fullField.split(":");
+                    if (parts.length < 2) continue;
 
-                String curCntStr = (String) keywordTemplate.opsForHash().get(keyword, "curCnt");
+                    String keyword = parts[0];
+                    String fieldType = parts[1];
 
-                if (curCntStr != null) {
-                    int curCnt = Integer.parseInt(curCntStr);
-                    Keyword kw = keywordRepository.findByKeywordName(keywordParsed);
-                    if (kw != null) {
-                        kw.setUseCount(curCnt);
-                        keywordRepository.save(kw);
+                    if (fieldType.equals("curCnt")) {
+                        // curCnt 값을 가져와서 SQL 데이터베이스에 저장
+                        String curCntStr = (String) keywordTemplate.opsForHash().get("keyword", keyword + ":curCnt");
+
+                        if (curCntStr != null) {
+                            try {
+                                int curCnt = Integer.parseInt(curCntStr);
+                                Keyword kw = keywordRepository.findByKeywordName(keyword);
+                                if (kw != null) {
+                                    kw.setUseCount(curCnt);
+                                    keywordRepository.save(kw);
+                                }
+                            } catch (NumberFormatException e) {
+                                log.error(">>> Number format exception for keyword: {}, curCnt: {}", keyword, curCntStr, e);
+                            } catch (DataAccessException e) {
+                                log.error(">>> Database access error while saving keyword: {}", keyword, e);
+                            }
+                        }
                     }
-
                 }
             }
+        } catch (RedisConnectionFailureException e) {
+            log.error("Redis connection failure while updating SQL.", e);
+        } catch (Exception e) {
+            log.error("Unexpected error occurred during update SQL.", e);
         }
     }
 }

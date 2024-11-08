@@ -3,6 +3,7 @@ package com.singlebungle.backend.global.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -33,49 +34,67 @@ public class RedisConfig {
     @Value("${spring.redis-user.port}")
     private int redisUserPort;
 
-    // 기본 Redis 인스턴스 설정
+    /**
+     * 기본 Redis 인스턴스 설정
+     */
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        LettuceConnectionFactory factory = new LettuceConnectionFactory(redisHost, redisPort);
-        factory.setPassword(redisPassword);
-        return factory;
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisHost, redisPort);
+        config.setPassword(redisPassword);
+        return new LettuceConnectionFactory(config);
     }
 
     @Bean
-    public RedisTemplate<String, String> redisTemplate() {
-        RedisTemplate<String, String> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory());
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(redisConnectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
         return template;
     }
 
-    // redis-keyword 인스턴스 설정
+    /**
+     * Redis-Keyword 인스턴스 설정
+     */
     @Bean
     public RedisConnectionFactory redisKeywordConnectionFactory() {
-        LettuceConnectionFactory factory = new LettuceConnectionFactory(redisKeywordHost, redisKeywordPort);
-        factory.setPassword(redisPassword);
-        return factory;
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisKeywordHost, redisKeywordPort);
+        config.setPassword(redisPassword);
+        return new LettuceConnectionFactory(config);
     }
 
     @Bean(name = "redisKeywordTemplate")
-    public RedisTemplate<String, Object> redisKeywordTemplate() {
+    @Primary
+    public RedisTemplate<String, Object> redisKeywordTemplate(RedisConnectionFactory redisKeywordConnectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisKeywordConnectionFactory());
+        template.setConnectionFactory(redisKeywordConnectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
         return template;
     }
 
-    // redis-user 인스턴스 설정
+    /**
+     * Redis-User 인스턴스 설정
+     */
     @Bean
     public RedisConnectionFactory redisUserConnectionFactory() {
-        LettuceConnectionFactory factory = new LettuceConnectionFactory(redisUserHost, redisUserPort);
-        factory.setPassword(redisPassword);
-        return factory;
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisUserHost, redisUserPort);
+        config.setPassword(redisPassword);
+        return new LettuceConnectionFactory(config);
     }
 
     @Bean(name = "redisUserTemplate")
-    public RedisTemplate<String, String> redisUserTemplate() {
-        RedisTemplate<String, String> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisUserConnectionFactory());
+    public RedisTemplate<String, Object> redisUserTemplate(RedisConnectionFactory redisUserConnectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(redisUserConnectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
         return template;
     }
-
 }

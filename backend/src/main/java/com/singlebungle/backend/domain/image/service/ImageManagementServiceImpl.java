@@ -8,6 +8,7 @@ import com.singlebungle.backend.domain.image.repository.ImageManagementRepositor
 import com.singlebungle.backend.domain.image.repository.ImageRepository;
 import com.singlebungle.backend.domain.user.entity.User;
 import com.singlebungle.backend.domain.user.repository.UserRepository;
+import com.singlebungle.backend.global.exception.EntityIsFoundException;
 import com.singlebungle.backend.global.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,13 @@ public class ImageManagementServiceImpl implements ImageManagementService {
                     .orElseThrow(() -> new IllegalStateException("디렉토리가 존재하지 않습니다."));;
         }
 
-        ImageManagement imageManagement = ImageManagement.convertToEntity(user, image, directory);
-        imageManagementRepository.save(imageManagement);
+        // 이미지 중복 저장 방지
+        ImageManagement imageManagement = imageManagementRepository.findByImage(image);
+        if (imageManagement != null) {
+            throw new EntityIsFoundException("이미 저장한 이미지 입니다.");
+        }
+
+        ImageManagement im = ImageManagement.convertToEntity(user, image, directory);
+        imageManagementRepository.save(im);
     }
 }
