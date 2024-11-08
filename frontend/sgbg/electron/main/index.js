@@ -86,27 +86,32 @@ async function createWindow() {
   })
 
   // 자동 업데이트 체크
-  autoUpdater.checkForUpdatesAndNotify()
+  // autoUpdater.checkForUpdatesAndNotify()
 }
 
-// 앱이 준비되면 창 생성 및 업데이트 관련 이벤트 핸들러 설정
+// // 앱이 준비되면 창 생성 및 업데이트 관련 이벤트 핸들러 설정
+// app.whenReady().then(() => {
+//   createWindow()
+
+//   // 업데이트 진행 상태 이벤트 핸들러 설정
+//   autoUpdater.on("update-available", () => {
+//     win?.webContents.send("message", "업데이트가 가능합니다. 다운로드 중...")
+//   })
+
+//   autoUpdater.on("update-downloaded", () => {
+//     win?.webContents.send(
+//       "message",
+//       JSON.stringify({
+//         message: "업데이트가 완료되었습니다. 앱을 재시작합니다.",
+//       })
+//     )
+//     autoUpdater.quitAndInstall() // 앱 자동 재시작
+//   })
+// })
+
+// 임시 추가
 app.whenReady().then(() => {
   createWindow()
-
-  // 업데이트 진행 상태 이벤트 핸들러 설정
-  autoUpdater.on("update-available", () => {
-    win?.webContents.send("message", "업데이트가 가능합니다. 다운로드 중...")
-  })
-
-  autoUpdater.on("update-downloaded", () => {
-    win?.webContents.send(
-      "message",
-      JSON.stringify({
-        message: "업데이트가 완료되었습니다. 앱을 재시작합니다.",
-      })
-    )
-    autoUpdater.quitAndInstall() // 앱 자동 재시작
-  })
 })
 
 app.on("window-all-closed", () => {
