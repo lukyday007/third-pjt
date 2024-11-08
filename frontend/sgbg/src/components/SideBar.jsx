@@ -14,6 +14,7 @@ import TestImage from "../asset/images/TestImage.png"
 import { useNavigate } from "react-router-dom"
 import { getDirectoryList, postCreateDirectory } from "../lib/api/directory-api"
 import CreateFolderModal from "./CreateFolderModal"
+import { getUserInfo } from "../lib/api/user-api"
 
 const s = {
   Test: styled.div`
@@ -86,10 +87,13 @@ const SideBar = () => {
   const [directoryInfos, setDirectoryInfos] = useState([])
   // 새폴더 모달 열림 여부
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  // 유저 정보
+  const [userInfo, setUserInfo] = useState({})
 
   // 컴포넌트가 로드될 때 요청
   useEffect(() => {
     fetchDirectoryInfos()
+    fetchUserInfo()
   }, [])
 
   const toggleSideBar = () => {
@@ -159,6 +163,18 @@ const SideBar = () => {
     setDirectoryInfos(fetchedDirectoryInfos)
   }
 
+  // 유저 정보 조회 함수
+  const fetchUserInfo = async () => {
+    getUserInfo(
+      (resp) => {
+        setUserInfo(resp.data)
+      },
+      (error) => {
+        console.log("error", error)
+      }
+    )
+  }
+
   return (
     <>
       <s.Test $isopen={isSideBarOpen}>
@@ -176,11 +192,12 @@ const SideBar = () => {
           <s.UserInfoArea>
             <img
               onClick={handleImageButtonClick}
-              src={TestImage}
+              src={userInfo.profileImagePath}
               alt="borami"
               width="36px"
+              style={{ borderRadius: "50%" }}
             />
-            <s.Email onClick={handleEmailClick}>kke0402@naver.com</s.Email>
+            <s.Email onClick={handleEmailClick}>{userInfo.email}</s.Email>
           </s.UserInfoArea>
           <s.FolderCaption>기본</s.FolderCaption>
           <s.FolderArea>
