@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import styled from "styled-components"
 import HomeIcon from "../asset/images/SideBar/HomeIcon.svg?react"
 import SideBarToggleIcon from "../asset/images/SideBar/SideBarToggleIcon.svg?react"
@@ -12,9 +12,15 @@ import TrashBinIcon from "../asset/images/SideBar/TrashBinIcon.svg?react"
 
 import TestImage from "../asset/images/TestImage.png"
 import { useNavigate } from "react-router-dom"
-import { getDirectoryList, postCreateDirectory } from "../lib/api/directory-api"
+import {
+  deleteDirectory,
+  getDirectoryList,
+  patchDirectoryName,
+  postCreateDirectory,
+} from "../lib/api/directory-api"
 import CreateFolderModal from "./CreateFolderModal"
 import { getUserInfo } from "../lib/api/user-api"
+import FolderRightClickModal from "./FolderRightClickModal"
 
 const s = {
   Test: styled.div`
@@ -64,6 +70,14 @@ const s = {
     color: #000000;
     margin-left: 8px;
   `,
+  FolderInput: styled.input`
+    padding: 0 10px;
+    height: 100%;
+    font-size: 16px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    margin-left: 8px;
+  `,
   FolderArea: styled.div`
     display: flex;
     align-items: center;
@@ -89,6 +103,19 @@ const SideBar = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   // 유저 정보
   const [userInfo, setUserInfo] = useState({})
+  // 우클릭 모달 열림 여부
+  const [isRightClickModalOpen, setIsRightClickModalOpen] = useState(false)
+  const [rightClickModalPosition, setRightClickModalPosition] = useState({
+    X: 0,
+    Y: 0,
+  })
+  // 현재 선택된 디렉토리
+  const [selectedDirectory, setSelectedDirectory] = useState(0)
+  const [changeNameTarget, setChangeNameTarget] = useState(0)
+  const [changeNameText, setChangeNameText] = useState("")
+  const [prevNameText, setPrevNameText] = useState("")
+  // 선택할 input 태그를 위한 ref
+  const inputRef = useRef(null)
 
   // 컴포넌트가 로드될 때 요청
   useEffect(() => {
@@ -96,12 +123,23 @@ const SideBar = () => {
     fetchUserInfo()
   }, [])
 
+  // changeNameTarget 변경을 감지해서 focus 이동
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [changeNameTarget])
+
   const toggleSideBar = () => {
     setIsSideBarOpen((prev) => !prev)
   }
 
   const toggleCreateModal = () => {
     setIsCreateModalOpen((prev) => !prev)
+  }
+
+  const toggleRightClickModal = () => {
+    setIsRightClickModalOpen((prev) => !prev)
   }
 
   const navigate = useNavigate()
@@ -115,6 +153,10 @@ const SideBar = () => {
   }
   const handleEmailClick = () => {
     navigate(`/login`)
+  }
+
+  const handleFolderClick = (id) => {
+    navigate(`/image/${id}`)
   }
 
   const createNewFolder = async (directoryName) => {
@@ -171,6 +213,79 @@ const SideBar = () => {
     )
   }
 
+  // 우클릭 관리
+  const handleRightClick = (event, id) => {
+    // 우클릭 이벤트 제한
+    event.preventDefault()
+
+    const currentX = event.clientX
+    const currentY = event.clientY
+
+    if (currentX && currentY) {
+      setRightClickModalPosition({ X: currentX, Y: currentY })
+    }
+
+    if (id) {
+      setSelectedDirectory(id)
+      toggleRightClickModal()
+    }
+  }
+
+  // 폴더 삭제
+  const handleDeleteDirectory = async () => {
+    if (!confirm("폴더를 삭제하시겠습니까?")) return
+
+    await deleteDirectory(selectedDirectory, (resp) => {
+      alert("완료")
+      fetchDirectoryInfos()
+    })
+    setSelectedDirectory(0)
+  }
+
+  // 폴더 이름 바꾸기
+  const handleChangeDirectoryName = async () => {
+    const targetDirectoryName = directoryInfos.find(
+      (directory) => directory.directoryId === selectedDirectory
+    )?.directoryName
+
+    setPrevNameText(targetDirectoryName)
+    setChangeNameText(targetDirectoryName)
+    setChangeNameTarget(selectedDirectory)
+  }
+
+  // 폴더명 input 변경 이벤트
+  const handleChangeInput = (event) => {
+    const newText = event.target.value
+    setChangeNameText(newText)
+  }
+
+  // 폴더 이름 변경 키다운 이벤트
+  const handleKeyDown = async (event) => {
+    if (event.key === "Enter") {
+      if (changeNameText === prevNameText) return
+
+      const requestDto = {
+        directoryId: changeNameTarget,
+        directoryName: changeNameText,
+      }
+
+      await patchDirectoryName(requestDto)
+      await fetchDirectoryInfos()
+      initChangeDirectoryName()
+    }
+
+    if (event.key === "Escape") {
+      initChangeDirectoryName()
+    }
+  }
+
+  // 이름 변경 이벤트 초기화
+  const initChangeDirectoryName = () => {
+    setPrevNameText("")
+    setChangeNameText("")
+    setChangeNameTarget(0)
+  }
+
   return (
     <>
       <s.Test $isopen={isSideBarOpen}>
@@ -200,25 +315,47 @@ const SideBar = () => {
             <AllImagesIcon />
             <s.FolderTitle>전체 이미지</s.FolderTitle>
           </s.FolderArea>
-          <s.FolderArea>
+          <s.FolderArea onClick={() => handleFolderClick(0)}>
             <DefaultFolderIcon />
             <s.FolderTitle>기본폴더</s.FolderTitle>
           </s.FolderArea>
           <s.FolderCaption>내 폴더</s.FolderCaption>
-          {directoryInfos ? (
-            directoryInfos.map((directoryInfo) => (
-              <s.FolderArea key={directoryInfo.directoryId}>
-                <CommonFolderIcon />
-                <s.FolderTitle>{directoryInfo.directoryName}</s.FolderTitle>
-              </s.FolderArea>
-            ))
-          ) : (
-            <></>
+          {isRightClickModalOpen && (
+            <FolderRightClickModal
+              toggleFunction={toggleRightClickModal}
+              position={rightClickModalPosition}
+              changeFunction={handleChangeDirectoryName}
+              openFunction={() => handleFolderClick(selectedDirectory)}
+              deleteFunction={handleDeleteDirectory}
+            />
           )}
-          <s.FolderArea>
-            <CommonFolderIcon />
-            <s.FolderTitle>싱글벙글한 이미지</s.FolderTitle>
-          </s.FolderArea>
+          {directoryInfos &&
+            directoryInfos.map((directoryInfo) => (
+              <s.FolderArea
+                key={directoryInfo.directoryId}
+                onClick={() => handleFolderClick(directoryInfo.directoryId)}
+                onContextMenu={(event) =>
+                  handleRightClick(event, directoryInfo.directoryId)
+                }
+              >
+                <CommonFolderIcon />
+                {directoryInfo.directoryId === changeNameTarget ? (
+                  <s.FolderInput
+                    onClick={(event) => event.stopPropagation()}
+                    value={changeNameText}
+                    onChange={handleChangeInput}
+                    ref={inputRef}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+                      setChangeNameText("")
+                      setChangeNameTarget(0)
+                    }}
+                  />
+                ) : (
+                  <s.FolderTitle>{directoryInfo.directoryName}</s.FolderTitle>
+                )}
+              </s.FolderArea>
+            ))}
           <s.FolderCaption>관리</s.FolderCaption>
           <s.FolderArea onClick={toggleCreateModal}>
             <CreateFolderIcon />
