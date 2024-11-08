@@ -68,6 +68,7 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
+        config.addAllowedOrigin("https://localhost:8080");
         config.addAllowedOrigin("https://k11b205.p.ssafy.io");
         config.addAllowedOrigin("http://localhost:3000");
         config.addAllowedOrigin("https://plogbucket.s3.ap-northeast-2.amazonaws.com/**");

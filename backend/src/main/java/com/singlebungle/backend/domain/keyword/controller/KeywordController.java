@@ -15,16 +15,16 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/keyword")
+@RequestMapping("/keywords")
 public class KeywordController {
 
     private final UserService userService;
     private final SearchService searchService;
 
-    @GetMapping("/{keyword}")
+    @GetMapping()
     @Operation(summary = "키워드 검색", description = "키워드를 검색합니다.")
-    public ResponseEntity<Map<String, List<String>>> search(
-            @PathVariable String keyword,
+    public ResponseEntity<List<String>> search(
+            @RequestParam String keyword,
             @Parameter(description = "JWT")
             @RequestHeader(value = "Authorization", required = false) String token
     ) {
@@ -35,12 +35,9 @@ public class KeywordController {
             throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
         }
 
-        List<String> images = searchService.getImageUrlsByTag(keyword);
+        List<String> keywords = searchService.getKeywordsByTag(keyword);
 
-        Map<String, List<String>> response = new HashMap<>();
-        response.put(keyword, images);
-
-        return ResponseEntity.status(200).body(response);
+        return ResponseEntity.status(200).body(keywords);
     }
 
 }

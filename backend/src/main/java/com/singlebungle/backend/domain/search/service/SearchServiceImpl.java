@@ -41,22 +41,22 @@ public class SearchServiceImpl implements SearchService {
         }
     }
 
+
     @Override
-    @Transactional
-    public List<String> getImageUrlsByTag(String tag) {
-        List<SearchDocument> searches = searchRepository.findByTagInfo_TagContaining(tag);
+    public List<String> getKeywordsByTag(String keyword) {
+        // 키워드가 포함된 문서 목록을 검색
+        List<SearchDocument> documents = searchRepository.findByTagInfo_TagContaining(keyword);
 
-        // 키워드 조회수 + 1
-        Keyword keyword = keywordRepository.findByKeywordName(tag);
-        if (keyword != null) {
-            keyword.setUseCount(keyword.getUseCount() + 1);
-        }
-
-        return searches.stream()
-                .map(search -> new String(
-                        search.getTagInfo().getImageUrl()
-                ))
+        // 검색된 문서에서 태그만 추출하여 리스트로 반환
+        return documents.stream()
+                .map(doc -> doc.getTagInfo().getTag())  // TagInfo에서 tag 값을 추출
+                .distinct()  // 중복 태그
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void incrementSearchCount(String keyword) {
+
     }
 
 }
