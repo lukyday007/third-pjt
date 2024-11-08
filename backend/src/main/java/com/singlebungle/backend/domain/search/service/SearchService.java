@@ -6,6 +6,8 @@ public interface SearchService {
 
     void saveTags(List<String> tags, String imageUrl);
 
-    List<String> getImageUrlsByTag(String tag);
+    List<String> getKeywordsByTag(String keyword);
+
+    void incrementSearchCount(String keyword);
 
 }
