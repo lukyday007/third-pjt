@@ -48,7 +48,6 @@ public class KeywordServiceImpl implements KeywordService {
 
                 continue;
             }
-            System.out.println("=======>> 저기서 걸림??");
 
             // 키워드 저장
             Keyword kw = Keyword.convertToEntity(name);

@@ -42,11 +42,17 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, String> redisTemplate() {
-        RedisTemplate<String, String> template = new RedisTemplate<>();
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new StringRedisSerializer());
         template.setConnectionFactory(redisConnectionFactory());
+
         return template;
     }
+
 
     // redis-keyword 인스턴스 설정
     @Bean
@@ -59,9 +65,14 @@ public class RedisConfig {
     @Bean(name = "redisKeywordTemplate")
     public RedisTemplate<String, Object> redisKeywordTemplate() {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new StringRedisSerializer());
         template.setConnectionFactory(redisKeywordConnectionFactory());
         return template;
     }
+
 
     // redis-user 인스턴스 설정
     @Bean
@@ -74,6 +85,8 @@ public class RedisConfig {
     @Bean(name = "redisUserTemplate")
     public RedisTemplate<String, String> redisUserTemplate() {
         RedisTemplate<String, String> template = new RedisTemplate<>();
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new StringRedisSerializer());
         template.setConnectionFactory(redisUserConnectionFactory());
         return template;
     }

@@ -13,4 +13,7 @@ public interface ImageManagementRepository extends JpaRepository<ImageManagement
     List<ImageManagement> findByUserAndImageIn(User user, List<Image> images);
 
     List<ImageManagement> findByCurDirectory(Directory directory);
+
+
+    ImageManagement findByImage(Image image);
 }
