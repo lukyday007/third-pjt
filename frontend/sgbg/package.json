@@ -58,6 +58,16 @@
         "owner": "jogyubeom",
         "repo": "SGBG_release"
       }
-    ]
-  }
+    ],
+    "extraResources": [
+    {
+      "from": "dist",
+      "to": "dist"
+    },
+    {
+      "from": "public",
+      "to": "public"
+    }
+  ]
+}
 }

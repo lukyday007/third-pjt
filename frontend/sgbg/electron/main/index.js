@@ -63,7 +63,7 @@ async function createWindow() {
     // Open devTool if the app is not packaged
     win.webContents.openDevTools()
   } else {
-    win.loadFile(indexHtml)
+    win.loadFile(`file://${indexHtml}`)
   }
 
   // Test actively push message to the Electron-Renderer
@@ -115,6 +115,6 @@ ipcMain.handle("open-win", (_, arg) => {
   if (VITE_DEV_SERVER_URL) {
     childWindow.loadURL(`${VITE_DEV_SERVER_URL}#${arg}`)
   } else {
-    childWindow.loadFile(indexHtml, { hash: arg })
+    childWindow.loadFile(`file://${indexHtml}`, { hash: arg })
   }
 })
