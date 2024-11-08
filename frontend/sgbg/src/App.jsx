@@ -36,7 +36,9 @@ function App() {
           {/* <SearchBar /> */}
           <Routes>
             <Route path="/" element={<MainPage />} />
-            <Route path="image" element={<ImgPage />} />
+            <Route path="image" element={<ImgPage />}>
+              <Route path=":id" />
+            </Route>
             <Route path="login" element={<LoginPage />} />
             <Route path="login-callback" element={<LoginCallBackPage />} />
           </Routes>

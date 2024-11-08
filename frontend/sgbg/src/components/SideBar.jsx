@@ -113,6 +113,10 @@ const SideBar = () => {
     navigate(`/login`)
   }
 
+  const handleFolderClick = (id) => {
+    navigate(`/image/${id}`)
+  }
+
   const createNewFolder = async (directoryName) => {
     toggleCreateModal()
 
@@ -190,7 +194,10 @@ const SideBar = () => {
           <s.FolderCaption>내 폴더</s.FolderCaption>
           {directoryInfos ? (
             directoryInfos.map((directoryInfo) => (
-              <s.FolderArea key={directoryInfo.directoryId}>
+              <s.FolderArea
+                key={directoryInfo.directoryId}
+                onClick={() => handleFolderClick(directoryInfo.directoryId)}
+              >
                 <CommonFolderIcon />
                 <s.FolderTitle>{directoryInfo.directoryName}</s.FolderTitle>
               </s.FolderArea>
