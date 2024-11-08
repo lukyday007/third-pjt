@@ -7,6 +7,7 @@ pipeline {
         REMOTE_HOST = 'k11b205.p.ssafy.io'
         REMOTE_DIR = '/home/ubuntu/plog'  // 원격 서버에서 프로젝트가 위치한 경로
         GITHUB_REPO = "jogyubeom/SGBG_release"
+        GH_TOKEN = credentials('GITHUB_TOKEN') // GitHub Personal Access Token을 `GH_TOKEN`으로 설정
     }
 
     stages {
