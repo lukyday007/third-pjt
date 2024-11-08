@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import styled from "styled-components"
 import HomeIcon from "../asset/images/SideBar/HomeIcon.svg?react"
 import SideBarToggleIcon from "../asset/images/SideBar/SideBarToggleIcon.svg?react"
@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom"
 import {
   deleteDirectory,
   getDirectoryList,
+  patchDirectoryName,
   postCreateDirectory,
 } from "../lib/api/directory-api"
 import CreateFolderModal from "./CreateFolderModal"
@@ -69,6 +70,14 @@ const s = {
     color: #000000;
     margin-left: 8px;
   `,
+  FolderInput: styled.input`
+    padding: 0 10px;
+    height: 100%;
+    font-size: 16px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    margin-left: 8px;
+  `,
   FolderArea: styled.div`
     display: flex;
     align-items: center;
@@ -102,12 +111,24 @@ const SideBar = () => {
   })
   // 현재 선택된 디렉토리
   const [selectedDirectory, setSelectedDirectory] = useState(0)
+  const [changeNameTarget, setChangeNameTarget] = useState(0)
+  const [changeNameText, setChangeNameText] = useState("")
+  const [prevNameText, setPrevNameText] = useState("")
+  // 선택할 input 태그를 위한 ref
+  const inputRef = useRef(null)
 
   // 컴포넌트가 로드될 때 요청
   useEffect(() => {
     fetchDirectoryInfos()
     fetchUserInfo()
   }, [])
+
+  // changeNameTarget 변경을 감지해서 focus 이동
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [changeNameTarget])
 
   const toggleSideBar = () => {
     setIsSideBarOpen((prev) => !prev)
@@ -221,6 +242,50 @@ const SideBar = () => {
     setSelectedDirectory(0)
   }
 
+  // 폴더 이름 바꾸기
+  const handleChangeDirectoryName = async () => {
+    const targetDirectoryName = directoryInfos.find(
+      (directory) => directory.directoryId === selectedDirectory
+    )?.directoryName
+
+    setPrevNameText(targetDirectoryName)
+    setChangeNameText(targetDirectoryName)
+    setChangeNameTarget(selectedDirectory)
+  }
+
+  // 폴더명 input 변경 이벤트
+  const handleChangeInput = (event) => {
+    const newText = event.target.value
+    setChangeNameText(newText)
+  }
+
+  // 폴더 이름 변경 키다운 이벤트
+  const handleKeyDown = async (event) => {
+    if (event.key === "Enter") {
+      if (changeNameText === prevNameText) return
+
+      const requestDto = {
+        directoryId: changeNameTarget,
+        directoryName: changeNameText,
+      }
+
+      await patchDirectoryName(requestDto)
+      await fetchDirectoryInfos()
+      initChangeDirectoryName()
+    }
+
+    if (event.key === "Escape") {
+      initChangeDirectoryName()
+    }
+  }
+
+  // 이름 변경 이벤트 초기화
+  const initChangeDirectoryName = () => {
+    setPrevNameText("")
+    setChangeNameText("")
+    setChangeNameTarget(0)
+  }
+
   return (
     <>
       <s.Test $isopen={isSideBarOpen}>
@@ -259,6 +324,7 @@ const SideBar = () => {
             <FolderRightClickModal
               toggleFunction={toggleRightClickModal}
               position={rightClickModalPosition}
+              changeFunction={handleChangeDirectoryName}
               openFunction={() => handleFolderClick(selectedDirectory)}
               deleteFunction={handleDeleteDirectory}
             />
@@ -273,7 +339,21 @@ const SideBar = () => {
                 }
               >
                 <CommonFolderIcon />
-                <s.FolderTitle>{directoryInfo.directoryName}</s.FolderTitle>
+                {directoryInfo.directoryId === changeNameTarget ? (
+                  <s.FolderInput
+                    onClick={(event) => event.stopPropagation()}
+                    value={changeNameText}
+                    onChange={handleChangeInput}
+                    ref={inputRef}
+                    onKeyDown={handleKeyDown}
+                    onBlur={() => {
+                      setChangeNameText("")
+                      setChangeNameTarget(0)
+                    }}
+                  />
+                ) : (
+                  <s.FolderTitle>{directoryInfo.directoryName}</s.FolderTitle>
+                )}
               </s.FolderArea>
             ))}
           <s.FolderCaption>관리</s.FolderCaption>

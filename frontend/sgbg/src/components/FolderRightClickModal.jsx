@@ -35,13 +35,14 @@ const FolderRightClickModal = ({
   position,
   openFunction,
   toggleFunction,
+  changeFunction,
   deleteFunction,
 }) => {
   return (
     <s.Overlay onClick={toggleFunction} onContextMenu={toggleFunction}>
       <s.Container $positionX={position.X} $positionY={position.Y}>
         <s.MenuTextArea onClick={openFunction}>열기</s.MenuTextArea>
-        <s.MenuTextArea>이름 바꾸기</s.MenuTextArea>
+        <s.MenuTextArea onClick={changeFunction}>이름 바꾸기</s.MenuTextArea>
         <s.MenuTextArea onClick={deleteFunction}>폴더 삭제</s.MenuTextArea>
       </s.Container>
     </s.Overlay>
