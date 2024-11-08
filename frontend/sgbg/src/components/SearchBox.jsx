@@ -159,6 +159,18 @@ const SearchBox = () => {
     }
   }
 
+  // 검색 키워드 추가/제거 공통 함수
+  const tagKeyword = (keyword) => {
+    if (searchKeywords.some((item) => item.keyword === keyword)) {
+      removeTag(keyword) // 중복 키워드 제거
+    } else {
+      addTag(keyword) // 새 키워드 추가
+    }
+    setQuery("")
+    setFilteredKeywords([])
+    setDropdownVisible(false)
+  }
+
   // 키워드 검색창
   const handleKeyDown = (e) => {
     //아래로 이동
@@ -173,14 +185,7 @@ const SearchBox = () => {
       // 엔터 클릭 시 검색, 중복이면 삭제
     } else if (e.key === "Enter") {
       const selectedKeyword = filteredKeywords[activeIndex]
-      if (searchKeywords.some((item) => item.keyword === selectedKeyword)) {
-        removeTag(selectedKeyword) // 중복 키워드 제거
-      } else {
-        addTag(selectedKeyword) // 새 키워드 추가
-      }
-      setQuery("")
-      setFilteredKeywords([])
-      setDropdownVisible(false)
+      tagKeyword(selectedKeyword)
       // 키워드 백스페이스 지우기
     } else if (
       e.key === "Backspace" &&
@@ -249,7 +254,7 @@ const SearchBox = () => {
           <s.ResultItem
             key={index}
             isActive={index === activeIndex}
-            onMouseDown={() => addTag(keyword)}
+            onClick={() => tagKeyword(keyword)}
           >
             <KeywordIcon />
             {keyword}
