@@ -7,7 +7,7 @@ pipeline {
         REMOTE_HOST = 'k11b205.p.ssafy.io'
         REMOTE_DIR = '/home/ubuntu/plog'  // 원격 서버에서 프로젝트가 위치한 경로
         GITHUB_REPO = "jogyubeom/SGBG_release"
-        GH_TOKEN = credentials('GITHUB_TOKEN') // GitHub Personal Access Token을 `GH_TOKEN`으로 설정
+        GITHUB_TOKEN = credentials('GH_TOKEN')
     }
 
     stages {
@@ -74,7 +74,7 @@ pipeline {
                 script {
                     def version = "1.0.${env.BUILD_NUMBER}"
 
-                    withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'GH_TOKEN', variable: 'GITHUB_TOKEN')]) {
                         // GitHub 릴리스 생성
                         def releaseResponse = sh(
                             script: """
