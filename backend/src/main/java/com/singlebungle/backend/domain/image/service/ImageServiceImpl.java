@@ -15,6 +15,7 @@ import com.singlebungle.backend.domain.image.entity.ImageManagement;
 import com.singlebungle.backend.domain.image.repository.*;
 import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
+import com.singlebungle.backend.domain.keyword.service.KeywordService;
 import com.singlebungle.backend.domain.user.entity.User;
 import com.singlebungle.backend.domain.user.repository.UserRepository;
 import com.singlebungle.backend.global.exception.EntityIsFoundException;
@@ -30,10 +31,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -48,6 +46,7 @@ public class ImageServiceImpl implements ImageService {
     private final ImageManagementRepository imageManagementRepository;
     private final ImageManagementRepositorySupport imageManagementRepositorySupport;
     private final DirectoryRepository directoryRepository;
+    private final KeywordService keywordService;
     private final KeywordRepository keywordRepository;
     private final AmazonS3 amazonS3;
 
@@ -162,12 +161,24 @@ public class ImageServiceImpl implements ImageService {
     @Override
     public Map<String, Object> getImageListFromDir(ImageListGetRequestDTO requestDTO) {
 
+        if (requestDTO.getKeywords() != null || ! requestDTO.getKeywords().isEmpty()) {
+            for (String keyword : requestDTO.getKeywords()) {
+                keywordService.increaseCurCnt(keyword);
+            }
+        }
+
         return imageManagementRepositorySupport.findImageListFromDir(requestDTO);
     }
 
 
     @Override
     public Map<String, Object> getImageListFromFeed(ImageListGetRequestDTO requestDTO) {
+
+        if (requestDTO.getKeywords() != null || requestDTO.getKeywords().isEmpty()) {
+            for (String keyword : requestDTO.getKeywords()) {
+                keywordService.increaseCurCnt(keyword);
+            }
+        }
 
         return imageRepositorySupport.findImageListFromFeed(requestDTO);
     }

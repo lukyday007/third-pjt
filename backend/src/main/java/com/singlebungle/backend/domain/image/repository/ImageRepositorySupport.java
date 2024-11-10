@@ -44,6 +44,7 @@ public class ImageRepositorySupport extends QuerydslRepositorySupport {
             }
             builder.and(keywordBuilder);
         }
+
         JPAQuery<ImageListGetResponseDTO> query = queryFactory
                 .select(Projections.constructor(ImageListGetResponseDTO.class,
                         qImage.imageId,
@@ -82,7 +83,6 @@ public class ImageRepositorySupport extends QuerydslRepositorySupport {
 
         // 총 페이지 수 계산
         int totalPage = (int) ((totalCount + requestDTO.getSize() - 1) / requestDTO.getSize());
-
 
         Map<String, Object> result = new HashMap<>();
         result.put("imageList", imageList);

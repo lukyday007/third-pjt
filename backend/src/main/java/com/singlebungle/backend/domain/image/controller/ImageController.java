@@ -15,7 +15,6 @@ import com.singlebungle.backend.domain.keyword.service.KeywordService;
 import com.singlebungle.backend.domain.search.service.SearchService;
 import com.singlebungle.backend.domain.user.service.UserService;
 import com.singlebungle.backend.global.exception.InvalidImageException;
-import com.singlebungle.backend.global.exception.InvalidRequestException;
 import com.singlebungle.backend.global.exception.model.NoTokenRequestException;
 import com.singlebungle.backend.global.model.BaseResponseBody;
 import io.swagger.v3.oas.annotations.Operation;
@@ -154,7 +153,7 @@ public class ImageController {
 
         Map<String, Object> imageList;
 
-        if (keywordList != null) {
+        if (keywordList != null || keywordList.isEmpty()) {
             List<String> keywords = Arrays.asList(keywordList.split(","));
             ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(userId, directoryId, page, size, keywords, sort, isBin);
             imageList = imageService.getImageListFromDir(requestDTO);
@@ -192,10 +191,16 @@ public class ImageController {
 
         log.info(">>> [GET] /images/feed - 요청 파라미터:  userId - {}, page - {}, size - {}, keyword - {}, sort - {}" , userId, page, size, keywordList, sort);
 
-        List<String> keywords = Arrays.asList(keywordList.split(","));
+        Map<String, Object> imageList;
 
-        ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(page, size, keywords, sort);
-        Map<String, Object> imageList = imageService.getImageListFromFeed(requestDTO);
+        if (keywordList != null || keywordList.isEmpty()) {
+            List<String> keywords = Arrays.asList(keywordList.split(","));
+            ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(page, size, keywords, sort);
+            imageList = imageService.getImageListFromFeed(requestDTO);
+        } else {
+            ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(page, size, sort);
+            imageList = imageService.getImageListFromFeed(requestDTO);
+        }
 
         return ResponseEntity.status(200).body(imageList);
     }
@@ -238,9 +243,9 @@ public class ImageController {
             throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
         }
 
-        log.info(">>> [DELETE] /images 삭제요청하는 이미지Id - {}", Arrays.toString(requestDTO.getImageDetailIds().toArray()));
+        log.info(">>> [DELETE] /images 삭제요청하는 이미지Id - {}", Arrays.toString(requestDTO.getImageManagementIds().toArray()));
 
-        imageDetailService.deleteImages(requestDTO);
+        imageManagementService.deleteImages(requestDTO);
 
         return ResponseEntity.status(200).body(BaseResponseBody.of(200, "이미지들을 영구 삭제합니다."));
     }

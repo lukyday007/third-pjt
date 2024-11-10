@@ -7,4 +7,6 @@ import java.util.List;
 public interface KeywordService {
 
     void saveKeyword(List<String> keywords);
+
+    void increaseCurCnt(String keyword);
 }

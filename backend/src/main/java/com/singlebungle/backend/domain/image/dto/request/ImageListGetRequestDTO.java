@@ -33,6 +33,13 @@ public class ImageListGetRequestDTO {
         this.sort = sort;
     }
 
+    // getImageListFromFeed
+    public ImageListGetRequestDTO(int page, int size, int sort) {
+        this.page = page;
+        this.size = size;
+        this.sort = sort;
+    }
+
 
     // getImageListFromDirectory
     public ImageListGetRequestDTO(Long userId, Long directoryId, int page, int size,  int sort, boolean isBin) {

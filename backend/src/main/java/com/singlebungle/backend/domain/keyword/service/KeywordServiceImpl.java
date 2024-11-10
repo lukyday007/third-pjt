@@ -2,6 +2,7 @@ package com.singlebungle.backend.domain.keyword.service;
 
 import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
+import com.singlebungle.backend.global.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -58,4 +59,19 @@ public class KeywordServiceImpl implements KeywordService {
         }
     }
 
+    public void increaseCurCnt(String keyword) {
+
+        if (keywordRepository.existsByKeywordName(keyword)) {
+            String curCntStr = (String) keywordTemplate.opsForHash().get("keyword", keyword + ":curCnt");
+
+            if (curCntStr == null)
+                throw new EntityNotFoundException(">>> 레디스에 해당 키워드의 curCnt 데이터가 없습니다.");
+
+            int curCnt = Integer.parseInt(curCntStr);
+            ++ curCnt;
+
+            keywordTemplate.opsForHash().put("keyword", keyword + ":curCnt", String.valueOf(curCnt));
+        }
+
+    }
 }
