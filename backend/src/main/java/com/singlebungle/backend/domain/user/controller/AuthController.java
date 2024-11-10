@@ -23,7 +23,7 @@ public class AuthController {
 
     private final GoogleAuthService googleAuthService;
     // Google 인증 리다이렉트 URL (크롬 익스텐션)
-    private static final String EXTENSION_REDIRECT_URI = "https://fcnagokaapcdhckhnndheebebadioomb.chromiumapp.org/google";
+    private static final String EXTENSION_REDIRECT_URI = "https://dkeojbjcmphonpoojkdobbdakebaljhe.chromiumapp.org/google";
     // 로컬 개발 환경 리다이렉트 URL
     private static final String LOCAL_REDIRECT_URI = "http://localhost:5173";
 
