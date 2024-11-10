@@ -2,6 +2,7 @@ package com.singlebungle.backend.domain.image.service;
 
 import com.singlebungle.backend.domain.directory.entity.Directory;
 import com.singlebungle.backend.domain.directory.repository.DirectoryRepository;
+import com.singlebungle.backend.domain.image.dto.request.ImageIdDeleteRequestDTO;
 import com.singlebungle.backend.domain.image.entity.Image;
 import com.singlebungle.backend.domain.image.entity.ImageManagement;
 import com.singlebungle.backend.domain.image.repository.ImageManagementRepository;
@@ -47,5 +48,16 @@ public class ImageManagementServiceImpl implements ImageManagementService {
 
         ImageManagement im = ImageManagement.convertToEntity(user, image, directory);
         imageManagementRepository.save(im);
+    }
+
+    @Override
+    @Transactional
+    public void deleteImages(ImageIdDeleteRequestDTO requestDTO) {
+
+        for (Long imageManagementId : requestDTO.getImageManagementIds()) {
+            if (imageManagementRepository.existsById(imageManagementId)) {
+                imageManagementRepository.deleteById(imageManagementId);
+            }
+        }
     }
 }

@@ -7,5 +7,4 @@ import java.util.List;
 public interface ImageDetailService {
     void saveImageDetail(String webUrl, String imageUrl, List<String> keywords);
 
-    void deleteImages(ImageIdDeleteRequestDTO requestDTO);
 }

@@ -15,7 +15,6 @@ import com.singlebungle.backend.domain.keyword.service.KeywordService;
 import com.singlebungle.backend.domain.search.service.SearchService;
 import com.singlebungle.backend.domain.user.service.UserService;
 import com.singlebungle.backend.global.exception.InvalidImageException;
-import com.singlebungle.backend.global.exception.InvalidRequestException;
 import com.singlebungle.backend.global.exception.model.NoTokenRequestException;
 import com.singlebungle.backend.global.model.BaseResponseBody;
 import io.swagger.v3.oas.annotations.Operation;

@@ -57,7 +57,7 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
             }
         }
 
-        // 키워드 or 조건으로 처리
+        // 키워드를 OR 조건으로 추가
         if (requestDTO.getKeywords() != null && !requestDTO.getKeywords().isEmpty()) {
             BooleanBuilder keywordBuilder = new BooleanBuilder();
 

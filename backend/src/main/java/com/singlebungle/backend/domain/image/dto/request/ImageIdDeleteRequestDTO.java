@@ -11,6 +11,9 @@ import java.util.List;
 @Setter
 @Builder
 @ToString
-@Schema(title="IMAGE_DELETE_REQ : 이미지 삭제 요청DTO")public class ImageIdDeleteRequestDTO {
-    private List<Long> imageDetailIds;
+@Schema(title="IMAGE_DELETE_REQ : 이미지 삭제 요청DTO")
+public class ImageIdDeleteRequestDTO {
+
+    private List<Long> imageManagementIds;
+
 }
