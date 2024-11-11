@@ -7,6 +7,7 @@ import os from "node:os"
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const { autoUpdater } = pkg
 
 const { autoUpdater } = require("electron-updater")
 
