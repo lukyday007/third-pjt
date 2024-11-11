@@ -154,7 +154,9 @@ const SideBar = () => {
   const handleEmailClick = () => {
     navigate(`/login`)
   }
-
+  const handleBasicClick = () => {
+    navigate(`/login`)
+  }
   const handleFolderClick = (id) => {
     navigate(`/image/${id}`)
   }
@@ -310,7 +312,7 @@ const SideBar = () => {
             />
             <s.Email onClick={handleEmailClick}>{userInfo.email}</s.Email>
           </s.UserInfoArea>
-          <s.FolderCaption>기본</s.FolderCaption>
+          <s.FolderCaption onClick={handleBasicClick}>기본</s.FolderCaption>
           <s.FolderArea>
             <AllImagesIcon />
             <s.FolderTitle>전체 이미지</s.FolderTitle>
