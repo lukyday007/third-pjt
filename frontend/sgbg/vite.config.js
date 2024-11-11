@@ -42,9 +42,10 @@ export default defineConfig(({ command }) => {
               minify: isBuild,
               outDir: "dist-electron/main",
               rollupOptions: {
-                external: Object.keys(
-                  "dependencies" in pkg ? pkg.dependencies : {}
-                ),
+                external: [
+                  ...Object.keys(pkg.dependencies || {}),
+                  "electron-progressbar", // electron-progressbar를 외부 모듈로 설정
+                ],
               },
             },
           },

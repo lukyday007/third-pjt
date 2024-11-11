@@ -22,6 +22,7 @@
     "@egjs/react-infinitegrid": "^4.12.0",
     "@reduxjs/toolkit": "^2.3.0",
     "axios": "^1.7.7",
+    "electron-progressbar": "^2.2.1",
     "electron-reload": "^2.0.0-alpha.1",
     "electron-updater": "^6.3.9",
     "prop-types": "^15.8.1",
