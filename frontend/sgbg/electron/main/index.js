@@ -1,5 +1,6 @@
-import { app, BrowserWindow, shell, ipcMain } from "electron"
+import { app, BrowserWindow, shell, ipcMain, dialog } from "electron"
 import { autoUpdater } from "electron-updater"
+import ProgressBar from "electron-progressbar"
 import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
 import path from "node:path"
@@ -40,8 +41,13 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 let win = BrowserWindow
+let progressBar = null
 const preload = path.join(__dirname, "../preload/index.mjs")
 const indexHtml = path.join(RENDERER_DIST, "index.html")
+
+// 자동 업데이트가 자동 설치되지 않도록 설정
+autoUpdater.autoInstallOnAppQuit = false
+autoUpdater.autoDownload = false
 
 async function createWindow() {
   win = new BrowserWindow({
@@ -58,73 +64,87 @@ async function createWindow() {
     },
   })
 
-  // 경로 확인을 위한 로그 출력
-  console.log("RENDERER_DIST:", RENDERER_DIST)
-  console.log("indexHtml:", indexHtml)
-
   if (VITE_DEV_SERVER_URL) {
-    // #298
-    console.log("VITE_DEV_SERVER_URL:", VITE_DEV_SERVER_URL)
     win.loadURL(VITE_DEV_SERVER_URL)
-    // Open devTool if the app is not packaged
-    // win.webContents.openDevTools()
   } else {
-    console.log("프로덕션 모드 - index.html 로드")
     win.loadFile(indexHtml)
-    // win.webContents.openDevTools()
   }
-
-  // Test actively push message to the Electron-Renderer
-  win.webContents.on("did-finish-load", () => {
-    win?.webContents.send("main-process-message", new Date().toLocaleString())
-  })
-
-  // Make all links open with the browser, not with the application
-  win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith("https:")) shell.openExternal(url)
-    return { action: "deny" }
-  })
-
-  // 자동 업데이트 체크
-  // autoUpdater.checkForUpdatesAndNotify()
 }
 
-// // 앱이 준비되면 창 생성 및 업데이트 관련 이벤트 핸들러 설정
-// app.whenReady().then(() => {
-//   createWindow()
+autoUpdater.on("checking-for-update", () => {
+  console.log("업데이트 확인 중")
+})
 
-//   // 업데이트 진행 상태 이벤트 핸들러 설정
-//   autoUpdater.on("update-available", () => {
-//     win?.webContents.send("message", "업데이트가 가능합니다. 다운로드 중...")
-//   })
+autoUpdater.on("update-available", () => {
+  console.log("업데이트 버전 확인")
 
-//   autoUpdater.on("update-downloaded", () => {
-//     win?.webContents.send(
-//       "message",
-//       JSON.stringify({
-//         message: "업데이트가 완료되었습니다. 앱을 재시작합니다.",
-//       })
-//     )
-//     autoUpdater.quitAndInstall() // 앱 자동 재시작
-//   })
-// })
+  dialog
+    .showMessageBox({
+      type: "info",
+      title: "Update",
+      message:
+        "새로운 버전이 확인되었습니다. 설치 파일을 다운로드 하시겠습니까?",
+      buttons: ["지금 설치", "나중에 설치"],
+    })
+    .then((result) => {
+      if (result.response === 0) autoUpdater.downloadUpdate()
+    })
+})
 
-// 임시 추가
+autoUpdater.on("update-not-available", () => {
+  console.log("업데이트 불가")
+  if (progressBar) {
+    progressBar.setCompleted()
+    progressBar = null
+  }
+})
+
+autoUpdater.on("download-progress", (progressObj) => {
+  if (!progressBar) {
+    progressBar = new ProgressBar({
+      text: "Download 중...",
+      detail: "다운로드 중입니다.",
+    })
+  }
+  progressBar.value = progressObj.percent
+})
+
+autoUpdater.on("update-downloaded", () => {
+  console.log("업데이트 완료")
+
+  if (progressBar) {
+    progressBar.setCompleted()
+    progressBar = null
+  }
+
+  dialog
+    .showMessageBox({
+      type: "info",
+      title: "Update",
+      message: "새로운 버전이 다운로드 되었습니다. 다시 시작하시겠습니까?",
+      buttons: ["예", "아니오"],
+    })
+    .then((result) => {
+      if (result.response === 0) autoUpdater.quitAndInstall(false, true)
+    })
+})
+
+autoUpdater.on("error", (err) => {
+  console.log("업데이트 중 에러 발생: ", err)
+  if (progressBar) {
+    progressBar.close()
+    progressBar = null
+  }
+})
+
 app.whenReady().then(() => {
   createWindow()
+  autoUpdater.checkForUpdates()
 })
 
 app.on("window-all-closed", () => {
   win = null
   if (process.platform !== "darwin") app.quit()
-})
-
-app.on("second-instance", () => {
-  if (win) {
-    // Focus on the main window if the user tried to open another
-    if (win.isMinimized()) win.restore()
-    win.focus()
-  }
 })
 
 app.on("activate", () => {
