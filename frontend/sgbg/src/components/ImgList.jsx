@@ -3,6 +3,7 @@ import styled from "styled-components"
 import { MasonryInfiniteGrid } from "@egjs/react-infinitegrid"
 import "./styles.css"
 import { getMyImages } from "../lib/api/image-api"
+import { useParams } from "react-router-dom"
 
 const s = {
   Image: styled.img`
@@ -46,11 +47,16 @@ const ImgList = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPage, setTotalPage] = useState(null)
 
+  const params = useParams()
+  useEffect(() => {
+    console.log("params", params)
+  }, [params])
+
   const fetchMyImages = async () => {
     if (totalPage !== null && currentPage > totalPage) return
 
     getMyImages(
-      35,
+      params.id,
       currentPage,
       10,
       "",
