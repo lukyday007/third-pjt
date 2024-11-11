@@ -21,12 +21,20 @@ const s = {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   `,
   MenuTextArea: styled.div`
-    margin: 4px 0;
-    padding: 5px 10px;
+    margin: 4px;
+    padding: 5px;
 
-    background-color: #cccccc;
+    background-color: #ffffff;
+
+    font-size: 18px;
 
     cursor: pointer;
+
+    &:hover {
+      font-weight: bold;
+      color: #000000;
+      background-color: #cccccc;
+    }
   `,
   MenuText: styled.div``,
 }
