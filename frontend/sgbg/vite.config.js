@@ -44,7 +44,8 @@ export default defineConfig(({ command }) => {
               rollupOptions: {
                 external: [
                   ...Object.keys(pkg.dependencies || {}),
-                  "electron-progressbar", // electron-progressbar를 외부 모듈로 설정
+                  "electron-progressbar",
+                  "electron-updater",
                 ],
               },
             },
