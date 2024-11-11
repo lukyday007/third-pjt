@@ -10,6 +10,9 @@ import com.singlebungle.backend.domain.directory.service.DirectoryService;
 import com.singlebungle.backend.domain.image.dto.request.ImageManagementIdsRequestDTO;
 import com.singlebungle.backend.domain.image.dto.request.MoveImagesRequestDTO;
 import com.singlebungle.backend.domain.image.entity.ImageManagement;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +29,11 @@ public class DirectoryController {
     private final DirectoryService directoryService;
 
     // 디렉토리 생성
+    @Operation(summary = "디렉토리 생성", description = "새 디렉토리를 생성합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "디렉토리 생성 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터")
+    })
     @PostMapping
     public ResponseEntity<?> createDirectory(
             @RequestBody DirectoryRequestDTO request,
@@ -35,6 +43,7 @@ public class DirectoryController {
     }
 
     // 디렉토리 이름 수정
+    @Operation(summary = "디렉토리 이름 수정", description = "기존 디렉토리의 이름을 수정합니다.")
     @PatchMapping
     public ResponseEntity<?> updateDirectoryName(
             @RequestBody DirectoryUpdateRequestDTO request,
@@ -44,6 +53,7 @@ public class DirectoryController {
     }
 
     // 디렉토리 목록 조회
+    @Operation(summary = "디렉토리 목록 조회", description = "사용자의 모든 디렉토리를 조회합니다.")
     @GetMapping
     public ResponseEntity<?> getUserDirectories(@RequestHeader("Authorization") String token) {
         List<Directory> directories = directoryService.getUserDirectories(token);
@@ -51,6 +61,7 @@ public class DirectoryController {
     }
 
     // 디렉토리 순서 변경
+    @Operation(summary = "디렉토리 순서 변경", description = "디렉토리의 순서를 변경합니다.")
     @PatchMapping("/sequence")
     public ResponseEntity<?> updateDirectorySequence(
             @RequestBody DirectorySequenceRequestDTO request,
@@ -60,6 +71,7 @@ public class DirectoryController {
     }
 
     // 디렉토리 삭제
+    @Operation(summary = "디렉토리 삭제", description = "특정 디렉토리를 삭제합니다.")
     @DeleteMapping("/{directoryId}")
     public ResponseEntity<?> deleteDirectory(
             @PathVariable Long directoryId,
@@ -70,6 +82,7 @@ public class DirectoryController {
 
     // 휴지통 비우기
     @DeleteMapping("/bin")
+    @Operation(summary = "휴지통 비우기", description = "휴지통 내 모든 이미지를 삭제합니다.")
     public ResponseEntity<?> deleteImagesInBinDirectory(@RequestHeader("Authorization") String token) {
         directoryService.deleteImagesInBinDirectory(token);
         return ResponseEntity.status(HttpStatus.OK).build();
@@ -77,6 +90,7 @@ public class DirectoryController {
 
     // 디렉토리로 이미지 이동
     @PatchMapping("/location")
+    @Operation(summary = "디렉토리로 이미지 이동", description = "목록으로 전달받은 이미지들을 특정 디렉토리로 이동합니다.")
     public ResponseEntity<?> moveImagesToDirectory(
             @RequestBody MoveImagesRequestDTO request,
             @RequestHeader("Authorization") String token) {
@@ -85,6 +99,7 @@ public class DirectoryController {
     }
 
     @PatchMapping("/bin")
+    @Operation(summary = "휴지통 이동/복원", description = "목록으로 전달받은 이미지들을 휴지통으로 보내거나 복원합니다.")
     public ResponseEntity<?> handleImages(
             @RequestParam(defaultValue = "true") Boolean toTrash,
             @RequestBody ImageManagementIdsRequestDTO request,
