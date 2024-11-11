@@ -84,6 +84,19 @@ const s = {
     margin-top: 8px;
     cursor: pointer;
   `,
+  DragFolderArea: styled.div`
+    position: fixed;
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+    cursor: pointer;
+    left: ${(props) => `${props.$positionX}px`};
+    top: ${(props) => `${props.$positionY - 20}px`};
+    width: 280px;
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  `,
   ClosedSidebar: styled.div`
     z-index: 10;
     background-color: #ffffff;
@@ -92,6 +105,10 @@ const s = {
     height: 100%;
     padding: 35px 28px 0 28px;
     display: ${(props) => (props.$isopen === true ? "none" : "inline")};
+  `,
+  DragDropArea: styled.div`
+    height: 2px;
+    width: 100%;
   `,
 }
 
@@ -116,12 +133,19 @@ const SideBar = () => {
   const [prevNameText, setPrevNameText] = useState("")
   // 선택할 input 태그를 위한 ref
   const inputRef = useRef(null)
+  // 드래그 요소 관리
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragPosition, setDragPosition] = useState({ X: 0, Y: 0 })
+  const [dragDirectoryName, setDragDirectoryName] = useState("")
+  const dragElementRef = useRef(null)
 
   // 컴포넌트가 로드될 때 요청
   useEffect(() => {
     fetchDirectoryInfos()
     fetchUserInfo()
   }, [])
+
+  useEffect(() => {}, [dragPosition])
 
   // changeNameTarget 변경을 감지해서 focus 이동
   useEffect(() => {
@@ -197,8 +221,8 @@ const SideBar = () => {
     }
 
     const fetchedDirectoryInfos = fetchedData.directories
-
     setDirectoryInfos(fetchedDirectoryInfos)
+    console.log(directoryInfos, "디렉토리 정보조회")
   }
 
   // 유저 정보 조회 함수
@@ -257,6 +281,34 @@ const SideBar = () => {
   const handleChangeInput = (event) => {
     const newText = event.target.value
     setChangeNameText(newText)
+  }
+
+  // 드래그 관리
+  const handleDragFolder = (event) => {
+    console.log(event)
+  }
+
+  // 드래그 시작 관리
+  const handleDragStart = (event, directoryInfo) => {
+    // 고스트 이미지 제거
+    const img = new Image()
+    img.src = ""
+    event.dataTransfer.setDragImage(img, 0, 0)
+    setDragDirectoryName(directoryInfo.directoryName)
+    setIsDragging(true)
+    handleDragFolder(event)
+  }
+
+  // 드래그 중 위치 업데이트
+  const handleDrag = (event) => {
+    if (isDragging) {
+      setDragPosition({ X: event.clientX, Y: event.clientY })
+    }
+  }
+
+  // 드래그 종료 핸들러
+  const handleDragEnd = () => {
+    setIsDragging(false)
   }
 
   // 폴더 이름 변경 키다운 이벤트
@@ -320,6 +372,7 @@ const SideBar = () => {
             <s.FolderTitle>기본폴더</s.FolderTitle>
           </s.FolderArea>
           <s.FolderCaption>내 폴더</s.FolderCaption>
+          <s.DragDropArea />
           {isRightClickModalOpen && (
             <FolderRightClickModal
               toggleFunction={toggleRightClickModal}
@@ -331,30 +384,37 @@ const SideBar = () => {
           )}
           {directoryInfos &&
             directoryInfos.map((directoryInfo) => (
-              <s.FolderArea
-                key={directoryInfo.directoryId}
-                onClick={() => handleFolderClick(directoryInfo.directoryId)}
-                onContextMenu={(event) =>
-                  handleRightClick(event, directoryInfo.directoryId)
-                }
-              >
-                <CommonFolderIcon />
-                {directoryInfo.directoryId === changeNameTarget ? (
-                  <s.FolderInput
-                    onClick={(event) => event.stopPropagation()}
-                    value={changeNameText}
-                    onChange={handleChangeInput}
-                    ref={inputRef}
-                    onKeyDown={handleKeyDown}
-                    onBlur={() => {
-                      setChangeNameText("")
-                      setChangeNameTarget(0)
-                    }}
-                  />
-                ) : (
-                  <s.FolderTitle>{directoryInfo.directoryName}</s.FolderTitle>
-                )}
-              </s.FolderArea>
+              <>
+                <s.FolderArea
+                  key={directoryInfo.directoryId}
+                  onClick={() => handleFolderClick(directoryInfo.directoryId)}
+                  onContextMenu={(event) =>
+                    handleRightClick(event, directoryInfo.directoryId)
+                  }
+                  onDragStart={(event) => handleDragStart(event, directoryInfo)}
+                  onDrag={(event) => handleDrag(event)}
+                  onDragEnd={handleDragEnd}
+                  draggable
+                >
+                  <CommonFolderIcon />
+                  {directoryInfo.directoryId === changeNameTarget ? (
+                    <s.FolderInput
+                      onClick={(event) => event.stopPropagation()}
+                      value={changeNameText}
+                      onChange={handleChangeInput}
+                      ref={inputRef}
+                      onKeyDown={handleKeyDown}
+                      onBlur={() => {
+                        setChangeNameText("")
+                        setChangeNameTarget(0)
+                      }}
+                    />
+                  ) : (
+                    <s.FolderTitle>{directoryInfo.directoryName}</s.FolderTitle>
+                  )}
+                </s.FolderArea>
+                <s.DragDropArea />
+              </>
             ))}
           <s.FolderCaption>관리</s.FolderCaption>
           <s.FolderArea onClick={toggleCreateModal}>
@@ -375,6 +435,17 @@ const SideBar = () => {
             <SettingsIcon />
             <s.FolderTitle>설정</s.FolderTitle>
           </s.FolderArea>
+
+          {isDragging && dragPosition.X && dragPosition.Y && (
+            <s.DragFolderArea
+              $positionX={dragPosition.X}
+              $positionY={dragPosition.Y}
+              key={`dragFolder`}
+            >
+              <DefaultFolderIcon />
+              <s.FolderTitle>{dragDirectoryName}</s.FolderTitle>
+            </s.DragFolderArea>
+          )}
         </s.Container>
       </s.Test>
 
