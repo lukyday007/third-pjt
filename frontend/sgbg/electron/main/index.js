@@ -24,7 +24,6 @@ const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
 
 let win = BrowserWindow
 let progressBar = null
-let autoUpdater = null
 const preload = path.join(__dirname, "../preload/index.mjs")
 const indexHtml = path.join(RENDERER_DIST, "index.html")
 
@@ -42,8 +41,7 @@ async function createWindow() {
 
 // `import()`로 electron-updater 동적 로딩
 async function initAutoUpdater() {
-  const updaterModule = await import("electron-updater")
-  autoUpdater = updaterModule.autoUpdater
+  const { autoUpdater } = await import("electron-updater")
 
   // autoUpdater 설정
   autoUpdater.autoDownload = false
