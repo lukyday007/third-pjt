@@ -11,6 +11,7 @@ import com.singlebungle.backend.domain.image.entity.ImageManagement;
 import com.singlebungle.backend.domain.image.entity.QImage;
 import com.singlebungle.backend.domain.image.entity.QImageDetail;
 import com.singlebungle.backend.domain.image.entity.QImageManagement;
+import com.singlebungle.backend.domain.keyword.entity.QKeyword;
 import com.singlebungle.backend.domain.user.entity.QUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
@@ -37,6 +38,7 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
         QImage qImage = QImage.image;
         QImageDetail qImageDetail = QImageDetail.imageDetail;
         QImageManagement qImageManagement = QImageManagement.imageManagement;
+        QKeyword qKeyword = QKeyword.keyword;
 
         BooleanBuilder builder = new BooleanBuilder();
 
@@ -62,7 +64,7 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
             BooleanBuilder keywordBuilder = new BooleanBuilder();
 
             for (String keyword : requestDTO.getKeywords()) {
-                builder.or(qImageDetail.keyword.keywordName.containsIgnoreCase(keyword));
+                keywordBuilder.or(qImageDetail.keyword.keywordName.containsIgnoreCase(keyword));
             }
             builder.and(keywordBuilder);
         }
@@ -73,9 +75,12 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
                         qImageManagement.image.imageUrl))
                 .from(qImageManagement)
                 .leftJoin(qImageManagement.image, qImage)
-                .leftJoin(qImageManagement.user, qUser)  // User와 조인 추가
+                .leftJoin(qImageManagement.user, qUser)
+                .leftJoin(qImageDetail).on(qImageManagement.image.eq(qImageDetail.image)) // ImageDetail 조인
+                .leftJoin(qImageDetail.keyword, qKeyword) // Keyword 조인
                 .where(builder);
 
+        // 정렬 조건 처리
         switch (requestDTO.getSort()) {
             case 0:
                 query.orderBy(qImageManagement.createdAt.desc());
@@ -102,6 +107,8 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
                 .from(qImageManagement)
                 .leftJoin(qImageManagement.image, qImage)
                 .leftJoin(qImageManagement.user, qUser)
+                .leftJoin(qImageDetail).on(qImageManagement.image.eq(qImageDetail.image))
+                .leftJoin(qImageDetail.keyword, qKeyword)
                 .where(builder)
                 .fetchCount();
 

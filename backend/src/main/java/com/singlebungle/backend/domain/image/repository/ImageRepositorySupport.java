@@ -10,6 +10,9 @@ import com.singlebungle.backend.domain.image.entity.Image;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.singlebungle.backend.domain.image.entity.QImage;
 import com.singlebungle.backend.domain.image.entity.QImageDetail;
+import com.singlebungle.backend.domain.image.entity.QImageManagement;
+import com.singlebungle.backend.domain.keyword.entity.QKeyword;
+import com.singlebungle.backend.domain.user.entity.QUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Repository;
@@ -32,6 +35,7 @@ public class ImageRepositorySupport extends QuerydslRepositorySupport {
 
         QImage qImage = QImage.image;
         QImageDetail qImageDetail = QImageDetail.imageDetail;
+        QKeyword qKeyword = QKeyword.keyword;
 
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(qImage.isDeleted.eq(false));
@@ -40,7 +44,7 @@ public class ImageRepositorySupport extends QuerydslRepositorySupport {
         if (requestDTO.getKeywords() != null && !requestDTO.getKeywords().isEmpty()) {
             BooleanBuilder keywordBuilder = new BooleanBuilder();
             for (String keyword : requestDTO.getKeywords()) {
-                keywordBuilder.or(qImageDetail.keyword.keywordName.containsIgnoreCase(keyword));
+                keywordBuilder.or(qKeyword.keywordName.containsIgnoreCase(keyword));
             }
             builder.and(keywordBuilder);
         }
@@ -50,7 +54,8 @@ public class ImageRepositorySupport extends QuerydslRepositorySupport {
                         qImage.imageId,
                         qImage.imageUrl))
                 .from(qImage)
-                .leftJoin(qImageDetail.imageDetail, qImageDetail)
+                .leftJoin(qImageDetail).on(qImage.eq(qImageDetail.image))
+                .leftJoin(qImageDetail.keyword, qKeyword)
                 .where(builder);
 
         switch (requestDTO.getSort()) {
@@ -77,7 +82,8 @@ public class ImageRepositorySupport extends QuerydslRepositorySupport {
         long totalCount = queryFactory
                 .select(qImage.imageId)
                 .from(qImage)
-                .leftJoin(qImageDetail.imageDetail, qImageDetail)
+                .leftJoin(qImageDetail).on(qImage.eq(qImageDetail.image))
+                .leftJoin(qImageDetail.keyword, qKeyword)
                 .where(builder)
                 .fetchCount();
 
