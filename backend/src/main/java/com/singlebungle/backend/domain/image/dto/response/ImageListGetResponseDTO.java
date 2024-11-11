@@ -1,7 +1,11 @@
 package com.singlebungle.backend.domain.image.dto.response;
 
+import com.singlebungle.backend.domain.image.dto.request.ImageListGetRequestDTO;
+import com.singlebungle.backend.global.model.BaseTimeEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
+
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,5 +18,11 @@ public class ImageListGetResponseDTO {
 
     private Long imageId;
     private String imageUrl;
+    private LocalDateTime createdAt;
+
+    public ImageListGetResponseDTO(Long imageId, String imageUrl) {
+        this.imageId = imageId;
+        this.imageUrl = imageUrl;
+    }
 
 }
