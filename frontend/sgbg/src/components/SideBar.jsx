@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react"
 import styled from "styled-components"
 import HomeIcon from "../asset/images/SideBar/HomeIcon.svg?react"
 import SideBarToggleIcon from "../asset/images/SideBar/SideBarToggleIcon.svg?react"
@@ -16,6 +16,7 @@ import {
   deleteDirectory,
   getDirectoryList,
   patchDirectoryName,
+  patchDirectorySequence,
   postCreateDirectory,
 } from "../lib/api/directory-api"
 import CreateFolderModal from "./CreateFolderModal"
@@ -84,14 +85,17 @@ const s = {
     margin-top: 8px;
     cursor: pointer;
   `,
-  DragFolderArea: styled.div`
+  DragFolderArea: styled.div.attrs((props) => ({
+    style: {
+      left: `${props.positionx}px`,
+      top: `${props.positiony - 20}px`,
+    },
+  }))`
     position: fixed;
     display: flex;
     align-items: center;
     margin-top: 8px;
     cursor: pointer;
-    left: ${(props) => `${props.$positionX}px`};
-    top: ${(props) => `${props.$positionY - 20}px`};
     width: 280px;
     background-color: #ffffff;
     border-radius: 4px;
@@ -106,7 +110,11 @@ const s = {
     padding: 35px 28px 0 28px;
     display: ${(props) => (props.$isopen === true ? "none" : "inline")};
   `,
-  DragDropArea: styled.div`
+  DragDropArea: styled.div.attrs((props) => ({
+    style: {
+      backgroundColor: props.isClosest ? "#cccccc" : "",
+    },
+  }))`
     height: 2px;
     width: 100%;
   `,
@@ -116,6 +124,7 @@ const SideBar = () => {
   const [isSideBarOpen, setIsSideBarOpen] = useState(true)
   // 디렉토리 리스트 정보
   const [directoryInfos, setDirectoryInfos] = useState([])
+  const [directorySequence, setDirectorySequence] = useState([])
   // 새폴더 모달 열림 여부
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   // 유저 정보
@@ -136,8 +145,11 @@ const SideBar = () => {
   // 드래그 요소 관리
   const [isDragging, setIsDragging] = useState(false)
   const [dragPosition, setDragPosition] = useState({ X: 0, Y: 0 })
-  const [dragDirectoryName, setDragDirectoryName] = useState("")
-  const dragElementRef = useRef(null)
+  const [dragDirectoryInfo, setDragDirectoryInfo] = useState(null)
+  // 드래그 드롭 관련 변수
+  const dragDropAreaRefs = useRef([])
+  const [dropAreaPositions, setDropAreaPositions] = useState([])
+  const [closestDropAreaIndex, setClosestDropAreaIndex] = useState(null)
 
   // 컴포넌트가 로드될 때 요청
   useEffect(() => {
@@ -153,6 +165,13 @@ const SideBar = () => {
       inputRef.current.focus()
     }
   }, [changeNameTarget])
+
+  // directoryInfos가 업데이트 된 후 위치 초기화
+  useLayoutEffect(() => {
+    if (directoryInfos && directoryInfos.length > 0) {
+      initDropAreaPositions()
+    }
+  }, [directoryInfos])
 
   const toggleSideBar = () => {
     setIsSideBarOpen((prev) => !prev)
@@ -221,8 +240,13 @@ const SideBar = () => {
     }
 
     const fetchedDirectoryInfos = fetchedData.directories
+    // 새로운 디렉토리 순서 저장
+    const newDirectorySequence = fetchedDirectoryInfos.map((directoryInfo) => {
+      return directoryInfo.directoryId
+    })
 
     setDirectoryInfos(fetchedDirectoryInfos)
+    setDirectorySequence(newDirectorySequence)
   }
 
   // 유저 정보 조회 함수
@@ -284,9 +308,7 @@ const SideBar = () => {
   }
 
   // 드래그 관리
-  const handleDragFolder = (event) => {
-    console.log(event)
-  }
+  const handleDragFolder = (event) => {}
 
   // 드래그 시작 관리
   const handleDragStart = (event, directoryInfo) => {
@@ -294,7 +316,7 @@ const SideBar = () => {
     const img = new Image()
     img.src = ""
     event.dataTransfer.setDragImage(img, 0, 0)
-    setDragDirectoryName(directoryInfo.directoryName)
+    setDragDirectoryInfo(directoryInfo)
     setIsDragging(true)
     handleDragFolder(event)
   }
@@ -302,13 +324,80 @@ const SideBar = () => {
   // 드래그 중 위치 업데이트
   const handleDrag = (event) => {
     if (isDragging) {
-      setDragPosition({ X: event.clientX, Y: event.clientY })
+      const newPosition = { X: event.clientX, Y: event.clientY }
+      if (newPosition.X !== 0 && newPosition.Y !== 0) {
+        setDragPosition(newPosition)
+        findClosestDropArea(newPosition)
+      }
     }
   }
 
   // 드래그 종료 핸들러
   const handleDragEnd = () => {
+    console.log("dragEnd")
+    if (dragDirectoryInfo && closestDropAreaIndex !== null) {
+      const draggedDirectoryId = dragDirectoryInfo.directoryId
+      const dropIndex = closestDropAreaIndex
+
+      console.log(draggedDirectoryId, dropIndex)
+
+      updateDirectorySequence(draggedDirectoryId, dropIndex)
+    }
+
     setIsDragging(false)
+    setClosestDropAreaIndex(null)
+  }
+
+  // 디렉토리 순서 변경 처리 함수
+  const updateDirectorySequence = async (draggedDirectoryId, dropIndex) => {
+    // 기존 sequence 복사
+    const newSequence = [...directorySequence]
+    // sequence에서 현재 드래그한 디렉토리의 index값 찾기
+    const draggedIndex = newSequence.indexOf(draggedDirectoryId)
+
+    // 없는 경우 리턴
+    if (draggedIndex === -1) {
+      return
+    }
+
+    // 드래그한 디렉토리 제거
+    newSequence.splice(draggedIndex, 1)
+
+    // dropIndex 조정
+    let adjustedDropIndex = dropIndex
+    if (draggedIndex < dropIndex) {
+      adjustedDropIndex = dropIndex - 1
+    }
+
+    // 위치 변경이 없는 경우 끝
+    if (adjustedDropIndex === draggedIndex) {
+      return
+    }
+
+    // 새로운 위치에 디렉토리 삽입
+    newSequence.splice(adjustedDropIndex, 0, draggedDirectoryId)
+
+    const response = await patchDirectorySequence(
+      { directorySequence: newSequence },
+      (resp) => {
+        return resp
+      },
+      (error) => {
+        console.log(error)
+      }
+    )
+    const fetchedDirectoryInfos = response.data?.directories
+
+    console.log(fetchedDirectoryInfos, newSequence)
+
+    // 반환값이 없거나 빈 배열인 경우 retrun
+    if (!fetchedDirectoryInfos) {
+      return
+    }
+
+    // 변경된 반환값이 올 경우 수정
+    setDirectoryInfos(fetchedDirectoryInfos)
+    setDirectorySequence(newSequence)
   }
 
   // 폴더 이름 변경 키다운 이벤트
@@ -336,6 +425,31 @@ const SideBar = () => {
     setPrevNameText("")
     setChangeNameText("")
     setChangeNameTarget(0)
+  }
+
+  // 각 DropArea의 위치 감지
+  const initDropAreaPositions = () => {
+    // 각 dropArea 감지 및 위치 저장
+    const newDropAreaPositions = dragDropAreaRefs.current.map((area) => {
+      const rect = area.getBoundingClientRect()
+      return { element: area, x: rect.x, y: rect.y }
+    })
+    setDropAreaPositions(newDropAreaPositions)
+  }
+
+  // 가장 가까운 DropArea를 찾아서 반환하는 함수
+  const findClosestDropArea = (position) => {
+    let closestAreaIndex = null
+    let minDistance = Infinity
+
+    dropAreaPositions.forEach(({ element, x, y }, index) => {
+      const distance = Math.hypot(position.X - x, position.Y - y)
+      if (distance < minDistance) {
+        minDistance = distance
+        closestAreaIndex = index
+      }
+    })
+    setClosestDropAreaIndex(closestAreaIndex)
   }
 
   return (
@@ -372,7 +486,10 @@ const SideBar = () => {
             <s.FolderTitle>기본폴더</s.FolderTitle>
           </s.FolderArea>
           <s.FolderCaption>내 폴더</s.FolderCaption>
-          <s.DragDropArea />
+          <s.DragDropArea
+            ref={(el) => (dragDropAreaRefs.current[0] = el)}
+            isClosest={closestDropAreaIndex === 0}
+          />
           {isRightClickModalOpen && (
             <FolderRightClickModal
               toggleFunction={toggleRightClickModal}
@@ -383,8 +500,8 @@ const SideBar = () => {
             />
           )}
           {directoryInfos &&
-            directoryInfos.map((directoryInfo) => (
-              <>
+            directoryInfos.map((directoryInfo, index) => (
+              <React.Fragment key={index}>
                 <s.FolderArea
                   key={directoryInfo.directoryId}
                   onClick={() => handleFolderClick(directoryInfo.directoryId)}
@@ -413,8 +530,12 @@ const SideBar = () => {
                     <s.FolderTitle>{directoryInfo.directoryName}</s.FolderTitle>
                   )}
                 </s.FolderArea>
-                <s.DragDropArea />
-              </>
+                <s.DragDropArea
+                  key={index}
+                  ref={(el) => (dragDropAreaRefs.current[index + 1] = el)}
+                  isClosest={closestDropAreaIndex === index + 1}
+                />
+              </React.Fragment>
             ))}
           <s.FolderCaption>관리</s.FolderCaption>
           <s.FolderArea onClick={toggleCreateModal}>
@@ -436,14 +557,14 @@ const SideBar = () => {
             <s.FolderTitle>설정</s.FolderTitle>
           </s.FolderArea>
 
-          {isDragging && dragPosition.X && dragPosition.Y && (
+          {isDragging && dragPosition.X !== 0 && dragPosition.Y !== 0 && (
             <s.DragFolderArea
-              $positionX={dragPosition.X}
-              $positionY={dragPosition.Y}
+              positionx={dragPosition.X}
+              positiony={dragPosition.Y}
               key={`dragFolder`}
             >
               <DefaultFolderIcon />
-              <s.FolderTitle>{dragDirectoryName}</s.FolderTitle>
+              <s.FolderTitle>{dragDirectoryInfo?.directoryName}</s.FolderTitle>
             </s.DragFolderArea>
           )}
         </s.Container>
