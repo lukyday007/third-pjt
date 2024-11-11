@@ -2,6 +2,10 @@ package com.singlebungle.backend.domain.user.controller;
 
 import com.singlebungle.backend.domain.user.service.GoogleAuthService;
 import com.singlebungle.backend.global.auth.dto.TokenResponseDTO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +32,15 @@ public class AuthController {
     private static final String LOCAL_REDIRECT_URI = "http://localhost:5173";
 
 
+    @Operation(summary = "Google 로그인 URL 생성", description = "사용자가 Google 로그인 화면으로 이동할 수 있는 URL을 생성합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Google 로그인 URL 생성 성공"),
+            @ApiResponse(responseCode = "500", description = "서버 오류로 인해 URL 생성 실패")
+    })
     @GetMapping("/google/authorize")
-    public ResponseEntity<?> getGoogleAuthorizeUrl(@RequestParam(required = false) String platform) {
+    public ResponseEntity<?> getGoogleAuthorizeUrl(
+            @Parameter(description = "요청 플랫폼 (extension 또는 웹)", example = "extension")
+            @RequestParam(required = false) String platform) {
         log.info("Generating Google login URL");
 
         String redirectUri;
@@ -48,8 +59,18 @@ public class AuthController {
         return ResponseEntity.ok().body(googleAuthorizeUrl);
     }
 
+    @Operation(summary = "Google 로그인 콜백", description = "Google에서 받은 인증 코드로 사용자 로그인을 처리합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Google 로그인 또는 회원 가입 성공"),
+            @ApiResponse(responseCode = "400", description = "인증 실패"),
+            @ApiResponse(responseCode = "500", description = "서버 오류로 인해 로그인 처리 실패")
+    })
     @GetMapping("/code/google")
-    public ResponseEntity<?> googleCallback(@RequestParam String code, @RequestParam(required = false) String platform, HttpServletResponse response) {
+    public ResponseEntity<?> googleCallback(
+            @Parameter(description = "Google에서 반환된 인증 코드")
+            @RequestParam String code,
+            @Parameter(description = "요청 플랫폼 (extension 또는 웹)", example = "extension")
+            @RequestParam(required = false) String platform, HttpServletResponse response) {
         try {
             log.info("Received Google authorization code: {}", code);
 
