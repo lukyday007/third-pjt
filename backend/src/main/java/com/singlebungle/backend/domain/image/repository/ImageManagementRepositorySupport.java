@@ -72,7 +72,9 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
         JPAQuery<ImageListGetResponseDTO> query = queryFactory
                 .select(Projections.constructor(ImageListGetResponseDTO.class,
                         qImageManagement.imageManagementId,
-                        qImageManagement.image.imageUrl))
+                        qImageManagement.image.imageUrl,
+                        qImageManagement.createdAt)) // createdAt 추가
+                .distinct()
                 .from(qImageManagement)
                 .leftJoin(qImageManagement.image, qImage)
                 .leftJoin(qImageManagement.user, qUser)
@@ -104,6 +106,7 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
         // 전체 개수 조회 (페이지네이션 적용 전에 실행)
         long totalCount = queryFactory
                 .select(qImageManagement.imageManagementId)
+                .distinct()
                 .from(qImageManagement)
                 .leftJoin(qImageManagement.image, qImage)
                 .leftJoin(qImageManagement.user, qUser)

@@ -52,7 +52,9 @@ public class ImageRepositorySupport extends QuerydslRepositorySupport {
         JPAQuery<ImageListGetResponseDTO> query = queryFactory
                 .select(Projections.constructor(ImageListGetResponseDTO.class,
                         qImage.imageId,
-                        qImage.imageUrl))
+                        qImage.imageUrl,
+                        qImage.createdAt)) // createdAt 추가
+                .distinct()
                 .from(qImage)
                 .leftJoin(qImageDetail).on(qImage.eq(qImageDetail.image))
                 .leftJoin(qImageDetail.keyword, qKeyword)
@@ -81,6 +83,7 @@ public class ImageRepositorySupport extends QuerydslRepositorySupport {
         // 전체 개수 조회 (페이지네이션 적용 전에 실행)
         long totalCount = queryFactory
                 .select(qImage.imageId)
+                .distinct()
                 .from(qImage)
                 .leftJoin(qImageDetail).on(qImage.eq(qImageDetail.image))
                 .leftJoin(qImageDetail.keyword, qKeyword)
