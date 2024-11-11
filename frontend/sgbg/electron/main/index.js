@@ -1,6 +1,6 @@
 const { app, BrowserWindow, shell, ipcMain, dialog } = require("electron")
 const updater = require("electron-updater")
-const { autoUpdater } = updater
+const autoUpdater = updater.autoUpdater
 const ProgressBar = require("electron-progressbar")
 const path = require("path")
 const os = require("os")

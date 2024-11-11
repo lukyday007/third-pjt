@@ -43,6 +43,7 @@
     "vite-plugin-electron-renderer": "^0.14.5"
   },
   "build": {
+    "asar": false,
     "appId": "com.example.sgbg",
     "productName": "Sgbg",
     "directories": {
