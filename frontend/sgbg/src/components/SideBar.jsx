@@ -179,10 +179,17 @@ const SideBar = () => {
     navigate(`/login`)
   }
 
+  const handleBasicClick = () => {
+    navigate(`/login`)
+  }
+
   const handleFolderClick = (id) => {
     navigate(`/image/${id}`)
   }
 
+  const handleSettingClick = () => {
+    navigate(`/setting`)
+  }
   const createNewFolder = async (directoryName) => {
     toggleCreateModal()
 
@@ -239,6 +246,7 @@ const SideBar = () => {
 
   // 우클릭 관리
   const handleRightClick = (event, id) => {
+    console.log(directoryInfos, "디렉토리 정보조회")
     // 우클릭 이벤트 제한
     event.preventDefault()
 
@@ -362,7 +370,7 @@ const SideBar = () => {
             />
             <s.Email onClick={handleEmailClick}>{userInfo.email}</s.Email>
           </s.UserInfoArea>
-          <s.FolderCaption>기본</s.FolderCaption>
+          <s.FolderCaption onClick={handleBasicClick}>기본</s.FolderCaption>
           <s.FolderArea>
             <AllImagesIcon />
             <s.FolderTitle>전체 이미지</s.FolderTitle>
@@ -431,7 +439,7 @@ const SideBar = () => {
             <TrashBinIcon />
             <s.FolderTitle>휴지통</s.FolderTitle>
           </s.FolderArea>
-          <s.FolderArea>
+          <s.FolderArea onClick={handleSettingClick}>
             <SettingsIcon />
             <s.FolderTitle>설정</s.FolderTitle>
           </s.FolderArea>
