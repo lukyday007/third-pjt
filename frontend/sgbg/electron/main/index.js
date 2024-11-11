@@ -85,8 +85,17 @@ autoUpdater.on("update-downloaded", () => {
       buttons: ["예", "아니오"],
     })
     .then((result) => {
-      if (result.response === 0) autoUpdater.quitAndInstall()
+      if (result.response === 0) {
+        setTimeout(() => {
+          autoUpdater.quitAndInstall()
+        }, 1000) // 1초 대기 후 quitAndInstall 호출
+      }
     })
+})
+
+app.on("before-quit", () => {
+  // 모든 창을 닫아 프로세스를 종료
+  BrowserWindow.getAllWindows().forEach((win) => win.close())
 })
 
 app.on("window-all-closed", () => {
