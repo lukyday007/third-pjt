@@ -8,6 +8,9 @@ import com.singlebungle.backend.global.auth.dto.TokenResponseDTO;
 import com.singlebungle.backend.global.exception.model.NoTokenRequestException;
 import com.singlebungle.backend.global.model.BaseResponseBody;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -27,8 +30,13 @@ public class UserController {
     private final JwtProvider jwtProvider;
 
     @Operation(summary = "유저 정보 조회", description = "액세스 토큰을 통해 유저 정보를 반환합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "유저 정보 조회 성공"),
+            @ApiResponse(responseCode = "400", description = "토큰이 유효하지 않음")
+    })
     @GetMapping
     public ResponseEntity<UserInfoResponseDTO> getUserInfo(
+            @Parameter(description = "Authorization 헤더에 포함된 액세스 토큰")
             @RequestHeader(value = "Authorization", required = false) String token) {
 
         if (token == null) {
@@ -54,8 +62,13 @@ public class UserController {
     }
 
     @Operation(summary = "로그아웃", description = "로그아웃을 처리하고 토큰을 삭제합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "로그아웃 성공"),
+            @ApiResponse(responseCode = "401", description = "유효하지 않은 토큰")
+    })
     @PostMapping("/logout")
     public ResponseEntity<BaseResponseBody> logout(
+            @Parameter(description = "Authorization 헤더에 포함된 액세스 토큰")
             @RequestHeader(value = "Authorization", required = false) String token) {
         if (token == null)
             throw new NoTokenRequestException("Access 토큰이 필요합니다.");
@@ -70,8 +83,13 @@ public class UserController {
     }
 
     @Operation(summary = "액세스 토큰 재발급", description = "쿠키에 저장된 리프레시 토큰을 사용하여 새로운 액세스 토큰을 재발급합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "액세스 토큰 재발급 성공"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 리프레시 토큰")
+    })
     @PostMapping("/refresh-token")
     public ResponseEntity<Map<String, String>> refreshAccessToken(
+            @Parameter(description = "쿠키에 저장된 리프레시 토큰")
             @CookieValue(value = "refreshToken", required = false) String refreshToken) {
         // 리프레시 토큰이 없으면 예외 처리
         if (refreshToken == null) {
