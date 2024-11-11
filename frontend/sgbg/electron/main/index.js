@@ -1,9 +1,8 @@
-const { app, BrowserWindow, shell, ipcMain, dialog } = require("electron")
-const updater = require("electron-updater")
-const autoUpdater = updater.autoUpdater
-const ProgressBar = require("electron-progressbar")
-const path = require("path")
-const os = require("os")
+import { app, BrowserWindow, shell, ipcMain, dialog } from "electron"
+import { autoUpdater } from "electron-updater"
+import ProgressBar from "electron-progressbar"
+import path from "path"
+import os from "os"
 
 const __dirname = path.resolve()
 
