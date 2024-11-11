@@ -1,28 +1,7 @@
-import { useState } from "react"
 import styled from "styled-components"
-import Masonry, { ResponsiveMasonry } from "react-responsive-masonry"
 import * as React from "react"
 import { MasonryInfiniteGrid } from "@egjs/react-infinitegrid"
 import "./styles.css"
-
-import test from "../asset/images/ImgList/1.jpg"
-
-const Dummydata = {
-  images: [
-    { imageId: "1", imageUrl: "src/asset/images/ImgList/1.jpg" },
-    { imageId: "2", imageUrl: "src/asset/images/ImgList/2.jpg" },
-    { imageId: "3", imageUrl: "src/asset/images/ImgList/3.jpg" },
-    { imageId: "4", imageUrl: "src/asset/images/ImgList/4.jpg" },
-    { imageId: "5", imageUrl: "src/asset/images/ImgList/5.png" },
-    { imageId: "6", imageUrl: "src/asset/images/ImgList/6.png" },
-    { imageId: "7", imageUrl: "src/asset/images/ImgList/7.jpg" },
-    { imageId: "8", imageUrl: "src/asset/images/ImgList/8.jpg" },
-    { imageId: "9", imageUrl: "src/asset/images/ImgList/9.jpg" },
-    { imageId: "10", imageUrl: "src/asset/images/ImgList/10.jpg" },
-    { imageId: "11", imageUrl: "src/asset/images/ImgList/11.jpg" },
-    { imageId: "12", imageUrl: "src/asset/images/ImgList/12.jpg" },
-  ],
-}
 
 const s = {
   Image: styled.img`
@@ -64,7 +43,6 @@ const Item = ({ num }) => (
 )
 
 const ImgList = () => {
-  const [selectedImageId, setSelectedImageId] = useState(null)
   const [items, setItems] = React.useState(() => getItems(0, 10))
   return (
     <>
