@@ -334,12 +334,9 @@ const SideBar = () => {
 
   // 드래그 종료 핸들러
   const handleDragEnd = () => {
-    console.log("dragEnd")
     if (dragDirectoryInfo && closestDropAreaIndex !== null) {
       const draggedDirectoryId = dragDirectoryInfo.directoryId
       const dropIndex = closestDropAreaIndex
-
-      console.log(draggedDirectoryId, dropIndex)
 
       updateDirectorySequence(draggedDirectoryId, dropIndex)
     }
@@ -430,7 +427,10 @@ const SideBar = () => {
   // 각 DropArea의 위치 감지
   const initDropAreaPositions = () => {
     // 각 dropArea 감지 및 위치 저장
-    const newDropAreaPositions = dragDropAreaRefs.current.map((area) => {
+    // ref로 참조되지 못한 null 값 제거
+    const validAreas = dragDropAreaRefs.current.filter((area) => area !== null)
+
+    const newDropAreaPositions = validAreas.map((area) => {
       const rect = area.getBoundingClientRect()
       return { element: area, x: rect.x, y: rect.y }
     })
