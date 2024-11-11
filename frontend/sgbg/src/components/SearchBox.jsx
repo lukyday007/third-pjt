@@ -277,7 +277,7 @@ const SearchBox = () => {
         {filteredKeywords.map((keyword, index) => (
           <s.ResultItem
             key={index}
-            isActive={index === activeIndex}
+            $isActive={index === activeIndex}
             onClick={() => tagKeyword(keyword)}
           >
             <KeywordIcon />

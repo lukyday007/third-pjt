@@ -223,8 +223,8 @@ const SideBar = () => {
     }
 
     const fetchedDirectoryInfos = fetchedData.directories
-
     setDirectoryInfos(fetchedDirectoryInfos)
+    console.log(directoryInfos, "디렉토리 정보조회")
   }
 
   // 유저 정보 조회 함수
