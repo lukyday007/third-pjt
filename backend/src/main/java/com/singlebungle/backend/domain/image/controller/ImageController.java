@@ -153,7 +153,7 @@ public class ImageController {
 
         Map<String, Object> imageList;
 
-        if (keywordList != null || keywordList.isEmpty()) {
+        if (keywordList != null && keywordList.isEmpty()) {
             List<String> keywords = Arrays.asList(keywordList.split(","));
             ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(userId, directoryId, page, size, keywords, sort, isBin);
             imageList = imageService.getImageListFromDir(requestDTO);
@@ -193,7 +193,7 @@ public class ImageController {
 
         Map<String, Object> imageList;
 
-        if (keywordList != null || keywordList.isEmpty()) {
+        if (keywordList != null && keywordList.isEmpty()) {
             List<String> keywords = Arrays.asList(keywordList.split(","));
             ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(page, size, keywords, sort);
             imageList = imageService.getImageListFromFeed(requestDTO);
