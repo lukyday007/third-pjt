@@ -8,15 +8,20 @@ async function getAccessTokenFromStorage() {
   return new Promise((resolve, reject) => {
     const result = chrome.storage.local.get('accessToken', (result) => {
       if (chrome.runtime.lastError) {
+        chrome.runtime.sendMessage({ action: 'openPopup' })
         reject(new Error('액세스 토큰 불러오기 실패'))
       } else if (!result.accessToken) {
-        reject(new Error('액세스 토큰이 저장되지 않았습니다. '))
+        chrome.runtime.sendMessage({ action: 'openPopup' })
+        reject({ message: '로그인이 필요한 기능입니다. ' })
       } else {
         resolve(result.accessToken)
       }
     })
   })
 }
+
+// 쿠키로 Access Token 재발급 요청
+// 백엔드 로직 화인 후 추가
 
 // 디렉토리 목록 조회 API
 async function fetchDirectoryList() {
