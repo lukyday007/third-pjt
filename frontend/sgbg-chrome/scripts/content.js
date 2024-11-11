@@ -179,6 +179,24 @@ function removeExistingFolderModal() {
 
   if (existingModal) {
     existingModal.remove()
+    // 모달 닫기 관련 이벤트리스너를 문서에서 제거
+    document.removeEventListener('keydown', handleEscapePress)
+    document.removeEventListener('click', handleOutsideClick)
+  }
+}
+
+// ESC 키 누르면 모달 제거
+const handleEscapePress = (event) => {
+  if (event.key === 'Escape') {
+    removeExistingFolderModal()
+  }
+}
+
+// 창 밖을 클릭하면 모달 제거
+const handleOutsideClick = (event) => {
+  const existingModal = document.querySelector('#create-folder-modal')
+  if (!existingModal.contains(event.target)) {
+    removeExistingFolderModal()
   }
 }
 
@@ -204,7 +222,8 @@ async function showCreateFolderModal(event) {
   `
 
   // input 바인딩
-  modal.addEventListener('input', (event) => {
+  const inputField = modal.querySelector('.modal-create-folder-input')
+  inputField.addEventListener('input', (event) => {
     newDirectoryName = event.target.value
   })
 
@@ -215,7 +234,19 @@ async function showCreateFolderModal(event) {
   // 생성된 폴더 아이콘에 클릭 이벤트 리스너 추가
   createFolderIcon.addEventListener('click', handleClickCreateFolderIcon)
 
+  document.addEventListener('keydown', handleEscapePress)
+  document.addEventListener('click', handleOutsideClick)
+
   document.body.appendChild(modal)
+
+  // 모달 클릭시 상위 요소로 이벤트 전파 방지
+  modal.addEventListener('click', (event) => {
+    event.stopPropagation()
+  })
+  // inputField 요소로 focus
+  requestAnimationFrame(() => {
+    inputField.focus()
+  })
 }
 
 // 알림 팝업 모달 띄우기
