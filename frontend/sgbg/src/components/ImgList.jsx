@@ -79,11 +79,11 @@ const ImgList = () => {
     )
   }
 
-  // useEffect(() => {
-  //   setItems([])
-  //   setCurrentPage(1)
-  //   setTotalPage(null)
-  // }, [params.id])
+  useEffect(() => {
+    setItems([])
+    setCurrentPage(1)
+    setTotalPage(null)
+  }, [params.id])
 
   return (
     <>
