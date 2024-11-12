@@ -32,7 +32,6 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class OpenaiServiceImpl implements OpenaiService {
 
-    private final SearchService searchService;
     private final WebClient openAiConfig;  // WebClient 빈을 openAiConfig로 주입받음
 
     public List<String> tags;
@@ -83,23 +82,41 @@ public class OpenaiServiceImpl implements OpenaiService {
     }
 
     private String convertWebPToJpegUrl(String webpUrl) throws IOException {
-        // WebP 이미지 다운로드
-        BufferedImage webpImage = ImageIO.read(new URL(webpUrl));
-        if (webpImage == null) {
-            throw new IllegalArgumentException(">>> WebP 이미지를 읽을 수 없습니다.");
+        try {
+            // WebP 이미지 다운로드
+            BufferedImage webpImage = ImageIO.read(new URL(webpUrl));
+            if (webpImage == null) {
+                log.error(">>> WebP 이미지를 읽을 수 없습니다. URL: {}", webpUrl);
+                throw new IllegalArgumentException("WebP 이미지를 읽는 데 실패했습니다.");
+            }
+
+            // JPEG로 변환
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ImageIO.write(webpImage, "jpg", outputStream);
+            byte[] jpegBytes = outputStream.toByteArray();
+
+            // 변환된 JPEG 이미지의 크기를 검증
+            if (jpegBytes.length == 0) {
+                log.error(">>> JPEG 변환 실패: 변환된 이미지 크기가 0입니다.");
+                throw new RuntimeException("JPEG 변환 실패: 변환된 이미지 크기가 0입니다.");
+            }
+            if (jpegBytes.length > 5 * 1024 * 1024) { // 예: 5MB 초과 제한
+                log.warn(">>> JPEG 이미지가 너무 큽니다. 크기: {} bytes", jpegBytes.length);
+                throw new IllegalArgumentException("JPEG 이미지 크기가 너무 큽니다.");
+            }
+
+            // Base64로 변환하여 OpenAI에 전달
+            String base64Image = "data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(jpegBytes);
+            log.info(">>> WebP 이미지를 JPEG(Base64)로 변환 완료, Base64 길이: {}", base64Image.length());
+
+            return base64Image;
+
+        } catch (IOException e) {
+            log.error(">>> WebP 이미지를 JPEG로 변환하는 동안 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("WebP 이미지를 JPEG로 변환하는 동안 오류가 발생했습니다.", e);
         }
-
-        // JPEG로 변환
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ImageIO.write(webpImage, "jpg", outputStream);
-        byte[] jpegBytes = outputStream.toByteArray();
-
-        // Base64로 변환하여 OpenAI에 전달할 수 있도록 준비
-        String base64Image = "data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(jpegBytes);
-        log.info(">>> WebP 이미지를 JPEG(Base64)로 변환 완료");
-
-        return base64Image;
     }
+
 
     // 1. 프롬프트 생성 메서드
     @Override
