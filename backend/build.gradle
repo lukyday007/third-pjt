@@ -75,7 +75,8 @@ dependencies {
 	implementation 'software.amazon.awssdk:auth:2.20.80'
 	// base64 처리
 	implementation 'javax.xml.bind:jaxb-api:2.3.1'
-	// webp 처리
+	// WebP 처리
+	implementation 'com.twelvemonkeys.imageio:imageio-core:3.9.4'
 	implementation 'com.twelvemonkeys.imageio:imageio-webp:3.9.4'
 
 	// ElasticSearch
