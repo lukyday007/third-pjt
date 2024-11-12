@@ -79,7 +79,7 @@ pipeline {
                         def releaseResponse = sh(
                             script: """
                                 curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
-                                -d '{"tag_name": "v${version}", "name": "Release v${version}", "body": "⚠️ 릴리스에 Source code 파일이 포함되지만, 실제 설치 파일만 사용하세요.\\n다운로드 링크: Sgbg.Setup.v${version}.exe 파일을 실행하세요."}' \
+                                -d '{"tag_name": "v${version}", "name": "Release v${version}", "body": "⚠️ "Source code" 파일이 포함되어 있으나, 실제 설치를 위해서는 **Sgbg.Setup.v${version}.exe** 파일만 실행하시면 됩니다."}' \
                                 https://api.github.com/repos/${GITHUB_REPO}/releases
                             """,
                             returnStdout: true
