@@ -45,15 +45,15 @@ const ImgList = () => {
   const [selectedImageId, setSelectedImageId] = useState(null)
   const [items, setItems] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
+  const [prevPage, setPrevPage] = useState(0)
   const [totalPage, setTotalPage] = useState(null)
+  const [isFetching, setIsFetching] = useState(false)
 
   const params = useParams()
-  useEffect(() => {
-    console.log("params", params)
-  }, [params])
 
   const fetchMyImages = async () => {
-    if (totalPage !== null && currentPage > totalPage) return
+    if (isFetching || (totalPage !== null && currentPage > totalPage)) return
+    setIsFetching(true)
 
     getMyImages(
       params.id,
@@ -63,47 +63,54 @@ const ImgList = () => {
       0,
       false,
       (resp) => {
-        const { imageList, totalPage } = resp.data
+        const imageList = resp.data.imageList
+        const totalPage = resp.data.totalPage
+        console.log("response", resp.data, "currentPage", currentPage)
         const newItems = getItemsWithImages(imageList, currentPage)
-
         setItems((prevItems) => [...prevItems, ...newItems])
-        setTotalPage(totalPage)
         setCurrentPage((prevPage) => prevPage + 1)
+        setTotalPage(totalPage)
+        setIsFetching(false)
       },
       (error) => {
         console.log("error", error)
+        setIsFetching(false)
       }
     )
   }
 
-  useEffect(() => {
-    fetchMyImages()
-  }, [])
+  // useEffect(() => {
+  //   setItems([])
+  //   setCurrentPage(1)
+  //   setTotalPage(null)
+  // }, [params.id])
 
   return (
-    <MasonryInfiniteGrid
-      className="container"
-      gap={5}
-      align={"stretch"}
-      maxStretchColumnSize={360}
-      useFirstRender={true}
-      onRequestAppend={(e) => {
-        fetchMyImages()
-      }}
-      onRenderComplete={(e) => {
-        console.log(e)
-      }}
-    >
-      {items.map((item) => (
-        <Item
-          key={item.key}
-          imageUrl={item.imageUrl}
-          isSelected={item.key === selectedImageId}
-          onClick={() => setSelectedImageId(item.key)}
-          data-grid-groupkey={item.groupKey}
-        />
-      ))}
-    </MasonryInfiniteGrid>
+    <>
+      <MasonryInfiniteGrid
+        className="container"
+        gap={5}
+        align={"stretch"}
+        maxStretchColumnSize={360}
+        useFirstRender={true}
+        onRequestAppend={(e) => {
+          fetchMyImages()
+        }}
+        onRenderComplete={(e) => {
+          console.log(e)
+        }}
+      >
+        {items.map((item) => (
+          <Item
+            key={item.key}
+            imageUrl={item.imageUrl}
+            isSelected={item.key === selectedImageId}
+            onClick={() => setSelectedImageId(item.key)}
+            data-grid-groupkey={item.groupKey}
+          />
+        ))}
+      </MasonryInfiniteGrid>
+    </>
   )
 }
 
