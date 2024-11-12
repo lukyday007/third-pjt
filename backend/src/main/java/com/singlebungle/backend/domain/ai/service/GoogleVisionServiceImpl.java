@@ -11,7 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -91,34 +97,81 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
 
     @Override
     public List<String> analyzeImage(String imageUrl) throws IOException {
-
-        Image image = isBase64Image(imageUrl) ? buildImageFromBase64(imageUrl) : buildImageFromUrl(imageUrl);
+        // 단일 처리 메서드 사용
+        Image image = buildImage(imageUrl);
 
         if (!detectSafeSearchGoogleVision(image)) {
             throw new InvalidImageException(">>> Google Vision - 부적절한 이미지 입니다.");
         }
 
-        // detectSafeSearchGoogleVision이 true인 경우에만 실행
         return detectLabels(image);
     }
 
     @Override
-    public boolean isBase64Image(String imageUrl) {
-        return imageUrl.startsWith("data:image");
+    public Image buildImage(String imageUrl) {
+        try {
+            // Base64 이미지 처리
+            if (imageUrl.startsWith("data:image")) {
+                String base64Data = imageUrl.substring(imageUrl.indexOf(",") + 1);
+
+                try {
+                    byte[] decodedBytes = Base64.getDecoder().decode(base64Data);
+
+                    // Base64가 WebP 형식인지 판별 후 변환
+                    if (imageUrl.startsWith("data:image/webp")) {
+                        log.info(">>> WebP(Base64) 감지, JPG로 변환 중...");
+                        return buildImageFromWebp(decodedBytes);
+                    }
+                    // 일반 Base64 이미지 처리
+                    return Image.newBuilder().setContent(ByteString.copyFrom(decodedBytes)).build();
+
+                } catch (IllegalArgumentException e) {
+                    log.error(">>> Base64 데이터 디코딩 실패: {}", e.getMessage());
+                    throw new RuntimeException(">>> Base64 데이터를 디코딩하는 동안 오류가 발생했습니다.", e);
+                }
+            }
+
+            // WebP URL 처리
+            if (imageUrl.endsWith(".webp")) {
+                log.info(">>> WebP(URL) 감지, JPG로 변환 중...");
+                byte[] webpBytes = new URL(imageUrl).openStream().readAllBytes();
+
+                return buildImageFromWebp(webpBytes);
+            }
+
+            // 일반 URL 이미지 처리
+            ImageSource imgSource = ImageSource.newBuilder().setImageUri(imageUrl).build();
+            return Image.newBuilder().setSource(imgSource).build();
+
+        } catch (IOException e) {
+            throw new RuntimeException(">>> 이미지를 처리하는 동안 오류가 발생했습니다.", e);
+        }
     }
 
-    @Override
-    public Image buildImageFromBase64(String base64Image) {
-        String base64Data = base64Image.substring(base64Image.indexOf(",") + 1);
-        byte[] decodedBytes = Base64.getDecoder().decode(base64Data);
-        return Image.newBuilder().setContent(ByteString.copyFrom(decodedBytes)).build();
-    }
+
 
     @Override
-    public Image buildImageFromUrl(String imageUrl) {
-        ImageSource imgSource = ImageSource.newBuilder().setImageUri(imageUrl).build();
-        return Image.newBuilder().setSource(imgSource).build();
+    public Image buildImageFromWebp(byte[] webpBytes) {
+        try {
+            InputStream webpInputStream = new ByteArrayInputStream(webpBytes);
+            BufferedImage bufferedImage = ImageIO.read(webpInputStream);
+
+            if (bufferedImage == null) {
+                throw new IllegalArgumentException(">>> WebP 이미지를 읽을 수 없습니다.");
+            }
+
+            ByteArrayOutputStream jpgOutputStream = new ByteArrayOutputStream();
+            ImageIO.write(bufferedImage, "jpg", jpgOutputStream);
+            byte[] jpgBytes = jpgOutputStream.toByteArray();
+
+            return Image.newBuilder().setContent(ByteString.copyFrom(jpgBytes)).build();
+
+        } catch (IOException e) {
+            log.error(">>> WebP 이미지를 JPG로 변환하는 동안 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException(">>> WebP 이미지를 JPG로 변환하는 동안 오류가 발생했습니다.", e);
+        }
     }
+
 
     // 외부 이미지 URL을 사용하여 라벨 검출 실행
     @Override

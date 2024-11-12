@@ -7,10 +7,7 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.singlebungle.backend.domain.image.dto.request.ImageListGetRequestDTO;
 import com.singlebungle.backend.domain.image.dto.response.ImageListGetResponseDTO;
-import com.singlebungle.backend.domain.image.entity.ImageManagement;
-import com.singlebungle.backend.domain.image.entity.QImage;
-import com.singlebungle.backend.domain.image.entity.QImageDetail;
-import com.singlebungle.backend.domain.image.entity.QImageManagement;
+import com.singlebungle.backend.domain.image.entity.*;
 import com.singlebungle.backend.domain.keyword.entity.QKeyword;
 import com.singlebungle.backend.domain.user.entity.QUser;
 import lombok.extern.slf4j.Slf4j;
@@ -126,4 +123,18 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
     }
 
 
+    public List<String> findKeywordList(Image image) {
+        QImageDetail qImageDetail = QImageDetail.imageDetail;
+        QKeyword qKeyword = QKeyword.keyword;
+
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(qImageDetail.image.eq(image));
+
+        JPAQuery<String> query = queryFactory
+                .select(qKeyword.keywordName)               // Keyword의 keywordName 필드 선택
+                .from(qImageDetail)
+                .join(qImageDetail.keyword, qKeyword)       // ImageDetail과 Keyword 조인
+                .where(builder);
+        return query.fetch();                               // 결과를 List<String>으로 반환
+    }
 }
