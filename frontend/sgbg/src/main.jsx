@@ -7,11 +7,9 @@ import { HashRouter, Navigate, Route, Routes } from "react-router-dom"
 // import './demos/node'
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <HashRouter>
-      <App />
-    </HashRouter>
-  </React.StrictMode>
+  <HashRouter>
+    <App />
+  </HashRouter>
 )
 
 postMessage({ payload: "removeLoading" }, "*")
