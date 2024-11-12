@@ -67,7 +67,6 @@ public class ImageServiceImpl implements ImageService {
         try {
             InputStream inputStream;
             String contentType;
-            long contentLength;
 
             if (imageUrl.startsWith("data:image")) {
                 // Base64 이미지 처리
@@ -75,50 +74,62 @@ public class ImageServiceImpl implements ImageService {
                 contentType = imageUrl.substring(5, commaIndex).split(";")[0];
                 byte[] imageData = Base64.getDecoder().decode(imageUrl.substring(commaIndex + 1));
                 inputStream = new ByteArrayInputStream(imageData);
-                contentLength = imageData.length;
             } else {
                 // URL 이미지 처리
                 URL url = new URL(imageUrl);
                 URLConnection urlConnection = url.openConnection();
                 contentType = urlConnection.getContentType();
                 inputStream = urlConnection.getInputStream();
-
-                // WebP 처리
-                if ("image/webp".equals(contentType)) {
-                    try {
-                        inputStream = convertWebPToJPG(inputStream); // WebP를 JPG로 변환
-                        contentType = "image/jpeg"; // 변환 후 Content-Type 설정
-                    } catch (IOException e) {
-                        log.error("WebP 변환 중 오류 발생: {}", e.getMessage());
-                        throw new RuntimeException("WebP 이미지를 처리할 수 없습니다.");
-                    }
-                }
-
-                contentLength = urlConnection.getContentLengthLong();
-                if (contentLength <= 0) {
-                    throw new IllegalArgumentException("이미지 파일 크기를 확인할 수 없습니다.");
-                }
             }
+
+            // WebP 처리
+            if ("image/webp".equals(contentType)) {
+                inputStream = convertWebPToJPG(inputStream);
+                contentType = "image/jpeg";
+            }
+
+            // 데이터 길이 계산
+            byte[] data = inputStream.readAllBytes();
+            long contentLength = data.length;
+
+            // S3 메타데이터 설정
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentType(contentType);
+            metadata.setContentLength(contentLength);
 
             // 파일명 생성
             String extension = getExtensionFromContentType(contentType);
             fileName = UUID.randomUUID().toString() + extension;
 
-            // S3에 업로드
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentType(contentType);
-            metadata.setContentLength(contentLength);
-            PutObjectRequest request = new PutObjectRequest(bucketName, fileName, inputStream, metadata);
+            // S3 업로드
+            InputStream uploadStream = new ByteArrayInputStream(data);
+            PutObjectRequest request = new PutObjectRequest(bucketName, fileName, uploadStream, metadata);
             amazonS3.putObject(request);
 
-            log.info("S3에 이미지 업로드 성공: {}", fileName);
-
+            log.info(">>> S3에 이미지 업로드 성공: {}", fileName);
             return fileName;
 
-        } catch (Exception e) {
-            log.error("이미지 업로드 중 오류 발생: {}", e.getMessage(), e);
-            throw new RuntimeException("이미지 업로드 중 오류가 발생했습니다.", e);
+        } catch (IOException e) {
+            log.error(">>> URL 처리 중 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("URL 처리 중 오류가 발생했습니다.", e);
+        } catch (AmazonServiceException e) {
+            log.error(">>> S3 서비스 오류: {}", e.getMessage(), e);
+            throw new RuntimeException("S3 서비스 오류가 발생했습니다.", e);
+        } catch (SdkClientException e) {
+            log.error(">>> S3 클라이언트 오류: {}", e.getMessage(), e);
+            throw new RuntimeException("S3 클라이언트 오류가 발생했습니다.", e);
         }
+    }
+
+
+    private long calculateContentLength(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            byteArrayOutputStream.write(buffer, 0, bytesRead);
+        }
+        return byteArrayOutputStream.size();
     }
 
 
