@@ -16,15 +16,10 @@ public interface GoogleVisionService {
 
     List<String> detectLabels(Image image) throws IOException;
 
+    Image buildImage(String imageUrl);
+
+    Image buildImageFromWebp(byte[] webpBytes);
+
     List<String> analyzeImage(String imageUrl) throws IOException;
-
-    boolean isBase64Image(String imageUrl);
-
-    Image buildImageFromBase64(String base64Image);
-
-    Image buildImageFromUrl(String imageUrl);
-
-
-
 
 }

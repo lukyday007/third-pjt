@@ -15,6 +15,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,9 +49,15 @@ public class OpenaiServiceImpl implements OpenaiService {
     @Override
     public KeywordAndLabels requestImageAnalysis(String imageUrl, List<String> labels) {
         try {
+
+            // WebP 처리 (URL 이미지)
+            if (imageUrl.endsWith(".webp")) {
+                log.info(">>> WebP 이미지 감지, 변환 중...");
+                imageUrl = convertWebPToJpegUrl(imageUrl);
+            }
+
             // 프롬프트 생성
             String gptPrompt = generatePrompt(imageUrl, labels);
-
             // OpenAI api 요청
             ChatGPTResponse response = sendOpenAiRequest(imageUrl, gptPrompt);
             // 응답 처리
@@ -71,6 +82,24 @@ public class OpenaiServiceImpl implements OpenaiService {
         }
     }
 
+    private String convertWebPToJpegUrl(String webpUrl) throws IOException {
+        // WebP 이미지 다운로드
+        BufferedImage webpImage = ImageIO.read(new URL(webpUrl));
+        if (webpImage == null) {
+            throw new IllegalArgumentException(">>> WebP 이미지를 읽을 수 없습니다.");
+        }
+
+        // JPEG로 변환
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ImageIO.write(webpImage, "jpg", outputStream);
+        byte[] jpegBytes = outputStream.toByteArray();
+
+        // Base64로 변환하여 OpenAI에 전달할 수 있도록 준비
+        String base64Image = "data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(jpegBytes);
+        log.info(">>> WebP 이미지를 JPEG(Base64)로 변환 완료");
+
+        return base64Image;
+    }
 
     // 1. 프롬프트 생성 메서드
     @Override
@@ -94,29 +123,33 @@ public class OpenaiServiceImpl implements OpenaiService {
     // 2. API 요청 메서드
     @Override
     public ChatGPTResponse sendOpenAiRequest(String imageUrl, String prompt) throws Exception {
-        ChatGPTRequest request = ChatGPTRequest.builder()
-                .model(apiModel)
-                .messages(List.of(
-                        ChatGPTRequest.UserMessage.builder()
-                                .role("user")
-                                .content(List.of(
-                                        new ChatGPTRequest.Content("text", prompt),
-                                        new ChatGPTRequest.Content("image_url", new ChatGPTRequest.ImageUrl(imageUrl))
-                                ))
-                                .build()
-                ))
-                .maxTokens(500)
-                .temperature(0)
-                .build();
+        try {
+            ChatGPTRequest request = ChatGPTRequest.builder()
+                    .model(apiModel)
+                    .messages(List.of(
+                            ChatGPTRequest.UserMessage.builder()
+                                    .role("user")
+                                    .content(List.of(
+                                            new ChatGPTRequest.Content("text", prompt),
+                                            new ChatGPTRequest.Content("image_url", new ChatGPTRequest.ImageUrl(imageUrl))
+                                    ))
+                                    .build()
+                    ))
+                    .maxTokens(500)
+                    .temperature(0)
+                    .build();
 
-//        log.info(">>> ChatGPT Request JSON: {}", new ObjectMapper().writeValueAsString(request));
+            return openAiConfig.post()
+                    .uri("/v1/chat/completions")
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(ChatGPTResponse.class)
+                    .block();
 
-        return openAiConfig.post()
-                .uri("/v1/chat/completions")
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(ChatGPTResponse.class)
-                .block();
+        } catch (Exception e) {
+            log.error(">>> OpenAI API 요청 실패: {}", e.getMessage());
+            throw new RuntimeException(">>> OpenAI API 요청 중 오류가 발생했습니다.");
+        }
     }
 
 
@@ -124,19 +157,12 @@ public class OpenaiServiceImpl implements OpenaiService {
     @Override
     public String extractResponseContent(ChatGPTResponse response) {
         if (response == null || response.getChoices().isEmpty()) {
-            if (response == null)
-                log.error(">>> OpenAI Response: 응답이 null입니다.");
-            if (response.getChoices().isEmpty())
-                log.error(">>> OpenAI Response: choices가 비어 있습니다.");
-
+            log.error(">>> OpenAI 응답이 비어 있습니다.");
             throw new InvalidResponseException("응답을 처리할 수 없습니다. OpenAI에서 빈 응답을 반환했습니다.");
         }
 
         ChatGPTResponse.Choice choice = response.getChoices().get(0);
-        String resultContent = choice.getMessage().getContent();
-//        log.info(">>> OpenAI Response: {}", resultContent);
-
-        return resultContent;
+        return choice.getMessage().getContent();
     }
 
 
@@ -189,10 +215,6 @@ public class OpenaiServiceImpl implements OpenaiService {
                 }
             }
         }
-
-//        System.out.println("===========================");
-//        System.out.println(Arrays.toString(labels.toArray()));
-//        System.out.println("===========================");
 
         return labels;
     }
