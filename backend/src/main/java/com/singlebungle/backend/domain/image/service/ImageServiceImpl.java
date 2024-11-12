@@ -123,16 +123,21 @@ public class ImageServiceImpl implements ImageService {
 
 
     private InputStream convertWebPToJPG(InputStream webpInputStream) throws IOException {
-        BufferedInputStream bufferedInputStream = new BufferedInputStream(webpInputStream);
-        BufferedImage webpImage = ImageIO.read(bufferedInputStream);
-        if (webpImage == null) {
-            throw new IllegalArgumentException("WebP 이미지를 읽는 데 실패했습니다.");
-        }
+        try (BufferedInputStream bufferedInputStream = new BufferedInputStream(webpInputStream)) {
+            BufferedImage webpImage = ImageIO.read(bufferedInputStream); // WebP 이미지 읽기
+            if (webpImage == null) {
+                log.error(">>> WebP 이미지를 읽을 수 없습니다. 스트림 확인 필요.");
+                throw new IllegalArgumentException("WebP 이미지를 읽는 데 실패했습니다.");
+            }
 
-        // WebP 이미지를 JPG로 변환
-        ByteArrayOutputStream jpgOutputStream = new ByteArrayOutputStream();
-        ImageIO.write(webpImage, "jpg", jpgOutputStream);
-        return new ByteArrayInputStream(jpgOutputStream.toByteArray());
+            // WebP 이미지를 JPG로 변환
+            ByteArrayOutputStream jpgOutputStream = new ByteArrayOutputStream();
+            ImageIO.write(webpImage, "jpg", jpgOutputStream);
+            return new ByteArrayInputStream(jpgOutputStream.toByteArray());
+        } catch (Exception e) {
+            log.error(">>> WebP 이미지를 JPG로 변환하는 중 오류 발생: {}", e.getMessage());
+            throw new RuntimeException("WebP 이미지를 변환하는 동안 오류가 발생했습니다.", e);
+        }
     }
 
 
