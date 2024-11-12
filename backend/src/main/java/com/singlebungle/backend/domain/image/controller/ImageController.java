@@ -63,10 +63,14 @@ public class ImageController {
             Long directoryId = requestDTO.getDirectoryId();
 
             // google vision api -> 라벨 번역 안됨
+            log.info(">>> Google Vision API 호출 시작");
             List<String> labels = googleVisionService.analyzeImage(requestDTO.getImageUrl());
+            log.info(">>> Google Vision API 호출 완료, 반환 라벨: {}", labels);
 
             // chatgpt api
+            log.info(">>> ChatGPT API 호출 시작");
             KeywordAndLabels keywordAndLabels = openaiService.requestImageAnalysis(requestDTO.getImageUrl(), labels);
+            log.info(">>> ChatGPT API 호출 완료, 반환 키워드: {}, 태그: {}", keywordAndLabels.getKeywords(), keywordAndLabels.getTags());
 
             if (keywordAndLabels.getKeywords() == null) {
                 throw new InvalidImageException();
