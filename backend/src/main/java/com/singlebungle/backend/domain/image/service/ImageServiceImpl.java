@@ -24,18 +24,20 @@ import com.singlebungle.backend.global.exception.EntityNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.ReactiveRedisOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream; // ByteArrayInputStream 사용
-import java.io.ByteArrayOutputStream; // ByteArrayOutputStream 사용
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,6 +67,7 @@ public class ImageServiceImpl implements ImageService {
         try {
             InputStream inputStream;
             String contentType;
+            long contentLength;
 
             if (imageUrl.startsWith("data:image")) {
                 // Base64 이미지 처리
@@ -72,10 +75,7 @@ public class ImageServiceImpl implements ImageService {
                 contentType = imageUrl.substring(5, commaIndex).split(";")[0];
                 byte[] imageData = Base64.getDecoder().decode(imageUrl.substring(commaIndex + 1));
                 inputStream = new ByteArrayInputStream(imageData);
-
-                // 파일명 생성
-                String extension = getExtensionFromContentType(contentType);
-                fileName = UUID.randomUUID().toString() + extension;
+                contentLength = imageData.length;
             } else {
                 // URL 이미지 처리
                 URL url = new URL(imageUrl);
@@ -85,43 +85,54 @@ public class ImageServiceImpl implements ImageService {
 
                 // WebP 처리
                 if ("image/webp".equals(contentType)) {
-                    inputStream = convertWebPToJPG(inputStream); // WebP를 JPG로 변환
-                    contentType = "image/jpeg"; // 변환 후 contentType을 JPG로 설정
+                    try {
+                        inputStream = convertWebPToJPG(inputStream); // WebP를 JPG로 변환
+                        contentType = "image/jpeg"; // 변환 후 Content-Type 설정
+                    } catch (IOException e) {
+                        log.error("WebP 변환 중 오류 발생: {}", e.getMessage());
+                        throw new RuntimeException("WebP 이미지를 처리할 수 없습니다.");
+                    }
                 }
 
-                // 파일명 생성
-                String extension = getExtensionFromContentType(contentType);
-                fileName = UUID.randomUUID().toString() + extension;
+                contentLength = urlConnection.getContentLengthLong();
+                if (contentLength <= 0) {
+                    throw new IllegalArgumentException("이미지 파일 크기를 확인할 수 없습니다.");
+                }
             }
+
+            // 파일명 생성
+            String extension = getExtensionFromContentType(contentType);
+            fileName = UUID.randomUUID().toString() + extension;
 
             // S3에 업로드
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType(contentType);
-            metadata.setContentLength(inputStream.available());
-
-            // S3에 업로드 요청 생성
+            metadata.setContentLength(contentLength);
             PutObjectRequest request = new PutObjectRequest(bucketName, fileName, inputStream, metadata);
             amazonS3.putObject(request);
 
-            System.out.println("===> S3에 이미지 업로드 성공: " + fileName);
+            log.info("S3에 이미지 업로드 성공: {}", fileName);
 
             return fileName;
 
-        } catch (MalformedURLException e) {
-            log.error(">>> Invalid image URL format: {}", imageUrl, e);
-            throw new RuntimeException(">>> Invalid image URL format.", e);
-        } catch (IOException e) {
-            log.error(">>> Failed to open URL connection for image: {}", imageUrl, e);
-            throw new RuntimeException(">>> Failed to open URL connection for image.", e);
-        } catch (AmazonServiceException e) {
-            log.error(">>> Amazon S3 service error: {}", e.getMessage(), e);
-            throw new RuntimeException(">>> Amazon S3 service error.", e);
-        } catch (SdkClientException e) {
-            log.error(">>> S3 client error: {}", e.getMessage(), e);
-            throw new RuntimeException(">>> S3 client error.", e);
         } catch (Exception e) {
-            throw new RuntimeException("-=-=-=> 이미지를 S3에 업로드하는 동안 오류가 발생했습니다.", e);
+            log.error("이미지 업로드 중 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("이미지 업로드 중 오류가 발생했습니다.", e);
         }
+    }
+
+
+    private InputStream convertWebPToJPG(InputStream webpInputStream) throws IOException {
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(webpInputStream);
+        BufferedImage webpImage = ImageIO.read(bufferedInputStream);
+        if (webpImage == null) {
+            throw new IllegalArgumentException("WebP 이미지를 읽는 데 실패했습니다.");
+        }
+
+        // WebP 이미지를 JPG로 변환
+        ByteArrayOutputStream jpgOutputStream = new ByteArrayOutputStream();
+        ImageIO.write(webpImage, "jpg", jpgOutputStream);
+        return new ByteArrayInputStream(jpgOutputStream.toByteArray());
     }
 
 
@@ -138,18 +149,6 @@ public class ImageServiceImpl implements ImageService {
             default:
                 throw new IllegalArgumentException("지원하지 않는 이미지 형식: " + contentType);
         }
-    }
-
-
-    // WebP 이미지를 JPG로 변환하는 메서드 추가
-    private InputStream convertWebPToJPG(InputStream webpInputStream) throws IOException {
-        BufferedImage webpImage = ImageIO.read(webpInputStream); // WebP 이미지 읽기
-        if (webpImage == null) {
-            throw new IllegalArgumentException(">>> WebP 이미지 파일을 읽을 수 없습니다.");
-        }
-        ByteArrayOutputStream jpgOutputStream = new ByteArrayOutputStream();
-        ImageIO.write(webpImage, "jpg", jpgOutputStream); // WebP를 JPG로 변환
-        return new ByteArrayInputStream(jpgOutputStream.toByteArray());
     }
 
 
@@ -208,6 +207,9 @@ public class ImageServiceImpl implements ImageService {
     }
 
 
+    @Qualifier("redisKeywordTemplate")
+    private final RedisTemplate<String, Object> redisKeywordTemplate;
+
     @Override
     public ImageInfoResponseDTO getImageInfo(Long imageId) {
 
@@ -215,17 +217,55 @@ public class ImageServiceImpl implements ImageService {
 
         List<String> keywordToStr = imageDetailRepository.findAllByImage(image)
                 .stream()
-                .map(ImageDetail::getKeyword)          // ImageDetail에서 Keyword 엔티티 추출
-                .map(Keyword::getKeywordName)           // Keyword 엔티티에서 keywordName 추출
+                .map(ImageDetail::getKeyword)   // ImageDetail에서 Keyword 엔티티 추출
+                .map(Keyword::getKeywordName)   // Keyword 엔티티에서 keywordName 추출
                 .collect(Collectors.toList());
 
         /*
          todo 이미지가 상세조회되면 관련된 키워드의 cnt + 1
          레디스에 반영
         */
+        List<String> keywordList = imageManagementRepositorySupport.findKeywordList(image);
+
+        // Redis에 키워드 조회수 반영
+        if (keywordList != null && ! keywordList.isEmpty()) {
+            for (String keyword: keywordList) {
+
+                String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss"));
+
+                updateKeywordInRedis(keyword, currentTime);
+
+            }
+        }
 
         return ImageInfoResponseDTO.convertToDTO(image, keywordToStr);
+    }
 
+    // Redis 키워드 업데이트 로직
+    private void updateKeywordInRedis(String keyword, String currentTime) {
+        String curCntKey = getRedisKey(keyword, "curCnt");
+        String prevCntKey = getRedisKey(keyword, "prevCnt");
+        String updatedKey = getRedisKey(keyword, "updated");
+
+        // 현재 조회수 가져오기
+        Object currentCountObj = redisKeywordTemplate.opsForHash().get("keyword", curCntKey);
+        String currentCountStr = currentCountObj != null ? currentCountObj.toString() : "0";
+
+        // 조회수 증가 (문자형 처리)
+        int newCount = Integer.parseInt(currentCountStr) + 1;
+        redisKeywordTemplate.opsForHash().put("keyword", curCntKey, String.valueOf(newCount));
+
+        // prevCnt가 없으면 초기값 설정
+        if (!redisKeywordTemplate.opsForHash().hasKey("keyword", prevCntKey)) {
+            redisKeywordTemplate.opsForHash().put("keyword", prevCntKey, "1");
+        }
+
+        // 업데이트 시간 저장
+        redisKeywordTemplate.opsForHash().put("keyword", updatedKey, currentTime);
+    }
+
+    private String getRedisKey(String keyword, String suffix) {
+        return keyword + ":" + suffix;
     }
 
 }
