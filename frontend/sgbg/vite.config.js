@@ -42,11 +42,9 @@ export default defineConfig(({ command }) => {
               minify: isBuild,
               outDir: "dist-electron/main",
               rollupOptions: {
-                external: [
-                  ...Object.keys(pkg.dependencies || {}),
-                  "electron-progressbar",
-                  "electron-updater",
-                ],
+                external: Object.keys(
+                  "dependencies" in pkg ? pkg.dependencies : {}
+                ),
               },
             },
           },
