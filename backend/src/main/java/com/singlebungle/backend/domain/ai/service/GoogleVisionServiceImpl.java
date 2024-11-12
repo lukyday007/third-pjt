@@ -113,6 +113,13 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
             if (imageUrl.startsWith("data:image")) {
                 return buildImageFromBase64(imageUrl);
             } else if (imageUrl.endsWith(".webp")) {
+                log.info(">>> WebP 이미지 감지, 변환을 시도합니다. URL: {}", imageUrl);
+
+                // WebP 지원 여부 확인
+                if (!isWebpSupported()) {
+                    throw new UnsupportedOperationException("WebP 이미지 처리가 지원되지 않습니다. 라이브러리를 확인하세요.");
+                }
+
                 return buildImageFromWebp(new URL(imageUrl).openStream().readAllBytes());
             } else {
                 return buildImageFromUrl(imageUrl);
@@ -136,24 +143,48 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
         return Image.newBuilder().setContent(ByteString.copyFrom(decodedBytes)).build();
     }
 
+    private boolean isWebpSupported() {
+        boolean isSupported = ImageIO.getImageReadersByFormatName("webp").hasNext();
+        log.info(">>> WebP 지원 여부: {}", isSupported);
+        return isSupported;
+    }
+
     // WebP 이미지 처리
     @Override
     public Image buildImageFromWebp(byte[] webpBytes) {
         try {
-            BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(webpBytes));
+            // WebP 이미지를 BufferedImage로 읽음
+            InputStream webpInputStream = new ByteArrayInputStream(webpBytes);
+            BufferedImage bufferedImage = ImageIO.read(webpInputStream);
+
+            // 이미지 읽기 검증
             if (bufferedImage == null) {
                 log.error(">>> WebP 이미지를 읽을 수 없습니다. WebP 파일이 손상되었거나 지원되지 않는 형식입니다.");
                 throw new IllegalArgumentException("WebP 이미지를 읽는 데 실패했습니다.");
             }
 
+            // WebP -> JPG 변환
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ImageIO.write(bufferedImage, "jpg", outputStream);
-            return Image.newBuilder().setContent(ByteString.copyFrom(outputStream.toByteArray())).build();
+
+            // 변환된 이미지 크기 검증
+            byte[] jpgBytes = outputStream.toByteArray();
+            if (jpgBytes.length == 0) {
+                log.error(">>> WebP 변환 실패: 결과 이미지 데이터가 비어 있습니다.");
+                throw new RuntimeException("WebP 변환 실패: 결과 이미지 데이터가 비어 있습니다.");
+            }
+
+            log.info(">>> WebP 이미지를 JPG로 성공적으로 변환했습니다. 변환된 이미지 크기: {} bytes", jpgBytes.length);
+
+            // Google Vision API와 호환되는 Image 객체 반환
+            return Image.newBuilder().setContent(ByteString.copyFrom(jpgBytes)).build();
+
         } catch (IOException e) {
-            log.error(">>> WebP 이미지를 처리하는 동안 오류 발생: {}", e.getMessage(), e);
-            throw new RuntimeException("WebP 이미지를 처리하는 동안 오류가 발생했습니다.", e);
+            log.error(">>> WebP 이미지를 JPG로 변환하는 동안 IOException 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("WebP 이미지를 JPG로 변환하는 동안 오류가 발생했습니다.", e);
         }
     }
+
 
     // URL 이미지 처리
     private Image buildImageFromUrl(String imageUrl) {
