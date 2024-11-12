@@ -48,6 +48,9 @@ public class ImageManagementServiceImpl implements ImageManagementService {
 
         ImageManagement im = ImageManagement.convertToEntity(user, image, directory);
         imageManagementRepository.save(im);
+
+        image.setCount(image.getCount() + 1);
+        imageRepository.save(image);
     }
 
     @Override
