@@ -55,7 +55,8 @@ function setLoggedOut() {
 
 // 앱 열기 버튼 이벤트
 function openApp() {
-  window.open('https://k11b205.p.ssafy.io')
+  window.open('sgbg://open')
+  // chrome.runtime.sendMessage({ action: 'openSgbgApp' })
 }
 
 // 로그인 상태에 따라 continue with Google 혹은 프로필 띄우기
