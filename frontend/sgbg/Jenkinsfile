@@ -110,11 +110,11 @@ pipeline {
                             """,
                             returnStdout: true
                         ).trim()
-                        
+
                         def assets = readJSON(text: assetsResponse)
 
                         assets.each { asset ->
-                            if (asset.name.contains("source")) {
+                            if (asset.name.contains("Source")) {
                                 sh """
                                     curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
                                     https://api.github.com/repos/${GITHUB_REPO}/releases/assets/${asset.id}
