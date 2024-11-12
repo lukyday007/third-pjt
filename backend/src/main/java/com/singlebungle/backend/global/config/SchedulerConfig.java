@@ -4,6 +4,7 @@ import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
@@ -18,7 +19,6 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 
 
 @Configuration
@@ -48,7 +48,14 @@ public class SchedulerConfig implements SchedulingConfigurer {
         taskRegistrar.setTaskScheduler(threadPoolTaskScheduler);
     }
 
-    // todo 테스트 후 2시간 간격으로 수정 2 *60*60*1000 : 2시간마다 실행
+
+    @Cacheable(value = "keywordCache", key = "#keyword", unless = "#result == null")
+    public Keyword findKeywordByName(String keyword) {
+        return keywordRepository.findByKeywordName(keyword);
+    }
+
+
+    // todo 테스트 후 2시간 간격으로 수정 2 * 60 * 60 * 1000 : 2시간마다 실행
     @Scheduled(fixedRate = 10 * 60 * 1000)
     public void updateKeywordRanking() {
         try {
@@ -74,13 +81,16 @@ public class SchedulerConfig implements SchedulingConfigurer {
                                 int curCnt = Integer.parseInt(curCntStr);
                                 int gap = curCnt - prevCnt;
 
-                                // ZSet에서 keyword-ranking 업데이트
-                                keywordTemplate.opsForZSet().incrementScore("keyword-ranking", keyword, gap);
+                                if (gap > 0) {
+                                    // ZSet에서 keyword-ranking 점수 업데이트
+                                    keywordTemplate.opsForZSet().incrementScore("keyword-ranking", keyword, gap);
+                                }
 
                                 // prevCnt 값을 curCnt로 갱신
                                 keywordTemplate.opsForHash().put("keyword", keyword + ":prevCnt", String.valueOf(curCnt));
+
                             } catch (NumberFormatException e) {
-                                log.error("Number format exception for keyword: {}, prevCnt: {}, curCnt: {}", keyword, prevCntStr, curCntStr, e);
+                                log.error(">>> updateKeywordRanking >>> Number format exception for keyword: {}, prevCnt: {}, curCnt: {}", keyword, prevCntStr, curCntStr, e);
                             }
                         }
                     }
@@ -92,6 +102,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
             log.error(">>> Unexpected error occurred during update Keyword Ranking.", e);
         }
     }
+
 
     // 12시간마다 SQL 데이터베이스와 동기화
     @Transactional

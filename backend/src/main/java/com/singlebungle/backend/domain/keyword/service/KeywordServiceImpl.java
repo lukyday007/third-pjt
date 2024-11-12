@@ -7,6 +7,7 @@ import com.singlebungle.backend.global.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -94,6 +96,7 @@ public class KeywordServiceImpl implements KeywordService {
 
 
     @Override
+    @Cacheable(value = "keywordRankCache", key = "'topRanks'", unless = "#result == null || #result.isEmpty()")
     public List<KeywordRankResponseDTO> getKeywordRankList() {
         // Redis에서 상위 5위 데이터를 내림차순으로 조회
         Set<ZSetOperations.TypedTuple<Object>> ranks = keywordTemplate.opsForZSet()
@@ -109,6 +112,6 @@ public class KeywordServiceImpl implements KeywordService {
                         rank.getScore() != null ? rank.getScore().toString() : "0" // 점수 값 (null 처리)
                 ))
                 .collect(Collectors.toList());
-
     }
+
 }
