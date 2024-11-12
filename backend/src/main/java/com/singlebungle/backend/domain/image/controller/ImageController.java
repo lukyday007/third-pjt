@@ -65,10 +65,6 @@ public class ImageController {
             // google vision api -> 라벨 번역 안됨
             List<String> labels = googleVisionService.analyzeImage(requestDTO.getImageUrl());
 
-//            if (labels == null) {
-//                throw new InvalidImageException();
-//            }
-
             // chatgpt api
             KeywordAndLabels keywordAndLabels = openaiService.requestImageAnalysis(requestDTO.getImageUrl(), labels);
 

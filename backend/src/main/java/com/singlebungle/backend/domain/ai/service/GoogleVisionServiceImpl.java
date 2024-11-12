@@ -149,7 +149,6 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
     }
 
 
-
     @Override
     public Image buildImageFromWebp(byte[] webpBytes) {
         try {
@@ -157,12 +156,18 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
             BufferedImage bufferedImage = ImageIO.read(webpInputStream);
 
             if (bufferedImage == null) {
-                throw new IllegalArgumentException(">>> WebP 이미지를 읽을 수 없습니다.");
+                log.error(">>> WebP 이미지를 읽을 수 없습니다. WebP 파일이 손상되었거나 지원되지 않는 형식입니다.");
+                throw new IllegalArgumentException("WebP 이미지를 읽는 데 실패했습니다.");
             }
 
             ByteArrayOutputStream jpgOutputStream = new ByteArrayOutputStream();
             ImageIO.write(bufferedImage, "jpg", jpgOutputStream);
             byte[] jpgBytes = jpgOutputStream.toByteArray();
+
+            if (jpgBytes.length == 0) {
+                log.error(">>> 변환된 JPG 이미지 데이터가 비어 있습니다.");
+                throw new RuntimeException(">>> JPG 변환 결과가 비어 있습니다.");
+            }
 
             return Image.newBuilder().setContent(ByteString.copyFrom(jpgBytes)).build();
 
