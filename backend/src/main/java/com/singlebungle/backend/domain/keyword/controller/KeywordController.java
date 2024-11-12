@@ -1,5 +1,7 @@
 package com.singlebungle.backend.domain.keyword.controller;
 
+import com.singlebungle.backend.domain.keyword.dto.KeywordRankResponseDTO;
+import com.singlebungle.backend.domain.keyword.service.KeywordService;
 import com.singlebungle.backend.domain.search.service.SearchService;
 import com.singlebungle.backend.domain.user.service.UserService;
 import com.singlebungle.backend.global.exception.model.NoTokenRequestException;
@@ -19,7 +21,9 @@ import java.util.Map;
 public class KeywordController {
 
     private final UserService userService;
+    private final KeywordService keywordService;
     private final SearchService searchService;
+
 
     @GetMapping()
     @Operation(summary = "키워드 검색", description = "키워드를 검색합니다.")
@@ -38,6 +42,18 @@ public class KeywordController {
         List<String> keywords = searchService.getKeywordsByTag(keyword);
 
         return ResponseEntity.status(200).body(keywords);
+    }
+
+
+    @GetMapping("/ranking")
+    @Operation(summary = "키워드 랭킹", description = "키워드 랭킹을 조회합니다.")
+    public ResponseEntity<Map<String, Object>> getKeywordRankList() {
+
+        Map<String, Object> keywordRank = new HashMap<>();
+        List<KeywordRankResponseDTO> KeywordRankList = keywordService.getKeywordRankList();
+        keywordRank.put("keywords", KeywordRankList);
+
+        return ResponseEntity.status(200).body(keywordRank);
     }
 
 }

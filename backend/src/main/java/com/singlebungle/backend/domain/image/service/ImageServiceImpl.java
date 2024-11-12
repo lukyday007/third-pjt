@@ -5,6 +5,7 @@ import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+
 import com.singlebungle.backend.domain.directory.entity.Directory;
 import com.singlebungle.backend.domain.directory.repository.DirectoryRepository;
 import com.singlebungle.backend.domain.image.dto.request.ImageListGetRequestDTO;
@@ -20,12 +21,16 @@ import com.singlebungle.backend.domain.user.entity.User;
 import com.singlebungle.backend.domain.user.repository.UserRepository;
 import com.singlebungle.backend.global.exception.EntityIsFoundException;
 import com.singlebungle.backend.global.exception.EntityNotFoundException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.ByteArrayInputStream;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream; // ByteArrayInputStream 사용
+import java.io.ByteArrayOutputStream; // ByteArrayOutputStream 사용
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -78,6 +83,12 @@ public class ImageServiceImpl implements ImageService {
                 contentType = urlConnection.getContentType();
                 inputStream = urlConnection.getInputStream();
 
+                // WebP 처리
+                if ("image/webp".equals(contentType)) {
+                    inputStream = convertWebPToJPG(inputStream); // WebP를 JPG로 변환
+                    contentType = "image/jpeg"; // 변환 후 contentType을 JPG로 설정
+                }
+
                 // 파일명 생성
                 String extension = getExtensionFromContentType(contentType);
                 fileName = UUID.randomUUID().toString() + extension;
@@ -113,6 +124,7 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
+
     public String getExtensionFromContentType(String contentType) {
         switch (contentType) {
             case "image/jpeg":
@@ -122,10 +134,22 @@ public class ImageServiceImpl implements ImageService {
             case "image/gif":
                 return ".gif";
             case "image/webp":
-                return ".webp";
+                return ".jpg";
             default:
                 throw new IllegalArgumentException("지원하지 않는 이미지 형식: " + contentType);
         }
+    }
+
+
+    // WebP 이미지를 JPG로 변환하는 메서드 추가
+    private InputStream convertWebPToJPG(InputStream webpInputStream) throws IOException {
+        BufferedImage webpImage = ImageIO.read(webpInputStream); // WebP 이미지 읽기
+        if (webpImage == null) {
+            throw new IllegalArgumentException(">>> WebP 이미지 파일을 읽을 수 없습니다.");
+        }
+        ByteArrayOutputStream jpgOutputStream = new ByteArrayOutputStream();
+        ImageIO.write(webpImage, "jpg", jpgOutputStream); // WebP를 JPG로 변환
+        return new ByteArrayInputStream(jpgOutputStream.toByteArray());
     }
 
 
@@ -195,9 +219,13 @@ public class ImageServiceImpl implements ImageService {
                 .map(Keyword::getKeywordName)           // Keyword 엔티티에서 keywordName 추출
                 .collect(Collectors.toList());
 
+        /*
+         todo 이미지가 상세조회되면 관련된 키워드의 cnt + 1
+         레디스에 반영
+        */
+
         return ImageInfoResponseDTO.convertToDTO(image, keywordToStr);
 
     }
-
 
 }

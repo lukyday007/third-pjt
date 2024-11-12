@@ -3,6 +3,7 @@ package com.singlebungle.backend.domain.image.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @ToString
@@ -21,7 +22,7 @@ public class ImageListGetRequestDTO {
 
     private int page;
     private int size;
-    private List<String> keywords;      // 중요
+    private List<String> keywords = new ArrayList<>();     // 중요
     private int sort;
     private boolean isBin;              // 중요
 

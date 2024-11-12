@@ -4,10 +4,7 @@ import com.singlebungle.backend.domain.image.dto.request.ImageAppRequestDTO;
 import com.singlebungle.backend.domain.image.dto.request.ImageWebRequestDTO;
 import com.singlebungle.backend.global.model.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
@@ -15,6 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "image")
+@Builder
 public class Image extends BaseTimeEntity {
 
     @Id
@@ -28,8 +26,10 @@ public class Image extends BaseTimeEntity {
     @Column(name = "source_url", columnDefinition = "TEXT", nullable = false)
     private String sourceUrl;
 
-    private int count;
+    @Builder.Default
+    private int count = 1;
 
+    @Builder.Default
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 

@@ -1,18 +1,24 @@
 package com.singlebungle.backend.domain.keyword.service;
 
+import com.singlebungle.backend.domain.keyword.dto.KeywordRankResponseDTO;
 import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
 import com.singlebungle.backend.global.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.Duration;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -69,6 +75,7 @@ public class KeywordServiceImpl implements KeywordService {
         }
     }
 
+    @Override
     public void increaseCurCnt(String keyword) {
         // 현재 시간 가져오기
         String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss"));
@@ -85,6 +92,26 @@ public class KeywordServiceImpl implements KeywordService {
             keywordTemplate.opsForHash().put("keyword", keyword + ":curCnt", String.valueOf(curCnt));
             keywordTemplate.opsForHash().put("keyword", keyword + ":updated", currentTime);
         }
-
     }
+
+
+    @Override
+    @Cacheable(value = "keywordRankCache", key = "'topRanks'", unless = "#result == null || #result.isEmpty()")
+    public List<KeywordRankResponseDTO> getKeywordRankList() {
+        // Redis에서 상위 5위 데이터를 내림차순으로 조회
+        Set<ZSetOperations.TypedTuple<Object>> ranks = keywordTemplate.opsForZSet()
+                .reverseRangeWithScores("keyword-ranking", 0, 4); // 상위 5위 (0부터 4까지)
+
+        if (ranks == null || ranks.isEmpty()) {
+            throw new EntityNotFoundException(">>> getKeywordRankList >>> 랭킹에 등록된 데이터가 없습니다.");
+        }
+
+        return ranks.stream()
+                .map(rank -> new KeywordRankResponseDTO(
+                        rank.getValue().toString(), // Object를 String으로 변환
+                        rank.getScore() != null ? rank.getScore().toString() : "0" // 점수 값 (null 처리)
+                ))
+                .collect(Collectors.toList());
+    }
+
 }

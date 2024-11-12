@@ -153,7 +153,7 @@ public class ImageController {
 
         Map<String, Object> imageList;
 
-        if (keywordList != null && keywordList.isEmpty()) {
+        if (keywordList != null && !keywordList.isEmpty()) {
             List<String> keywords = Arrays.asList(keywordList.split(","));
             ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(userId, directoryId, page, size, keywords, sort, isBin);
             imageList = imageService.getImageListFromDir(requestDTO);
@@ -193,7 +193,7 @@ public class ImageController {
 
         Map<String, Object> imageList;
 
-        if (keywordList != null && keywordList.isEmpty()) {
+        if (keywordList != null && !keywordList.isEmpty()) {
             List<String> keywords = Arrays.asList(keywordList.split(","));
             ImageListGetRequestDTO requestDTO = new ImageListGetRequestDTO(page, size, keywords, sort);
             imageList = imageService.getImageListFromFeed(requestDTO);
@@ -209,7 +209,7 @@ public class ImageController {
     // /images/{imageId}
     @GetMapping(value = "/{imageId}")
     @Operation(summary = "이미지 상세 조회", description = "해당 이미지를 상세 조회합니다.")
-    public ResponseEntity<ImageInfoResponseDTO> getImage(
+    public ResponseEntity<ImageInfoResponseDTO> getImageDetail(
         @PathVariable Long imageId,
         @Parameter(description = "JWT")
         @RequestHeader(value = "Authorization", required = false) String token
