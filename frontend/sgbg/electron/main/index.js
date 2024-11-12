@@ -1,10 +1,11 @@
-import { app, BrowserWindow, shell, ipcMain, dialog } from "electron"
-import { autoUpdater } from "electron-updater"
-import ProgressBar from "electron-progressbar"
-import path from "path"
-import os from "os"
+import { app, BrowserWindow, shell, ipcMain } from "electron"
+import { createRequire } from "node:module"
+import { fileURLToPath } from "node:url"
+import path from "node:path"
+import os from "node:os"
 
-const __dirname = path.resolve()
+const require = createRequire(import.meta.url)
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
 //
@@ -16,94 +17,111 @@ const __dirname = path.resolve()
 // ├─┬ dist
 // │ └── index.html    > Electron-Renderer
 //
-// The built directory structure 설정
 process.env.APP_ROOT = path.join(__dirname, "../..")
-const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron")
-const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist")
-const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
+
+export const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron")
+export const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist")
+export const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
+
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
+  ? path.join(process.env.APP_ROOT, "public")
+  : RENDERER_DIST
+
+// Disable GPU Acceleration for Windows 7
+if (os.release().startsWith("6.1")) app.disableHardwareAcceleration()
+
+// Set application name for Windows 10+ notifications
+if (process.platform === "win32") app.setAppUserModelId(app.getName())
+
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+  process.exit(0)
+}
 
 let win = BrowserWindow
-let progressBar = null
 const preload = path.join(__dirname, "../preload/index.mjs")
 const indexHtml = path.join(RENDERER_DIST, "index.html")
 
 async function createWindow() {
   win = new BrowserWindow({
     title: "Main window",
-    icon: path.join(RENDERER_DIST, "singlebungle128.svg"),
+    icon: path.join(process.env.VITE_PUBLIC, "singlebungle128.svg"),
     webPreferences: {
       preload,
+      // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
+      // nodeIntegration: true,
+
+      // Consider using contextBridge.exposeInMainWorld
+      // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
+      // contextIsolation: false,
     },
   })
 
-  win.loadFile(indexHtml)
-}
+  // 경로 확인을 위한 로그 출력
+  console.log("RENDERER_DIST:", RENDERER_DIST)
+  console.log("indexHtml:", indexHtml)
 
-// `import()`로 electron-updater 동적 로딩
-async function initAutoUpdater() {
-  const { autoUpdater } = await import("electron-updater")
+  if (VITE_DEV_SERVER_URL) {
+    // #298
+    console.log("VITE_DEV_SERVER_URL:", VITE_DEV_SERVER_URL)
+    win.loadURL(VITE_DEV_SERVER_URL)
+    // Open devTool if the app is not packaged
+    // win.webContents.openDevTools()
+  } else {
+    console.log("프로덕션 모드 - index.html 로드")
+    win.loadFile(indexHtml)
+    // win.webContents.openDevTools()
+  }
 
-  // autoUpdater 설정
-  autoUpdater.autoDownload = false
-  autoUpdater.autoInstallOnAppQuit = false
-
-  autoUpdater.checkForUpdates()
-
-  autoUpdater.on("update-available", () => {
-    dialog
-      .showMessageBox({
-        type: "info",
-        title: "Update",
-        message: "새로운 버전이 있습니다. 다운로드하시겠습니까?",
-        buttons: ["예", "아니오"],
-      })
-      .then((result) => {
-        if (result.response === 0) autoUpdater.downloadUpdate()
-      })
+  // Test actively push message to the Electron-Renderer
+  win.webContents.on("did-finish-load", () => {
+    win?.webContents.send("main-process-message", new Date().toLocaleString())
   })
 
-  autoUpdater.on("download-progress", (progressObj) => {
-    if (!progressBar) {
-      progressBar = new ProgressBar({
-        text: "다운로드 중...",
-        detail: "파일을 다운로드 중입니다.",
-      })
-    }
-    progressBar.value = progressObj.percent
-  })
-
-  autoUpdater.on("update-downloaded", () => {
-    if (progressBar) {
-      progressBar.setCompleted()
-      progressBar = null
-    }
-    dialog
-      .showMessageBox({
-        type: "info",
-        title: "업데이트 완료",
-        message: "새 버전이 다운로드되었습니다. 지금 설치하시겠습니까?",
-        buttons: ["예", "아니오"],
-      })
-      .then((result) => {
-        if (result.response === 0) {
-          setTimeout(() => {
-            autoUpdater.quitAndInstall()
-          }, 1000) // 1초 대기 후 quitAndInstall 호출
-        }
-      })
+  // Make all links open with the browser, not with the application
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith("https:")) shell.openExternal(url)
+    return { action: "deny" }
   })
 }
 
-app.whenReady().then(async () => {
-  createWindow()
-  await initAutoUpdater() // autoUpdater 초기화 함수 호출
-})
-
-app.on("before-quit", () => {
-  // 모든 창을 닫아 프로세스를 종료
-  BrowserWindow.getAllWindows().forEach((win) => win.close())
-})
+app.whenReady().then(createWindow)
 
 app.on("window-all-closed", () => {
+  win = null
   if (process.platform !== "darwin") app.quit()
+})
+
+app.on("second-instance", () => {
+  if (win) {
+    // Focus on the main window if the user tried to open another
+    if (win.isMinimized()) win.restore()
+    win.focus()
+  }
+})
+
+app.on("activate", () => {
+  const allWindows = BrowserWindow.getAllWindows()
+  if (allWindows.length) {
+    allWindows[0].focus()
+  } else {
+    createWindow()
+  }
+})
+
+// New window example arg: new windows url
+ipcMain.handle("open-win", (_, arg) => {
+  const childWindow = new BrowserWindow({
+    webPreferences: {
+      preload,
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
+  })
+
+  if (VITE_DEV_SERVER_URL) {
+    childWindow.loadURL(`${VITE_DEV_SERVER_URL}#${arg}`)
+  } else {
+    childWindow.loadFile(indexHtml, { hash: arg })
+  }
 })
