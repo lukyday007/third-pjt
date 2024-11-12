@@ -4,6 +4,7 @@ import { MasonryInfiniteGrid } from "@egjs/react-infinitegrid"
 import "./styles.css"
 import { getMyImages } from "../lib/api/image-api"
 import { useParams } from "react-router-dom"
+import ImgDetailModal from "./ImgDetailModal"
 
 const s = {
   Image: styled.img`
@@ -46,6 +47,8 @@ const ImgList = () => {
   const [items, setItems] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPage, setTotalPage] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedImage, setSelectedImage] = useState(null)
 
   const params = useParams()
   useEffect(() => {
@@ -80,30 +83,50 @@ const ImgList = () => {
     fetchMyImages()
   }, [])
 
+  // 이미지 클릭
+  const handleImageClick = (image) => {
+    setSelectedImage(image)
+    setIsModalOpen(true)
+    setSelectedImageId(image.key) // 원래 이미지 클릭에 있던 코드
+  }
+
+  // 모달 열기 닫기
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setSelectedImage(null)
+  }
+
   return (
-    <MasonryInfiniteGrid
-      className="container"
-      gap={5}
-      align={"stretch"}
-      maxStretchColumnSize={360}
-      useFirstRender={true}
-      onRequestAppend={(e) => {
-        fetchMyImages()
-      }}
-      onRenderComplete={(e) => {
-        console.log(e)
-      }}
-    >
-      {items.map((item) => (
-        <Item
-          key={item.key}
-          imageUrl={item.imageUrl}
-          isSelected={item.key === selectedImageId}
-          onClick={() => setSelectedImageId(item.key)}
-          data-grid-groupkey={item.groupKey}
-        />
-      ))}
-    </MasonryInfiniteGrid>
+    <>
+      <MasonryInfiniteGrid
+        className="container"
+        gap={5}
+        align={"stretch"}
+        maxStretchColumnSize={360}
+        useFirstRender={true}
+        onRequestAppend={(e) => {
+          fetchMyImages()
+        }}
+        onRenderComplete={(e) => {
+          console.log(e)
+        }}
+      >
+        {items.map((item) => (
+          <Item
+            key={item.key}
+            imageUrl={item.imageUrl}
+            isSelected={item.key === selectedImageId}
+            onClick={() => handleImageClick(item)}
+            data-grid-groupkey={item.groupKey}
+          />
+        ))}
+      </MasonryInfiniteGrid>
+
+      {/* 이미지 상세 모달 */}
+      {isModalOpen && (
+        <ImgDetailModal image={selectedImage} onClose={closeModal} />
+      )}
+    </>
   )
 }
 
