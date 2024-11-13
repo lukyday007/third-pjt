@@ -12,3 +12,7 @@ export const getKeywordList = async (keyword, success, fail) => {
 }
 
 // 인기 키워드
+export const getRankingKeywordList = async (success, fail) => {
+  const response = await jwt.get(`/keywords/ranking`).then(success).catch(fail)
+  return response
+}

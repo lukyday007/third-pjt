@@ -79,13 +79,19 @@ pipeline {
                         def releaseResponse = sh(
                             script: """
                                 curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
-                                -d '{"tag_name": "v${version}", "name": "Release v${version}", "body": "Electron app release"}' \
+                                -d '{"tag_name": "v${version}", "name": "Release v${version}", "body": "⚠️ Source code 파일이 포함되어 있으나, 실제 설치를 위해서는 **Sgbg.Setup.v${version}.exe** 파일만 실행하시면 됩니다."}' \
                                 https://api.github.com/repos/${GITHUB_REPO}/releases
                             """,
                             returnStdout: true
                         ).trim()
+                        echo "Release response: ${releaseResponse}"
+
                         // 릴리스 ID 추출
-                        def releaseId = readJSON(text: releaseResponse).id
+                        def parsedResponse = readJSON(text: releaseResponse)
+                        def releaseId = parsedResponse?.id
+                        if (!releaseId) {
+                            error "Failed to retrieve releaseId from GitHub API response: ${releaseResponse}"
+                        }
 
                         // 설치 파일 업로드 (latest.yml 포함)
                         sh """
@@ -101,32 +107,6 @@ pipeline {
                             --data-binary @frontend/sgbg/build/latest.yml \
                             "https://uploads.github.com/repos/${GITHUB_REPO}/releases/${releaseId}/assets?name=latest.yml"
                         """
-
-                        // 릴리스의 자산 목록 가져오기 및 source 파일 삭제
-                        def assetsResponse = sh(
-                            script: """
-                                curl -H "Authorization: token $GITHUB_TOKEN" \
-                                https://api.github.com/repos/${GITHUB_REPO}/releases/${releaseId}/assets
-                            """,
-                            returnStdout: true
-                        ).trim()
-
-                        def assets = readJSON(text: assetsResponse)
-
-                        // 자산 목록과 이름을 확인하기 위한 로그 추가
-                        println "Assets Response: ${assetsResponse}"
-
-                        assets.each { asset ->
-                            println "Asset Name: ${asset.name}"
-
-                            if (asset.name.contains("Source")) {
-                                println "Deleting asset with ID: ${asset.id}"
-                                sh """
-                                    curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
-                                    https://api.github.com/repos/${GITHUB_REPO}/releases/assets/${asset.id}
-                                """
-                            }
-                        }
                     }
                 }
             }
