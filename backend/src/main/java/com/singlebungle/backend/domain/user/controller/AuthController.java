@@ -29,7 +29,7 @@ public class AuthController {
     // Google 인증 리다이렉트 URL (크롬 익스텐션)
     private static final String EXTENSION_REDIRECT_URI = "https://dkeojbjcmphonpoojkdobbdakebaljhe.chromiumapp.org/google";
     // 로컬 개발 환경 리다이렉트 URL
-    private static final String LOCAL_REDIRECT_URI = "http://localhost:5173";
+    private static final String LOCAL_REDIRECT_URI = "https://k11b205.p.ssafy.io";
 
 
     @Operation(summary = "Google 로그인 URL 생성", description = "사용자가 Google 로그인 화면으로 이동할 수 있는 URL을 생성합니다.")
