@@ -28,7 +28,9 @@ public class JwtAuthenticationFilter extends GenericFilterBean { // JWT 토큰�
         put("/api/oauth2/code/google", new HashSet<>(List.of("GET")));
         put("/api/oauth2/google/authorize", new HashSet<>(List.of("GET")));
         put("/api/users/refresh-token", new HashSet<>(List.of("POST")));//리프레시 토큰 재발급 제외
-        put("/api/user/oauth2/", new HashSet<>(List.of("POST"))); // 소셜 로그인 리다이렉션 제외
+        put("/api/user/oauth2/", new HashSet<>(List.of("POST")));  // 소셜 로그인 리다이렉션 제외
+        put("/images/", new HashSet<>(List.of("GET")));
+        put("/images/feed", new HashSet<>(List.of("GET")));
         put("/api/error", new HashSet<>(List.of("GET", "POST"))); // error 제외
         put("/api/swagger-ui", new HashSet<>(List.of("GET"))); // swagger 제외
         put("/api/v3/api-docs", new HashSet<>(List.of("GET"))); // swagger 제외
