@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import styled from "styled-components"
 
 const s = {
@@ -63,6 +63,13 @@ const s = {
 
 const CreateFolderModal = ({ toggleFunction, createFunction }) => {
   const [directoryName, setDirectoryName] = useState("")
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [])
 
   // input 요소 감지 이벤트
   const handleInputChange = (event) => {
@@ -73,6 +80,10 @@ const CreateFolderModal = ({ toggleFunction, createFunction }) => {
   const handleKeyDown = (event) => {
     if (event.key === "Enter") {
       createFunction(directoryName)
+    }
+
+    if (event.key === "Escape") {
+      toggleFunction()
     }
   }
 
@@ -86,6 +97,7 @@ const CreateFolderModal = ({ toggleFunction, createFunction }) => {
             value={directoryName}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
+            ref={inputRef}
           ></s.InputBox>
         </s.InputArea>
         <s.ButtonArea>

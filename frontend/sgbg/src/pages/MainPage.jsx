@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import styled, { keyframes } from "styled-components"
 import SingBung from "../asset/images/MainPage/SingBung.svg?react"
 import FirstKeywordIcon from "../asset/images/MainPage/FirstKeywordIcon.svg?react"
@@ -10,6 +10,8 @@ import KeywordIncreaseIcon from "../asset/images/MainPage/KeywordIncreaseIcon.sv
 import KeywordDecreaseIcon from "../asset/images/MainPage/KeywordDecreaseIcon.svg?react"
 import { replace, useLocation, useNavigate } from "react-router-dom"
 import { googleSignIn } from "../lib/api/user-api"
+import { getFeedImages } from "../lib/api/image-api"
+import { getRankingKeywordList } from "../lib/api/keyword-api"
 
 const rotateImage = keyframes`
   100% {
@@ -41,6 +43,15 @@ const s = {
   TitleButton: styled.button`
     background-color: #000000;
     color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    margin-top: 36px;
+    cursor: pointer;
+  `,
+  TitleButtonLight: styled.button`
+    background-color: #ffffff;
     font-size: 16px;
     font-weight: 600;
     padding: 8px 16px;
@@ -81,11 +92,12 @@ const s = {
     flex-direction: column;
     margin-left: auto;
   `,
+  ImageArea: styled.div``,
 }
 
 const MainPage = () => {
   const navigate = useNavigate()
-
+  const [rankingKeword, setRankingKeword] = useState()
   const params = new URLSearchParams(window.location.search)
   const code = encodeURIComponent(params.get("code"))
   const googleLogin = async (code) => {
@@ -103,27 +115,91 @@ const MainPage = () => {
     )
   }
 
+  const fetchRankingKeword = async () => {
+    getRankingKeywordList(
+      (resp) => {
+        setRankingKeword(resp.data)
+        console.log(resp.data, "결과야 잘 오니")
+      },
+      (error) => {
+        console.log("error", error)
+      }
+    )
+  }
+  useEffect(() => {
+    fetchRankingKeword()
+  }, [])
+
   useEffect(() => {
     if (code !== "null") {
       googleLogin(code)
     }
   }, [code])
 
-  const handleLoginClick = () => {
-    navigate("/login")
+  const fetchNewImage = async () => {
+    getFeedImages(
+      1,
+      1,
+      "",
+      1,
+      (resp) => {
+        console.log(resp.data)
+      },
+      (error) => {
+        console.error(error)
+      }
+    )
   }
 
   return (
-    <s.Container>
-      <s.TitleArea>
-        <s.TitleTextArea>
-          <s.Title>싱글벙글한 이미지를 찾아보아요</s.Title>
-          <s.TextWithTitle>
-            싱글벙글 이미지들을 키워드로 검색하고,
-          </s.TextWithTitle>
-          <s.TextWithTitle>
-            실시간 인기 키워드와 랜덤 이미지로 더 많은 즐거움을 만나보세요.
-          </s.TextWithTitle>
+    <>
+      <div>
+        <s.Container>
+          <s.TitleArea>
+            <s.TitleTextArea>
+              <s.Title>싱글벙글한 이미지를 찾아보아요</s.Title>
+              <s.TextWithTitle>
+                싱글벙글 이미지들을 키워드로 검색하고,
+              </s.TextWithTitle>
+              <s.TextWithTitle>
+                실시간 인기 키워드와 랜덤 이미지로 더 많은 즐거움을 만나보세요.
+              </s.TextWithTitle>
+              <s.TitleButton>최신 싱글벙글</s.TitleButton>
+            </s.TitleTextArea>
+            <s.SingBungMove>
+              <SingBung />
+            </s.SingBungMove>
+          </s.TitleArea>
+          <s.KeywordArea>
+            <s.KeywordTitle>실시간 싱글벙글</s.KeywordTitle>
+            <s.Keyword>
+              <FirstKeywordIcon />
+              <s.KeywordText>싱글벙글</s.KeywordText>
+              <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
+            </s.Keyword>
+            <s.Keyword>
+              <SecondKeywordIcon />
+              <s.KeywordText>싱글벙글</s.KeywordText>
+              <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
+            </s.Keyword>
+            <s.Keyword>
+              <ThirdKeywordIcon />
+              <s.KeywordText>싱글벙글</s.KeywordText>
+              <KeywordDecreaseIcon style={{ marginLeft: "auto" }} />
+            </s.Keyword>
+            <s.Keyword>
+              <FourthKeywordIcon />
+              <s.KeywordText>싱글벙글</s.KeywordText>
+              <KeywordDecreaseIcon style={{ marginLeft: "auto" }} />
+            </s.Keyword>
+            <s.Keyword>
+              <FifthKeywordIcon />
+              <s.KeywordText>싱글벙글</s.KeywordText>
+              <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
+            </s.Keyword>
+          </s.KeywordArea>
+        </s.Container>
+        <s.ImageArea>
           <s.TitleButton>최신 싱글벙글</s.TitleButton>
           <s.TitleButton onClick={handleLoginClick}>
             로그인하는버튼 (임시)

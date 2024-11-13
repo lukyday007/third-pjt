@@ -179,6 +179,24 @@ function removeExistingFolderModal() {
 
   if (existingModal) {
     existingModal.remove()
+    // 모달 닫기 관련 이벤트리스너를 문서에서 제거
+    document.removeEventListener('keydown', handleEscapePress)
+    document.removeEventListener('click', handleOutsideClick)
+  }
+}
+
+// ESC 키 누르면 모달 제거
+const handleEscapePress = (event) => {
+  if (event.key === 'Escape') {
+    removeExistingFolderModal()
+  }
+}
+
+// 창 밖을 클릭하면 모달 제거
+const handleOutsideClick = (event) => {
+  const existingModal = document.querySelector('#create-folder-modal')
+  if (!existingModal.contains(event.target)) {
+    removeExistingFolderModal()
   }
 }
 
@@ -204,7 +222,8 @@ async function showCreateFolderModal(event) {
   `
 
   // input 바인딩
-  modal.addEventListener('input', (event) => {
+  const inputField = modal.querySelector('.modal-create-folder-input')
+  inputField.addEventListener('input', (event) => {
     newDirectoryName = event.target.value
   })
 
@@ -215,25 +234,20 @@ async function showCreateFolderModal(event) {
   // 생성된 폴더 아이콘에 클릭 이벤트 리스너 추가
   createFolderIcon.addEventListener('click', handleClickCreateFolderIcon)
 
-  document.body.appendChild(modal)
-}
+  document.addEventListener('keydown', handleEscapePress)
+  document.addEventListener('click', handleOutsideClick)
 
-// 현재 탭의 정보 url을 받아오기
-// 탭 정보는 background.js 혹은 popup.js에서만 읽어올 수 있다.
-// background.js에 메세지를 보내서 탭 정보를 받아온다
-// function getCurrentTab() {
-//   return new Promise((resolve, reject) => {
-//     chrome.runtime.sendMessage({ action: 'getCurrentTab' }, (response) => {
-//       if (response.tab) {
-//         // 현재 탭 url을 반환
-//         resolve(response.tab.url)
-//       } else {
-//         // 탭 불러오기 실패 동작
-//         reject(new Error('탭 불러오기 실패'))
-//       }
-//     })
-//   })
-// }
+  document.body.appendChild(modal)
+
+  // 모달 클릭시 상위 요소로 이벤트 전파 방지
+  modal.addEventListener('click', (event) => {
+    event.stopPropagation()
+  })
+  // inputField 요소로 focus
+  requestAnimationFrame(() => {
+    inputField.focus()
+  })
+}
 
 // 알림 팝업 모달 띄우기
 function showAlertModal(imgSrc, isSaved) {

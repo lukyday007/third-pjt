@@ -1,18 +1,8 @@
-import React, { act, useState } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import styled from "styled-components"
 import SearchIcon from "../asset/images/SearchBox/searchIcon.svg?react"
 import KeywordIcon from "../asset/images/SearchBox/keywordIcon.svg?react"
-
-// 더미 데이터 예시
-const dummyKeywords = [
-  "강",
-  "강아지",
-  "강한 용사 여호와",
-  "강릉",
-  "강원과학고",
-  "강풍",
-  "가보",
-]
+import { getKeywordList } from "../lib/api/keyword-api"
 
 // 태그 컬러 일단 여기에...
 const colorPairs = [
@@ -59,6 +49,7 @@ const KeywordCancleIcon = ({ fillPrimary, fillSecondary, onClick }) => (
   </svg>
 )
 
+// 스타일
 const s = {
   Container: styled.div`
     display: flex;
@@ -127,9 +118,9 @@ const s = {
     gap: 5px;
     cursor: pointer;
     background-color: ${(props) =>
-      props.isActive ? "#e0f7fa" : "transparent"};
+      props.$isActive ? "#e1e1e1" : "transparent"};
     &:hover {
-      background-color: #f0f0f0;
+      background-color: #e1e1e1;
     }
   `,
 }
@@ -138,21 +129,32 @@ const SearchBox = () => {
   const [query, setQuery] = useState("")
   const [filteredKeywords, setFilteredKeywords] = useState([]) // 자동완성 키워드
   const [searchKeywords, setSearchKeywords] = useState([]) // 검색창 키워드
+  console.log(searchKeywords, "키워드야")
   const [isDropdownVisible, setDropdownVisible] = useState(false) // 자동완성 드롭다운
   const [activeIndex, setActiveIndex] = useState(0) // 자동완성 인덱스
+  const containerRef = useRef(null)
 
   // 검색하기
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     const input = e.target.value
     setQuery(input)
 
     // 검색어가 입력될 때마다 더미 데이터를 필터링
     // 나중에는 검색어 입력할때마다 api
     if (input) {
-      const results = dummyKeywords.filter((keyword) => keyword.includes(input))
-      setFilteredKeywords(results)
-      setDropdownVisible(true)
-      setActiveIndex(0)
+      getKeywordList(
+        input,
+        (resp) => {
+          setFilteredKeywords(resp.data)
+          setDropdownVisible(true)
+          setActiveIndex(0)
+        },
+        (error) => {
+          console.error("검색오류:", error)
+        }
+      )
+      // const results = dummyKeywords.filter((keyword) => keyword.includes(input))
+      // setFilteredKeywords(results)
     } else {
       setFilteredKeywords([])
       setDropdownVisible(false)
@@ -183,15 +185,11 @@ const SearchBox = () => {
           (prevIndex - 1 + filteredKeywords.length) % filteredKeywords.length
       )
       // 엔터 클릭 시 검색, 중복이면 삭제
-    } else if (e.key === "Enter") {
+    } else if (e.key === "Enter" && query) {
       const selectedKeyword = filteredKeywords[activeIndex]
       tagKeyword(selectedKeyword)
       // 키워드 백스페이스 지우기
-    } else if (
-      e.key === "Backspace" &&
-      query === "" &&
-      searchKeywords.length > 0
-    ) {
+    } else if (e.key === "Backspace" && !query && searchKeywords.length > 0) {
       setSearchKeywords(searchKeywords.slice(0, -1))
       // 자동완성 끄기
     } else if (e.key === "Escape") {
@@ -202,7 +200,9 @@ const SearchBox = () => {
   // 키워드 추가
   const addTag = (keyword) => {
     const { background, text } = getRandomColorPair()
-    setSearchKeywords([...searchKeywords, { keyword, background, text }])
+    if (keyword) {
+      setSearchKeywords([...searchKeywords, { keyword, background, text }])
+    }
   }
 
   // 키워드 삭제
@@ -210,14 +210,28 @@ const SearchBox = () => {
     setSearchKeywords(searchKeywords.filter((item) => item.keyword !== keyword))
   }
 
-  //색깔 랜덤으로 고르기
+  // 키워드 색깔 랜덤으로 고르기
   const getRandomColorPair = () => {
     const randomIndex = Math.floor(Math.random() * colorPairs.length)
     return colorPairs[randomIndex]
   }
 
+  // 바깥 누르면 자동완성 꺼짐
+  const handleClickOutside = (event) => {
+    if (containerRef.current && !containerRef.current.contains(event.target)) {
+      setDropdownVisible(false)
+    }
+  }
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
+
   return (
-    <s.Container>
+    <s.Container ref={containerRef}>
       <s.SearchArea>
         <SearchIcon />
         {searchKeywords.length > 0 && (
@@ -253,7 +267,7 @@ const SearchBox = () => {
         {filteredKeywords.map((keyword, index) => (
           <s.ResultItem
             key={index}
-            isActive={index === activeIndex}
+            $isActive={index === activeIndex}
             onClick={() => tagKeyword(keyword)}
           >
             <KeywordIcon />

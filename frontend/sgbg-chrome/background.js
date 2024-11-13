@@ -43,22 +43,12 @@ chrome.runtime.onInstalled.addListener(() => {
   })
 })
 
-// 메세지 리스너 정의 - 현재 탭 정보 가져오기
-// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-//   if (message.action === 'getCurrentTab') {
-//     getCurrentTab()
-//       .then((tab) => {
-//         sendResponse({ tab })
-//       })
-//       .catch((e) => {
-//         // 탭 불러오기 실패
-//         sendResponse({ error: e.message })
-//       })
-
-//     // 비동기 처리를 위해 sendResponse 동작이 일어나기 전까지는 true를 반환
-//     return true
-//   }
-// })
+// 메세지 리스너 정의 - 팝업 열기
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'openPopup') {
+    chrome.action.openPopup()
+  }
+})
 
 // 메세지 리스너 정의 - 구글 로그인 요청
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
