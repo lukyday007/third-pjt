@@ -12,9 +12,11 @@ import com.singlebungle.backend.domain.user.repository.UserRepository;
 import com.singlebungle.backend.global.exception.EntityIsFoundException;
 import com.singlebungle.backend.global.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ImageManagementServiceImpl implements ImageManagementService {
@@ -41,7 +43,8 @@ public class ImageManagementServiceImpl implements ImageManagementService {
         }
 
         // 이미지 중복 저장 방지
-        ImageManagement imageManagement = imageManagementRepository.findByImage(image);
+        ImageManagement imageManagement = imageManagementRepository.findByImageAndUser(image, user);
+        log.info("========> imageId: {}" , image.getImageId());
         if (imageManagement != null) {
             throw new EntityIsFoundException("이미 저장한 이미지 입니다.");
         }

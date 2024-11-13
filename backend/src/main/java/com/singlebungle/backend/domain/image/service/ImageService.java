@@ -2,6 +2,8 @@ package com.singlebungle.backend.domain.image.service;
 
 import com.singlebungle.backend.domain.image.dto.request.ImageListGetRequestDTO;
 import com.singlebungle.backend.domain.image.dto.response.ImageInfoResponseDTO;
+import com.singlebungle.backend.domain.image.dto.response.ImageListFromDirResponseDTO;
+
 import java.util.Map;
 
 public interface ImageService {
