@@ -95,9 +95,8 @@ public class KeywordServiceImpl implements KeywordService {
 
 
     @Override
-//    @Cacheable(value = "keywordRankCache", key = "'topRanks'", unless = "#result == null || #result.isEmpty()")
+//    @Cacheable(value = "keywordRankCache", key = "'ranking'", unless = "#result == null || #result.isEmpty()")
     public List<KeywordRankResponseDTO> getKeywordRankList() {
-        log.info(">>>>>>>>>> getKeywordRankList >>>>>>>>> 처리중 ...");
 
         // Redis에서 정확한 등락률 계산을 위해 상위 10위 랭킹 목록 가져오기
         Set<ZSetOperations.TypedTuple<Object>> currentRanks = keywordTemplate.opsForZSet()
@@ -144,9 +143,6 @@ public class KeywordServiceImpl implements KeywordService {
                     }
 
                     double gap = currentScore - previousScore;
-
-                    log.info(">>> Keyword: {}, CurrentScore: {}, PreviousScore: {}, Gap: {}, State: {}",
-                            keyword, currentScore, previousScore, gap, isState);
 
                     return new KeywordRankResponseDTO(keyword, isState, gap);
                 })

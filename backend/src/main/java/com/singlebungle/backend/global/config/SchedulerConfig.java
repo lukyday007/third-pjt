@@ -56,7 +56,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
 
 
     // todo 테스트 후 2시간 간격으로 수정 2 * 60 * 60 * 1000 : 2시간마다 실행
-    @Scheduled(fixedRate = 10 * 60 * 1000)
+    @Scheduled(fixedRate = 60 * 60 * 1000)
     public void updateKeywordRanking() {
         try {
             Set<Object> keywordObjs = keywordTemplate.opsForHash().keys("keyword");
