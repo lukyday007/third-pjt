@@ -34,17 +34,17 @@ const s = {
   `,
 }
 
-const ImgDetailModal = ({ image, onClose }) => {
+const ImgDetailModal = ({ imageId, onClose }) => {
   const [imageDetail, setImageDetail] = useState(null)
 
   useEffect(() => {
-    fetchImageDetail(image)
+    fetchImageDetail(imageId)
   }, [])
 
-  const fetchImageDetail = (image) => {
-    const imageId = image.imageId
+  const fetchImageDetail = async (id) => {
+    const imageId = id
     try {
-      const response = getImageDetail(imageId, (resp) => {
+      const response = await getImageDetail(imageId, (resp) => {
         const data = resp.data
         return data
       })
@@ -57,16 +57,18 @@ const ImgDetailModal = ({ image, onClose }) => {
 
   return (
     <s.Overlay onClick={onClose}>
-      <s.Container onClick={(e) => e.stopPropagation()}>
-        <s.CloseButton onClick={onClose}>X</s.CloseButton>
-        <div>
-          <img
-            src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${image.imageUrl}`}
-            alt="Selected"
-          />
-          <p>이미지 세부 정보</p>
-        </div>
-      </s.Container>
+      {imageDetail && (
+        <s.Container onClick={(e) => e.stopPropagation()}>
+          <s.CloseButton onClick={onClose}>X</s.CloseButton>
+          <div>
+            <img
+              src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${imageDetail?.imageUrl}`}
+              alt="Selected"
+            />
+            <p>이미지 세부 정보</p>
+          </div>
+        </s.Container>
+      )}
     </s.Overlay>
   )
 }
