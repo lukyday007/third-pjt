@@ -17,4 +17,6 @@ public interface UserService {
     UserInfoResponseDTO getUserInfoById(Long userId);
 
     Long getUserByToken(String token);
+
+    void deleteUser(String token);
 }
