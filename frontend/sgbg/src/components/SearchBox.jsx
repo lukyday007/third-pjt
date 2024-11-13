@@ -4,17 +4,6 @@ import SearchIcon from "../asset/images/SearchBox/searchIcon.svg?react"
 import KeywordIcon from "../asset/images/SearchBox/keywordIcon.svg?react"
 import { getKeywordList } from "../lib/api/keyword-api"
 
-// 더미 데이터 예시
-const dummyKeywords = [
-  "강",
-  "강아지",
-  "강한 용사 여호와",
-  "강릉",
-  "강원과학고",
-  "강풍",
-  "가보",
-]
-
 // 태그 컬러 일단 여기에...
 const colorPairs = [
   { background: "rgba(251, 216, 210, 1)", text: "rgba(239, 92, 68, 1)" },
@@ -129,9 +118,9 @@ const s = {
     gap: 5px;
     cursor: pointer;
     background-color: ${(props) =>
-      props.isActive ? "#e0f7fa" : "transparent"};
+      props.$isActive ? "#e1e1e1" : "transparent"};
     &:hover {
-      background-color: #f0f0f0;
+      background-color: #e1e1e1;
     }
   `,
 }
@@ -140,6 +129,7 @@ const SearchBox = () => {
   const [query, setQuery] = useState("")
   const [filteredKeywords, setFilteredKeywords] = useState([]) // 자동완성 키워드
   const [searchKeywords, setSearchKeywords] = useState([]) // 검색창 키워드
+  console.log(searchKeywords, "키워드야")
   const [isDropdownVisible, setDropdownVisible] = useState(false) // 자동완성 드롭다운
   const [activeIndex, setActiveIndex] = useState(0) // 자동완성 인덱스
   const containerRef = useRef(null)

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import styled, { keyframes } from "styled-components"
 import SingBung from "../asset/images/MainPage/SingBung.svg?react"
 import FirstKeywordIcon from "../asset/images/MainPage/FirstKeywordIcon.svg?react"
@@ -11,6 +11,7 @@ import KeywordDecreaseIcon from "../asset/images/MainPage/KeywordDecreaseIcon.sv
 import { replace, useLocation, useNavigate } from "react-router-dom"
 import { googleSignIn } from "../lib/api/user-api"
 import { getFeedImages } from "../lib/api/image-api"
+import { getRankingKeywordList } from "../lib/api/keyword-api"
 
 const rotateImage = keyframes`
   100% {
@@ -96,7 +97,7 @@ const s = {
 
 const MainPage = () => {
   const navigate = useNavigate()
-
+  const [rankingKeword, setRankingKeword] = useState()
   const params = new URLSearchParams(window.location.search)
   const code = encodeURIComponent(params.get("code"))
   const googleLogin = async (code) => {
@@ -113,6 +114,21 @@ const MainPage = () => {
       }
     )
   }
+
+  const fetchRankingKeword = async () => {
+    getRankingKeywordList(
+      (resp) => {
+        setRankingKeword(resp.data)
+        console.log(resp.data, "결과야 잘 오니")
+      },
+      (error) => {
+        console.log("error", error)
+      }
+    )
+  }
+  useEffect(() => {
+    fetchRankingKeword()
+  }, [])
 
   useEffect(() => {
     if (code !== "null") {
