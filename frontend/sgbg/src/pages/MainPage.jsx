@@ -109,6 +109,10 @@ const MainPage = () => {
     }
   }, [code])
 
+  const handleLoginClick = () => {
+    navigate("/login")
+  }
+
   return (
     <s.Container>
       <s.TitleArea>
@@ -121,6 +125,9 @@ const MainPage = () => {
             실시간 인기 키워드와 랜덤 이미지로 더 많은 즐거움을 만나보세요.
           </s.TextWithTitle>
           <s.TitleButton>최신 싱글벙글</s.TitleButton>
+          <s.TitleButton onClick={handleLoginClick}>
+            로그인하는버튼 (임시)
+          </s.TitleButton>
         </s.TitleTextArea>
         <s.SingBungMove>
           <SingBung />
