@@ -240,8 +240,8 @@ const ImgList = () => {
             <Item
               key={item.key}
               imageUrl={item.imageUrl}
-              isSelected={item.key === selectedImageId}
-              onClick={() => setSelectedImageId(item.key)}
+              isSelected={item.key === selectedImageKey}
+              onClick={() => handleImageClick(item)}
               data-grid-groupkey={item.groupKey}
             />
           ))}
@@ -262,12 +262,15 @@ const ImgList = () => {
             <Item
               key={item.key}
               imageUrl={item.imageUrl}
-              isSelected={item.key === selectedImageId}
-              onClick={() => setSelectedImageId(item.key)}
+              isSelected={item.key === selectedImageKey}
+              onClick={() => handleImageClick(item)}
               data-grid-groupkey={item.groupKey}
             />
           ))}
         </MasonryInfiniteGrid>
+      )}
+      {isModalOpen && (
+        <ImgDetailModal imageId={selectedImageId} onClose={closeModal} />
       )}
     </>
   )
