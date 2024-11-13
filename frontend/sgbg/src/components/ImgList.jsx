@@ -59,7 +59,7 @@ const ImgList = () => {
     setIsFetching(true)
 
     getMyImages(
-      params.id,ddd
+      params.id,
       currentPage,
       10,
       "",
