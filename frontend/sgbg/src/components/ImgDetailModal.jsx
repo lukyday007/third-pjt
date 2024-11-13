@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react"
 import styled from "styled-components"
+import { getImageDetail } from "../lib/api/image-api"
 
 const s = {
   Overlay: styled.div`
@@ -32,19 +34,56 @@ const s = {
   `,
 }
 
-const ImgDetailModal = ({ image, onClose }) => {
+const ImgDetailModal = ({ imageId, onClose }) => {
+  const [imageDetail, setImageDetail] = useState(null)
+
+  useEffect(() => {
+    fetchImageDetail(imageId)
+  }, [imageId])
+
+  useEffect(() => {
+    // 컴포넌트 로드시 keydown 이벤트 리스너 추가
+    window.addEventListener("keydown", handleKeyDown)
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [])
+
+  const fetchImageDetail = async (id) => {
+    const imageId = id
+    try {
+      const response = await getImageDetail(imageId, (resp) => {
+        const data = resp.data
+        return data
+      })
+
+      setImageDetail(response)
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      onClose()
+    }
+  }
+
   return (
     <s.Overlay onClick={onClose}>
-      <s.Container onClick={(e) => e.stopPropagation()}>
-        <s.CloseButton onClick={onClose}>×xxxxxxxxxxxxx</s.CloseButton>
-        <div>
-          <img
-            src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${image.imageUrl}`}
-            alt="Selected"
-          />
-          <p>이미지 세부 정보</p>
-        </div>
-      </s.Container>
+      {imageDetail && (
+        <s.Container onClick={(e) => e.stopPropagation()}>
+          <s.CloseButton onClick={onClose}>X</s.CloseButton>
+          <div>
+            <img
+              src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${imageDetail?.imageUrl}`}
+              alt="Selected"
+            />
+            <p>이미지 세부 정보</p>
+          </div>
+        </s.Container>
+      )}
     </s.Overlay>
   )
 }
