@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -69,7 +71,8 @@ public class UserController {
     @PostMapping("/logout")
     public ResponseEntity<BaseResponseBody> logout(
             @Parameter(description = "Authorization 헤더에 포함된 액세스 토큰")
-            @RequestHeader(value = "Authorization", required = false) String token) {
+            @RequestHeader(value = "Authorization", required = false) String token,
+            HttpServletResponse response) {
         if (token == null)
             throw new NoTokenRequestException("Access 토큰이 필요합니다.");
         log.info(">>> [GET] /user/logout - 로그아웃 요청: {}", token);
@@ -79,6 +82,14 @@ public class UserController {
         }
         userService.userSignOut(token);
         log.info(">>> [GET] /user/logout - 로그아웃 완료");
+
+        // 쿠키에서 리프레시 토큰 삭제
+        Cookie refreshTokenCookie = new Cookie("refreshToken", null);
+        refreshTokenCookie.setPath("/"); // 쿠키가 적용된 경로
+        refreshTokenCookie.setMaxAge(0); // 만료 시간 0으로 설정하여 즉시 삭제
+        refreshTokenCookie.setHttpOnly(true); // HttpOnly 설정 유지
+        response.addCookie(refreshTokenCookie); // 응답에 쿠키 추가하여 삭제
+
         return ResponseEntity.status(200).body(BaseResponseBody.of(200, "로그아웃이 완료되었습니다."));
     }
 
