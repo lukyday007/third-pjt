@@ -7,15 +7,18 @@ import { useParams } from "react-router-dom"
 import ImgDetailModal from "./ImgDetailModal"
 
 const s = {
-  Image: styled.img`
+  Image: styled.img.attrs((props) => ({
+    "data-is-selected": props.isSelected ? "true" : "false",
+  }))`
+    box-sizing: border-box;
     width: 100%;
     border-radius: 8px;
     border: solid 1px rgba(229, 229, 229, 1);
-    outline: ${({ isSelected }) =>
-      isSelected ? "3px solid rgba(255, 184, 0, 1)" : "none"};
+    border: ${(props) =>
+      props.isSelected ? "3px solid rgba(255, 184, 0, 1)" : "none"};
     &:hover {
-      outline: ${({ isSelected }) =>
-        isSelected
+      border: ${(props) =>
+        props.isSelected
           ? "3px solid rgba(255, 184, 0, 1)"
           : "3px solid rgba(255, 238, 194, 1)"};
     }
@@ -27,13 +30,14 @@ function getItemsWithImages(images, groupKey) {
     groupKey,
     key: groupKey * 100 + index,
     imageUrl: image.imageUrl,
+    imageId: image.imageId,
   }))
 }
 
 const Item = ({ imageUrl, isSelected, onClick }) => (
   <div className="item" onClick={onClick}>
     <div className="thumbnail">
-      <img
+      <s.Image
         src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${imageUrl}`}
         alt="User image"
         isSelected={isSelected}
@@ -88,6 +92,11 @@ const ImgList = () => {
     setTotalPage(null)
   }, [params.id])
 
+  // 선택 이미지 변경시 알림
+  useEffect(() => {
+    console.log(selectedImageId)
+  }, selectedImageId)
+
   // 이미지 클릭
   const handleImageClick = (image) => {
     setSelectedImage(image)
@@ -113,7 +122,7 @@ const ImgList = () => {
           fetchMyImages()
         }}
         onRenderComplete={(e) => {
-          console.log(e)
+          // console.log(e)
         }}
       >
         {items.map((item) => (

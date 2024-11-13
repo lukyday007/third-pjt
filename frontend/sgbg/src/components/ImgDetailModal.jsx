@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react"
 import styled from "styled-components"
+import { getImageDetail } from "../lib/api/image-api"
 
 const s = {
   Overlay: styled.div`
@@ -33,10 +35,30 @@ const s = {
 }
 
 const ImgDetailModal = ({ image, onClose }) => {
+  const [imageDetail, setImageDetail] = useState(null)
+
+  useEffect(() => {
+    fetchImageDetail(image)
+  }, [])
+
+  const fetchImageDetail = (image) => {
+    const imageId = image.imageId
+    try {
+      const response = getImageDetail(imageId, (resp) => {
+        const data = resp.data
+        return data
+      })
+
+      setImageDetail(response)
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
   return (
     <s.Overlay onClick={onClose}>
       <s.Container onClick={(e) => e.stopPropagation()}>
-        <s.CloseButton onClick={onClose}>×xxxxxxxxxxxxx</s.CloseButton>
+        <s.CloseButton onClick={onClose}>X</s.CloseButton>
         <div>
           <img
             src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${image.imageUrl}`}

@@ -38,3 +38,12 @@ export const getFeedImages = async (
     .then(success)
     .catch(fail)
 }
+
+// 이미지 상세 조회
+export const getImageDetail = async (imageId, success, fail) => {
+  const response = await local
+    .get(`/images/${imageId}`)
+    .then(success)
+    .catch(fail)
+  return response
+}
