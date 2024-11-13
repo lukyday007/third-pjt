@@ -210,17 +210,9 @@ public class ImageController {
     @GetMapping(value = "/{imageId}")
     @Operation(summary = "이미지 상세 조회", description = "해당 이미지를 상세 조회합니다.")
     public ResponseEntity<ImageInfoResponseDTO> getImageDetail(
-        @PathVariable Long imageId,
-        @Parameter(description = "JWT")
-        @RequestHeader(value = "Authorization", required = false) String token
+        @PathVariable Long imageId
     ) {
-        Long userId = 0L;
-        if (token != null) {
-            userId = userService.getUserByToken(token);
-        } else {
-            throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
-        }
-
+        
         log.info(">>> [GET] /images/{} - 요청 파라미터: imageId - {}", imageId, imageId);
         ImageInfoResponseDTO imageInfo = imageService.getImageInfo(imageId);
 

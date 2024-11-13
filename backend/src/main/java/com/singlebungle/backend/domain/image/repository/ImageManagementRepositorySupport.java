@@ -6,7 +6,7 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.singlebungle.backend.domain.image.dto.request.ImageListGetRequestDTO;
-import com.singlebungle.backend.domain.image.dto.response.ImageListGetResponseDTO;
+import com.singlebungle.backend.domain.image.dto.response.ImageListFromDirResponseDTO;
 import com.singlebungle.backend.domain.image.entity.*;
 import com.singlebungle.backend.domain.keyword.entity.QKeyword;
 import com.singlebungle.backend.domain.user.entity.QUser;
@@ -66,17 +66,25 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
             builder.and(keywordBuilder);
         }
 
-        JPAQuery<ImageListGetResponseDTO> query = queryFactory
-                .select(Projections.constructor(ImageListGetResponseDTO.class,
+        JPAQuery<ImageListFromDirResponseDTO> query = queryFactory
+                .select(Projections.constructor(ImageListFromDirResponseDTO.class,
                         qImageManagement.imageManagementId,
+                        qImage.imageId,
                         qImageManagement.image.imageUrl,
                         qImageManagement.createdAt)) // createdAt 추가
                 .distinct()
                 .from(qImageManagement)
-                .leftJoin(qImageManagement.image, qImage)
+                // 유저와 조인
                 .leftJoin(qImageManagement.user, qUser)
-                .leftJoin(qImageDetail).on(qImageManagement.image.eq(qImageDetail.image)) // ImageDetail 조인
-                .leftJoin(qImageDetail.keyword, qKeyword) // Keyword 조인
+                // 이미지와 조인
+                .leftJoin(qImageManagement.image, qImage).on(qImageManagement.image.imageId.eq(qImage.imageId))
+                // 디렉토리와 조인
+                .leftJoin(qImageManagement.curDirectory)
+                .leftJoin(qImageManagement.prevDirectory)
+                // 이미지 상세 정보 조인
+                .leftJoin(qImageDetail).on(qImageManagement.image.eq(qImageDetail.image))
+                .leftJoin(qImageDetail.keyword, qKeyword)
+                // 조건 추가
                 .where(builder);
 
         // 정렬 조건 처리
@@ -95,7 +103,7 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
                 break;
         }
 
-        List<ImageListGetResponseDTO> imageList = query
+        List<ImageListFromDirResponseDTO> imageList = query
                 .offset((requestDTO.getPage() - 1) * requestDTO.getSize())
                 .limit(requestDTO.getSize())
                 .fetch();

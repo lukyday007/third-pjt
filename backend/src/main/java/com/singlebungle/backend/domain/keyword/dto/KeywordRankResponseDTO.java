@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class KeywordRankResponseDTO {
 
     private String keyword;
-    private String gap;
+
+    // "up", "down", "same" 상태
+    private String isState;
 
 }

@@ -50,8 +50,8 @@ public class KeywordController {
     public ResponseEntity<Map<String, Object>> getKeywordRankList() {
 
         Map<String, Object> keywordRank = new HashMap<>();
-        List<KeywordRankResponseDTO> KeywordRankList = keywordService.getKeywordRankList();
-        keywordRank.put("keywords", KeywordRankList);
+//        List<KeywordRankResponseDTO> KeywordRankList = keywordService.getKeywordRankList();
+//        keywordRank.put("keywords", KeywordRankList);
 
         return ResponseEntity.status(200).body(keywordRank);
     }

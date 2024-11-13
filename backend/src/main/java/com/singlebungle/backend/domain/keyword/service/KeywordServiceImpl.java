@@ -95,23 +95,45 @@ public class KeywordServiceImpl implements KeywordService {
     }
 
 
-    @Override
-    @Cacheable(value = "keywordRankCache", key = "'topRanks'", unless = "#result == null || #result.isEmpty()")
-    public List<KeywordRankResponseDTO> getKeywordRankList() {
-        // Redis에서 상위 5위 데이터를 내림차순으로 조회
-        Set<ZSetOperations.TypedTuple<Object>> ranks = keywordTemplate.opsForZSet()
-                .reverseRangeWithScores("keyword-ranking", 0, 4); // 상위 5위 (0부터 4까지)
-
-        if (ranks == null || ranks.isEmpty()) {
-            throw new EntityNotFoundException(">>> getKeywordRankList >>> 랭킹에 등록된 데이터가 없습니다.");
-        }
-
-        return ranks.stream()
-                .map(rank -> new KeywordRankResponseDTO(
-                        rank.getValue().toString(), // Object를 String으로 변환
-                        rank.getScore() != null ? rank.getScore().toString() : "0" // 점수 값 (null 처리)
-                ))
-                .collect(Collectors.toList());
-    }
+//    @Override
+//    @Cacheable(value = "keywordRankCache", key = "'topRanks'", unless = "#result == null || #result.isEmpty()")
+//    public List<KeywordRankResponseDTO> getKeywordRankList() {
+//        // Redis에서 정확한 등락률 계산을 위해 상위 10위 랭킹 목록 가져오기
+//        Set<ZSetOperations.TypedTuple<Object>> ranks = keywordTemplate.opsForZSet()
+//                .reverseRangeWithScores("keyword-ranking", 0, 9);
+//
+//        if (ranks == null || ranks.isEmpty()) {
+//            throw new EntityNotFoundException(">>> getKeywordRankList >>> 랭킹에 등록된 데이터가 없습니다.");
+//        }
+//
+//        // Redis에서 이전 랭킹 데이터 가져오기 (상위 10위)
+//        Set<ZSetOperations.TypedTuple<Object>> previousRanks = keywordTemplate.opsForZSet()
+//                .reverseRangeWithScores("previous-ranking", 0, 9); // 이전 순위 데이터
+//
+//
+//        return ranks.stream()
+//                .map(rank -> {
+//                    String keyword = rank.getValue().toString();
+//                    Double currentGap = rank.getScore(); // 현재 gap
+//                    Double previousGap = keywordTemplate.opsForZSet().score("previous-ranking", keyword); // 이전 gap
+//
+//                    String state = "same"; // 기본값
+//                    if (currentGap != null && previousGap != null) {
+//                        if (currentGap > previousGap) {
+//                            state = "up";
+//                        } else if (currentGap < previousGap) {
+//                            state = "down";
+//                        }
+//                    }
+//
+////                    return new KeywordRankResponseDTO(
+////                            keyword, // 키워드
+////                            currentGap != null ? currentGap.toString() : "0", // 점수
+////                            state // 등락 상태
+////                    );
+//                })
+//                .collect(Collectors.toList());
+//
+//    }
 
 }
