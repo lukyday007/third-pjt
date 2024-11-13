@@ -60,56 +60,71 @@ public class SchedulerConfig implements SchedulingConfigurer {
     @Scheduled(fixedRate = 60 * 60 * 1000)      // 1시간마다 실행
     public void updateKeywordRanking() {
         try {
-            Set<Object> keywordObjs = keywordTemplate.opsForHash().keys("keyword");
+            // Redis Lock 설정
+            Boolean locked = keywordTemplate.opsForValue().setIfAbsent("lock:keyword-ranking", "locked", Duration.ofMinutes(2));
 
-            if (keywordObjs != null) {
-                for (Object keywordObj : keywordObjs) {
-                    String fullField = keywordObj.toString();  // 예: "apple:curCnt"
-                    String[] parts = fullField.split(":");
-                    if (parts.length < 2) continue;
+            if (locked != null && locked) {
+                try {
+                    Set<Object> keywordObjs = keywordTemplate.opsForHash().keys("keyword");
 
-                    String keyword = parts[0];
-                    String fieldType = parts[1];
+                    if (keywordObjs != null) {
+                        for (Object keywordObj : keywordObjs) {
+                            String fullField = keywordObj.toString();  // 예: "apple:curCnt"
+                            String[] parts = fullField.split(":");
+                            if (parts.length < 2) continue;
 
-                    if (fieldType.equals("curCnt")) {
-                        // prevCnt와 curCnt 값 가져오기
-                        String prevCntStr = (String) keywordTemplate.opsForHash().get("keyword", keyword + ":prevCnt");
-                        String curCntStr = (String) keywordTemplate.opsForHash().get("keyword", keyword + ":curCnt");
+                            String keyword = parts[0];
+                            String fieldType = parts[1];
 
-                        // 기존 keyword-ranking 값을 previous-ranking으로 이동
-                        Double currentKeywordScore = keywordTemplate.opsForZSet().score("keyword-ranking", keyword);
-                        if (currentKeywordScore != null) {
-                            // keyword-ranking의 점수를 previous-ranking으로 이동
-                            keywordTemplate.opsForZSet().add("previous-ranking", keyword, currentKeywordScore);
-                        }
+                            if (fieldType.equals("curCnt")) {
+                                // prevCnt와 curCnt 값 가져오기
+                                String prevCntStr = (String) keywordTemplate.opsForHash().get("keyword", keyword + ":prevCnt");
+                                String curCntStr = (String) keywordTemplate.opsForHash().get("keyword", keyword + ":curCnt");
 
-                        if (prevCntStr != null && curCntStr != null) {
-                            try {
-                                int prevCnt = Integer.parseInt(prevCntStr);
-                                int curCnt = Integer.parseInt(curCntStr);
-                                int gap = curCnt - prevCnt;
-
-                                if (gap > 0) {
-                                    // ZSet에서 keyword-ranking 점수 업데이트
-                                    keywordTemplate.opsForZSet().incrementScore("keyword-ranking", keyword, gap);
+                                // 기존 keyword-ranking 값을 previous-ranking으로 이동
+                                Double currentKeywordScore = keywordTemplate.opsForZSet().score("keyword-ranking", keyword);
+                                if (currentKeywordScore != null) {
+                                    // keyword-ranking의 점수를 previous-ranking으로 이동
+                                    keywordTemplate.opsForZSet().add("previous-ranking", keyword, currentKeywordScore);
                                 }
 
-                                // prevCnt 값을 curCnt로 갱신
-                                keywordTemplate.opsForHash().put("keyword", keyword + ":prevCnt", String.valueOf(curCnt));
+                                if (prevCntStr != null && curCntStr != null) {
+                                    try {
+                                        int prevCnt = Integer.parseInt(prevCntStr);
+                                        int curCnt = Integer.parseInt(curCntStr);
+                                        int gap = curCnt - prevCnt;
 
-                                // TTL 설정
-                                keywordTemplate.expire("keyword-ranking", Duration.ofHours(1));
-                                keywordTemplate.expire("previous-ranking", Duration.ofHours(1));
-                                keywordTemplate.expire("keyword", Duration.ofHours(1));
+                                        if (gap > 0) {
+                                            // ZSet에서 keyword-ranking 점수 업데이트
+                                            keywordTemplate.opsForZSet().incrementScore("keyword-ranking", keyword, gap);
+                                        }
 
+                                        // prevCnt 값을 curCnt로 갱신
+                                        keywordTemplate.opsForHash().put("keyword", keyword + ":prevCnt", String.valueOf(curCnt));
 
-                            } catch (NumberFormatException e) {
-                                log.error(">>> updateKeywordRanking >>> Number format exception for keyword: {}, prevCnt: {}, curCnt: {}", keyword, prevCntStr, curCntStr, e);
+                                        //  keywordTemplate.expire("keyword", Duration.ofMinutes(1));
+                                        keywordTemplate.expire("keyword-ranking", Duration.ofMinutes(10));
+                                        keywordTemplate.expire("previous-ranking", Duration.ofMinutes(10));
+
+                                    } catch (NumberFormatException e) {
+                                        log.error(">>> updateKeywordRanking >>> Number format exception for keyword: {}, prevCnt: {}, curCnt: {}", keyword, prevCntStr, curCntStr, e);
+                                    }
+                                }
                             }
                         }
                     }
+                } catch (RedisConnectionFailureException e) {
+                    log.error("Redis connection failure while updating keyword ranking.", e);
+                } catch (Exception e) {
+                    log.error("Unexpected error occurred during keyword ranking update.", e);
+                } finally {
+                    // 락 해제
+                    keywordTemplate.delete("lock:keyword-ranking");
                 }
+            } else {
+                log.info(">>> 다른 작업에서 이미 락을 사용 중입니다. 작업을 중복 실행하지 않습니다.");
             }
+
         } catch (RedisConnectionFailureException e) {
             log.error(">>> 키워드 랭킹 갱신 준 레디스 연결에 실패했습니다.", e);
         } catch (Exception e) {
@@ -120,7 +135,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
 
     // 12시간마다 SQL 데이터베이스와 동기화
     @Transactional
-    @Scheduled(fixedRate = 12 * 60 * 60 * 1000)
+    @Scheduled(fixedRate = 60 * 60 * 1000)  // 1시간마다
     public void updateSQL() {
         try {
             Set<Object> keywordObjs = keywordTemplate.opsForHash().keys("keyword");

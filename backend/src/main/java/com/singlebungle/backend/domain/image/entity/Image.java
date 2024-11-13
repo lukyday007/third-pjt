@@ -33,6 +33,10 @@ public class Image extends BaseTimeEntity {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
+    @Builder.Default
+    @Column(name = "is_tag", nullable = false)
+    private boolean isTag = false;
+
     // 웹에서 저장할 때
     public static Image convertToEntity(String sourceUrl, String imageUrl) {
         Image image = new Image();
