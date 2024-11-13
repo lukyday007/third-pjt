@@ -185,6 +185,7 @@ const MainPage = () => {
           </s.TitleArea>
           <s.KeywordArea>
             <s.KeywordTitle>실시간 싱글벙글</s.KeywordTitle>
+            {/*실시간 검색 랭킹 */}
             {rankingKeyword?.map((keyword, index) => {
               // 아이콘 컴포넌트 선택
               const KeywordIcon = keywordIcons[index] || keywordIcons[0]
