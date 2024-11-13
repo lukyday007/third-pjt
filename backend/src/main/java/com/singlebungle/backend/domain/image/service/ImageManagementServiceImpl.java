@@ -44,7 +44,6 @@ public class ImageManagementServiceImpl implements ImageManagementService {
 
         // 이미지 중복 저장 방지
         ImageManagement imageManagement = imageManagementRepository.findByImageAndUser(image, user);
-        log.info("========> imageId: {}" , image.getImageId());
         if (imageManagement != null) {
             throw new EntityIsFoundException("이미 저장한 이미지 입니다.");
         }

@@ -1,11 +1,9 @@
 package com.singlebungle.backend.domain.user.controller;
 
 import com.singlebungle.backend.domain.user.dto.response.UserInfoResponseDTO;
-import com.singlebungle.backend.domain.user.entity.User;
 import com.singlebungle.backend.domain.user.service.UserService;
 import com.singlebungle.backend.global.auth.TokenInfo;
 import com.singlebungle.backend.global.auth.auth.JwtProvider;
-import com.singlebungle.backend.global.auth.dto.TokenResponseDTO;
 import com.singlebungle.backend.global.exception.model.NoTokenRequestException;
 import com.singlebungle.backend.global.model.BaseResponseBody;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,7 +14,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
