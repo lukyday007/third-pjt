@@ -41,6 +41,15 @@ const ImgDetailModal = ({ imageId, onClose }) => {
     fetchImageDetail(imageId)
   }, [imageId])
 
+  useEffect(() => {
+    // 컴포넌트 로드시 keydown 이벤트 리스너 추가
+    window.addEventListener("keydown", handleKeyDown)
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [])
+
   const fetchImageDetail = async (id) => {
     const imageId = id
     try {
@@ -52,6 +61,12 @@ const ImgDetailModal = ({ imageId, onClose }) => {
       setImageDetail(response)
     } catch (e) {
       console.log(e)
+    }
+  }
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      onClose()
     }
   }
 

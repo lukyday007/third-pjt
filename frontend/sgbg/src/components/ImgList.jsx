@@ -34,17 +34,31 @@ function getItemsWithImages(images, groupKey) {
   }))
 }
 
-const Item = ({ imageUrl, isSelected, onClick }) => (
-  <div className="item" onClick={onClick}>
-    <div className="thumbnail">
-      <s.Image
-        src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${imageUrl}`}
-        alt="User image"
-        isSelected={isSelected}
-      />
+const Item = ({ imageUrl, isSelected, onClick }) => {
+  const selectedRef = useRef(null)
+
+  // 선택 이미지가 변경되면 해당 위치로 화면 스크롤 이동
+  useEffect(() => {
+    if (isSelected && selectedRef.current) {
+      selectedRef.current.scrollIntoView({
+        behavior: "smooth",
+      })
+    }
+  }, [isSelected])
+
+  return (
+    <div className="item" onClick={onClick}>
+      <div className="thumbnail">
+        <s.Image
+          src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${imageUrl}`}
+          alt="User image"
+          isSelected={isSelected}
+          ref={isSelected ? selectedRef : null}
+        />
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 const ImgList = () => {
   const [selectedImageKey, setSelectedImageKey] = useState(null)
@@ -55,7 +69,6 @@ const ImgList = () => {
   const [totalPage, setTotalPage] = useState(null)
   const [isFetching, setIsFetching] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const selectedImageRef = useRef(null)
   const selectedImageKeyRef = useRef(selectedImageKey)
   const itemsRef = useRef(items)
 
@@ -95,10 +108,9 @@ const ImgList = () => {
     setTotalPage(null)
   }, [params.id])
 
-  // 선택 이미지 변경시 알림
+  // 선택 이미지 변경시 Ref 참조 변경
   useEffect(() => {
     selectedImageKeyRef.current = selectedImageKey
-    console.log("selectedImageKey", selectedImageKey)
   }, [selectedImageKey])
 
   //
@@ -139,7 +151,6 @@ const ImgList = () => {
     const currentKey = selectedImageKeyRef.current
 
     if (!currentKey) {
-      console.log("!selectedImageKey", currentKey)
       return
     }
 
@@ -183,9 +194,6 @@ const ImgList = () => {
       setSelectedImageKey(currentItems[nextIndex].key)
       setSelectedImageId(currentItems[nextIndex].imageId)
     }
-
-    console.log(imageIndex)
-    console.log(currentItems[imageIndex + 1])
   }
 
   return (
