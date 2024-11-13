@@ -36,6 +36,7 @@ public class JwtAuthenticationFilter extends GenericFilterBean { // JWT 토큰�
         put("/api/v3/api-docs", new HashSet<>(List.of("GET"))); // swagger 제외
         put("/api/oauth2", new HashSet<>(List.of("GET", "POST"))); // oauth 제외
         put("/api/keywords/ranking", new HashSet<>(List.of("GET")));
+
     }};
 
     @Override
