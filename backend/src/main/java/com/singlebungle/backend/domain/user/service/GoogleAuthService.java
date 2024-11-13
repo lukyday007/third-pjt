@@ -63,6 +63,13 @@ public class GoogleAuthService implements AuthService {
 
         if (existingUser.isPresent()) {
             user = existingUser.get(); // 기존 사용자 가져오기
+
+            // 유저가 삭제된 상태인지 확인
+            if (user.getStatus() == User.Status.DELETED) {
+                log.error("User account is deleted and cannot be reactivated.");
+                throw new IllegalArgumentException("해당 계정은 삭제된 상태이며, 재가입이 불가능합니다.");
+            }
+
             tokenInfo = jwtProvider.generateAndSaveToken(user, redirectUri); // 토큰 생성 및 저장
         } else {
             log.info("No existing user found. Proceeding with signup.");

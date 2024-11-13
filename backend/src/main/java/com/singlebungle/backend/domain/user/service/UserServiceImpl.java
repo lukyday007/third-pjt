@@ -111,4 +111,15 @@ public class UserServiceImpl implements UserService {
         return jwtProvider.getUserIdFromToken(token);
     }
 
+    @Transactional
+    public void deleteUser(String token) {
+        Long userId = jwtProvider.getUserIdFromToken(token); // JWT에서 사용자 ID 추출
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 회원 상태를 DELETED로 변경
+        user.setStatus(User.Status.DELETED);
+        userRepository.save(user); // 상태 변경 후 저장
+    }
+
 }
