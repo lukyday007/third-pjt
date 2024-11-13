@@ -99,6 +99,13 @@ const ImgList = () => {
 
   // 이미지 클릭
   const handleImageClick = (image) => {
+    // 동일한 이미지 클릭시 이미지 선택 해제
+    if (selectedImageId === image.key) {
+      setSelectedImage(null)
+      setSelectedImageId(null)
+      return
+    }
+
     setSelectedImage(image)
     setIsModalOpen(true)
     setSelectedImageId(image.key) // 원래 이미지 클릭에 있던 코드
