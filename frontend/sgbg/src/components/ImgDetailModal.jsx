@@ -16,6 +16,10 @@ const s = {
     z-index: 1000;
   `,
   Container: styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     background: white;
     padding: 20px;
     border-radius: 8px;
@@ -31,6 +35,15 @@ const s = {
     top: 10px;
     right: 10px;
     cursor: pointer;
+  `,
+  DetailImage: styled.img``,
+  KeyWordArea: styled.div``,
+  KeyWord: styled.div``,
+  SourceText: styled.span`
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   `,
 }
 
@@ -53,11 +66,16 @@ const ImgDetailModal = ({ imageId, onClose }) => {
   const fetchImageDetail = async (id) => {
     const imageId = id
     try {
-      const response = await getImageDetail(imageId, (resp) => {
-        const data = resp.data
-        return data
-      })
-
+      const response = await getImageDetail(
+        imageId,
+        (resp) => {
+          const data = resp.data
+          return data
+        },
+        (error) => {
+          console.log(error)
+        }
+      )
       setImageDetail(response)
     } catch (e) {
       console.log(e)
@@ -70,18 +88,27 @@ const ImgDetailModal = ({ imageId, onClose }) => {
     }
   }
 
+  const handleSourceClick = (url) => {
+    window.open(url)
+  }
+
   return (
     <s.Overlay onClick={onClose}>
       {imageDetail && (
         <s.Container onClick={(e) => e.stopPropagation()}>
           <s.CloseButton onClick={onClose}>X</s.CloseButton>
-          <div>
-            <img
-              src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${imageDetail?.imageUrl}`}
-              alt="Selected"
-            />
-            <p>이미지 세부 정보</p>
-          </div>
+          <s.DetailImage
+            src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${imageDetail?.imageUrl}`}
+            alt="Selected"
+          />
+          {imageDetail?.keywords.map((keyword, index) => {
+            return <s.KeyWord key={index}>{keyword}</s.KeyWord>
+          })}
+          <s.SourceText
+            onClick={() => handleSourceClick(imageDetail.sourceUrl)}
+          >
+            {imageDetail.sourceUrl}
+          </s.SourceText>
         </s.Container>
       )}
     </s.Overlay>
