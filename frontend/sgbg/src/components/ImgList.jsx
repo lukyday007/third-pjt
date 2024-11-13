@@ -4,6 +4,7 @@ import { MasonryInfiniteGrid } from "@egjs/react-infinitegrid"
 import "./styles.css"
 import { getMyImages } from "../lib/api/image-api"
 import { useParams } from "react-router-dom"
+import ImgDetailModal from "./ImgDetailModal"
 
 const s = {
   Image: styled.img`
@@ -48,6 +49,8 @@ const ImgList = () => {
   const [prevPage, setPrevPage] = useState(0)
   const [totalPage, setTotalPage] = useState(null)
   const [isFetching, setIsFetching] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedImage, setSelectedImage] = useState(null)
 
   const params = useParams()
 
@@ -85,6 +88,19 @@ const ImgList = () => {
     setTotalPage(null)
   }, [params.id])
 
+  // 이미지 클릭
+  const handleImageClick = (image) => {
+    setSelectedImage(image)
+    setIsModalOpen(true)
+    setSelectedImageId(image.key) // 원래 이미지 클릭에 있던 코드
+  }
+
+  // 모달 열기 닫기
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setSelectedImage(null)
+  }
+
   return (
     <>
       <MasonryInfiniteGrid
@@ -105,11 +121,16 @@ const ImgList = () => {
             key={item.key}
             imageUrl={item.imageUrl}
             isSelected={item.key === selectedImageId}
-            onClick={() => setSelectedImageId(item.key)}
+            onClick={() => handleImageClick(item)}
             data-grid-groupkey={item.groupKey}
           />
         ))}
       </MasonryInfiniteGrid>
+
+      {/* 이미지 상세 모달 */}
+      {isModalOpen && (
+        <ImgDetailModal image={selectedImage} onClose={closeModal} />
+      )}
     </>
   )
 }
