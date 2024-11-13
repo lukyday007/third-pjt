@@ -160,6 +160,10 @@ const MainPage = () => {
     )
   }
 
+  const handleLoginClick = () => {
+    navigate("/login")
+  }
+
   return (
     <>
       <div>
@@ -201,6 +205,9 @@ const MainPage = () => {
         <s.ImageArea>
           <s.TitleButton>최신 싱글벙글</s.TitleButton>
           <s.TitleButtonLight>랜덤 싱글벙글</s.TitleButtonLight>
+          <s.TitleButton onClick={handleLoginClick}>
+            로그인하는버튼 (임시)
+          </s.TitleButton>
         </s.ImageArea>
       </div>
     </>
