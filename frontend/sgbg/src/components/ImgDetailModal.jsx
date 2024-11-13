@@ -39,7 +39,7 @@ const ImgDetailModal = ({ imageId, onClose }) => {
 
   useEffect(() => {
     fetchImageDetail(imageId)
-  }, [])
+  }, [imageId])
 
   const fetchImageDetail = async (id) => {
     const imageId = id
