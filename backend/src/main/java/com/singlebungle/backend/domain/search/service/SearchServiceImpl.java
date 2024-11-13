@@ -45,15 +45,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public List<String> getKeywordsByTag(String keyword) {
-        System.out.println("여기까지 온 거 맞아?? 마즘???");
         // 키워드가 포함된 문서 목록을 검색
         List<SearchDocument> documents = searchRepository.findByTagInfo_TagContaining(keyword);
 
-        // 로그로 검색된 문서의 태그 확인
-        documents.forEach(doc -> {
-            String tag = doc.getTagInfo().getTag();
-            log.info(">>> Found Tag: {}", tag); // 태그 값을 로그로 출력
-        });
 
         // 검색된 문서에서 태그만 추출하여 리스트로 반환
         return documents.stream()
