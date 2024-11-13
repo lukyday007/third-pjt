@@ -18,6 +18,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.Set;
 
 
@@ -56,7 +57,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
 
 
     // todo 테스트 후 2시간 간격으로 수정 2 * 60 * 60 * 1000 : 2시간마다 실행
-    @Scheduled(fixedRate = 60 * 60 * 1000)
+    @Scheduled(fixedRate = 60 * 60 * 1000)      // 1시간마다 실행
     public void updateKeywordRanking() {
         try {
             Set<Object> keywordObjs = keywordTemplate.opsForHash().keys("keyword");
@@ -95,6 +96,12 @@ public class SchedulerConfig implements SchedulingConfigurer {
 
                                 // prevCnt 값을 curCnt로 갱신
                                 keywordTemplate.opsForHash().put("keyword", keyword + ":prevCnt", String.valueOf(curCnt));
+
+                                // TTL 설정
+                                keywordTemplate.expire("keyword-ranking", Duration.ofHours(1));
+                                keywordTemplate.expire("previous-ranking", Duration.ofHours(1));
+                                keywordTemplate.expire("keyword", Duration.ofHours(1));
+
 
                             } catch (NumberFormatException e) {
                                 log.error(">>> updateKeywordRanking >>> Number format exception for keyword: {}, prevCnt: {}, curCnt: {}", keyword, prevCntStr, curCntStr, e);
