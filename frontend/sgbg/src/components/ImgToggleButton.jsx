@@ -1,4 +1,5 @@
-import React, { useState } from "react"
+import React, { useContext } from "react"
+import { AppContext } from "../contexts/AppContext"
 import styled from "styled-components"
 
 // ToggleContainer 스타일 정의
@@ -22,7 +23,7 @@ const ToggleBackground = styled.div`
   position: absolute;
   width: 50%;
   height: 100%;
-  left: ${({ isChecked }) => (isChecked ? "50%" : "0%")};
+  left: ${({ isLatest }) => (isLatest === 2 ? "50%" : "0%")};
   border-radius: 20px;
   background: white;
   transition: all 0.3s;
@@ -32,25 +33,24 @@ const ToggleText = styled.div`
   z-index: 1;
   font-size: 12px;
   text-align: center;
-  color: ${({ isChecked, position }) =>
-    (isChecked && position === "right") || (!isChecked && position === "left")
+  color: ${({ isLatest, position }) =>
+    (isLatest === 2 && position === "right") ||
+    (isLatest === 0 && position === "left")
       ? "#343434"
       : "white"};
   transition: color 0.3s;
 `
 
 const ImgToggleButton = () => {
-  const [isChecked, setIsChecked] = useState(false)
-
-  const toggle = () => setIsChecked((prev) => !prev)
+  const { isLatest, toggleLatest } = useContext(AppContext)
 
   return (
-    <ToggleContainer onClick={toggle}>
-      <ToggleBackground isChecked={isChecked} />
-      <ToggleText isChecked={isChecked} position="left">
+    <ToggleContainer onClick={toggleLatest}>
+      <ToggleBackground isLatest={isLatest} />
+      <ToggleText isLatest={isLatest} position="left">
         최신순
       </ToggleText>
-      <ToggleText isChecked={isChecked} position="right">
+      <ToggleText isLatest={isLatest} position="right">
         랜덤순
       </ToggleText>
     </ToggleContainer>

@@ -1,4 +1,7 @@
+import { useContext } from "react"
 import { useLocation } from "react-router-dom"
+import { AppContext } from "../contexts/AppContext"
+
 import styled from "styled-components"
 import SearchBox from "./SearchBox"
 import ImgToggleButton from "./ImgToggleButton"
@@ -27,11 +30,12 @@ const s = {
 }
 
 const SearchBar = () => {
+  const { folderName } = useContext(AppContext)
   const location = useLocation()
   const isHome = location.pathname === "/"
   return (
     <s.Container isHome={isHome}>
-      {!isHome && <s.Title>폴더가 길어지면 검색창이 줄어들어요</s.Title>}
+      {!isHome && <s.Title>{folderName}</s.Title>}
       <SearchBox />
       {isHome ? (
         <s.SearchButton>싱글벙글 검색</s.SearchButton>

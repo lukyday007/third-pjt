@@ -1,5 +1,14 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react"
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useContext,
+} from "react"
+import { useNavigate } from "react-router-dom"
 import styled from "styled-components"
+import { AppContext } from "../contexts/AppContext"
+
 import HomeIcon from "../asset/images/SideBar/HomeIcon.svg?react"
 import SideBarToggleIcon from "../asset/images/SideBar/SideBarToggleIcon.svg?react"
 
@@ -11,7 +20,6 @@ import SettingsIcon from "../asset/images/SideBar/SettingsIcon.svg?react"
 import TrashBinIcon from "../asset/images/SideBar/TrashBinIcon.svg?react"
 
 import TestImage from "../asset/images/TestImage.png"
-import { useNavigate } from "react-router-dom"
 import {
   deleteDirectory,
   getDirectoryList,
@@ -19,8 +27,8 @@ import {
   patchDirectorySequence,
   postCreateDirectory,
 } from "../lib/api/directory-api"
-import CreateFolderModal from "./CreateFolderModal"
 import { getUserInfo } from "../lib/api/user-api"
+import CreateFolderModal from "./CreateFolderModal"
 import FolderRightClickModal from "./FolderRightClickModal"
 
 const s = {
@@ -121,6 +129,9 @@ const s = {
 }
 
 const SideBar = () => {
+  // 디렉토리 이름 상태
+  const { setFolderName } = useContext(AppContext)
+  // 사이드바 열림 여부
   const [isSideBarOpen, setIsSideBarOpen] = useState(true)
   // 디렉토리 리스트 정보
   const [directoryInfos, setDirectoryInfos] = useState([])
@@ -137,6 +148,7 @@ const SideBar = () => {
   })
   // 현재 선택된 디렉토리
   const [selectedDirectory, setSelectedDirectory] = useState(0)
+  const [selectedDirectoryName, setSelectedDirectoryName] = useState("")
   const [changeNameTarget, setChangeNameTarget] = useState(0)
   const [changeNameText, setChangeNameText] = useState("")
   const [prevNameText, setPrevNameText] = useState("")
@@ -202,8 +214,11 @@ const SideBar = () => {
     navigate(`/login`)
   }
 
-  const handleFolderClick = (id) => {
+  const handleFolderClick = (id, name) => {
+    console.log("1")
+    setFolderName(name)
     navigate(`/image/${id}`)
+    // console.log(id, name, "아디랑 이름")
   }
 
   const handleSettingClick = () => {
@@ -269,7 +284,7 @@ const SideBar = () => {
   }
 
   // 우클릭 관리
-  const handleRightClick = (event, id) => {
+  const handleRightClick = (event, id, name) => {
     console.log(directoryInfos, "디렉토리 정보조회")
     // 우클릭 이벤트 제한
     event.preventDefault()
@@ -283,6 +298,7 @@ const SideBar = () => {
 
     if (id) {
       setSelectedDirectory(id)
+      setSelectedDirectoryName(name)
       toggleRightClickModal()
     }
   }
@@ -489,7 +505,7 @@ const SideBar = () => {
             <AllImagesIcon />
             <s.FolderTitle>전체 이미지</s.FolderTitle>
           </s.FolderArea>
-          <s.FolderArea onClick={() => handleFolderClick(0)}>
+          <s.FolderArea onClick={() => handleFolderClick(0, "기본폴더")}>
             <DefaultFolderIcon />
             <s.FolderTitle>기본폴더</s.FolderTitle>
           </s.FolderArea>
@@ -503,7 +519,9 @@ const SideBar = () => {
               toggleFunction={toggleRightClickModal}
               position={rightClickModalPosition}
               changeFunction={handleChangeDirectoryName}
-              openFunction={() => handleFolderClick(selectedDirectory)}
+              openFunction={() =>
+                handleFolderClick(selectedDirectory, selectedDirectoryName)
+              }
               deleteFunction={handleDeleteDirectory}
             />
           )}
@@ -512,9 +530,18 @@ const SideBar = () => {
               <React.Fragment key={index}>
                 <s.FolderArea
                   key={directoryInfo.directoryId}
-                  onClick={() => handleFolderClick(directoryInfo.directoryId)}
+                  onClick={() =>
+                    handleFolderClick(
+                      directoryInfo.directoryId,
+                      directoryInfo.directoryName
+                    )
+                  }
                   onContextMenu={(event) =>
-                    handleRightClick(event, directoryInfo.directoryId)
+                    handleRightClick(
+                      event,
+                      directoryInfo.directoryId,
+                      directoryInfo.directoryName
+                    )
                   }
                   onDragStart={(event) => handleDragStart(event, directoryInfo)}
                   onDrag={(event) => handleDrag(event)}

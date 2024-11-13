@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useContext } from "react"
+import { AppContext } from "../contexts/AppContext"
 import styled from "styled-components"
 import SearchIcon from "../asset/images/SearchBox/searchIcon.svg?react"
 import KeywordIcon from "../asset/images/SearchBox/keywordIcon.svg?react"
@@ -94,8 +95,8 @@ const s = {
     align-items: center;
     gap: 5px;
     white-space: nowrap;
-    background-color: ${(props) => props.bgColor};
-    color: ${(props) => props.textColor};
+    background-color: ${(props) => props.$bgColor};
+    color: ${(props) => props.$textColor};
     padding: 5px 10px;
     border-radius: 8px;
   `,
@@ -126,10 +127,10 @@ const s = {
 }
 
 const SearchBox = () => {
+  const { searchKeywords, setSearchKeywords } = useContext(AppContext)
   const [query, setQuery] = useState("")
   const [filteredKeywords, setFilteredKeywords] = useState([]) // 자동완성 키워드
-  const [searchKeywords, setSearchKeywords] = useState([]) // 검색창 키워드
-  console.log(searchKeywords, "키워드야")
+  // const [searchKeywords, setSearchKeywords] = useState([]) // 검색창 키워드
   const [isDropdownVisible, setDropdownVisible] = useState(false) // 자동완성 드롭다운
   const [activeIndex, setActiveIndex] = useState(0) // 자동완성 인덱스
   const containerRef = useRef(null)
@@ -146,6 +147,7 @@ const SearchBox = () => {
         input,
         (resp) => {
           setFilteredKeywords(resp.data)
+          console.log(resp.data, "키워드 검색 응답...")
           setDropdownVisible(true)
           setActiveIndex(0)
         },
@@ -240,8 +242,8 @@ const SearchBox = () => {
               return (
                 <s.KeywordItem
                   key={index}
-                  bgColor={item.background}
-                  textColor={item.text}
+                  $bgColor={item.background}
+                  $textColor={item.text}
                 >
                   <KeywordCancleIcon
                     onClick={() => removeTag(item.keyword)}
