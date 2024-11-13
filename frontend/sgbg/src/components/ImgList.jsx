@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import styled from "styled-components"
 import { MasonryInfiniteGrid } from "@egjs/react-infinitegrid"
 import "./styles.css"
-import { getMyImages } from "../lib/api/image-api"
+import { getFeedImages, getMyImages } from "../lib/api/image-api"
 import { useParams } from "react-router-dom"
 
 const s = {
@@ -79,6 +79,32 @@ const ImgList = () => {
     )
   }
 
+  const fetchFeedImages = async () => {
+    if (isFetching || (totalPage !== null && currentPage > totalPage)) return
+    setIsFetching(true)
+
+    getFeedImages(
+      currentPage,
+      10,
+      "",
+      0,
+      (resp) => {
+        const imageList = resp.data.imageList
+        const totalPage = resp.data.totalPage
+        console.log("response", resp.data, "currentPage", currentPage)
+        const newItems = getItemsWithImages(imageList, currentPage)
+        setItems((prevItems) => [...prevItems, ...newItems])
+        setCurrentPage((prevPage) => prevPage + 1)
+        setTotalPage(totalPage)
+        setIsFetching(false)
+      },
+      (error) => {
+        console.log("error", error)
+        setIsFetching(false)
+      }
+    )
+  }
+
   useEffect(() => {
     setItems([])
     setCurrentPage(1)
@@ -87,29 +113,51 @@ const ImgList = () => {
 
   return (
     <>
-      <MasonryInfiniteGrid
-        className="container"
-        gap={5}
-        align={"stretch"}
-        maxStretchColumnSize={360}
-        useFirstRender={true}
-        onRequestAppend={(e) => {
-          fetchMyImages()
-        }}
-        onRenderComplete={(e) => {
-          console.log(e)
-        }}
-      >
-        {items.map((item) => (
-          <Item
-            key={item.key}
-            imageUrl={item.imageUrl}
-            isSelected={item.key === selectedImageId}
-            onClick={() => setSelectedImageId(item.key)}
-            data-grid-groupkey={item.groupKey}
-          />
-        ))}
-      </MasonryInfiniteGrid>
+      {params.id ? (
+        <MasonryInfiniteGrid
+          className="container"
+          gap={5}
+          align={"stretch"}
+          maxStretchColumnSize={360}
+          useFirstRender={true}
+          onRequestAppend={(e) => {
+            fetchMyImages()
+          }}
+          onRenderComplete={(e) => {}}
+        >
+          {items.map((item) => (
+            <Item
+              key={item.key}
+              imageUrl={item.imageUrl}
+              isSelected={item.key === selectedImageId}
+              onClick={() => setSelectedImageId(item.key)}
+              data-grid-groupkey={item.groupKey}
+            />
+          ))}
+        </MasonryInfiniteGrid>
+      ) : (
+        <MasonryInfiniteGrid
+          className="container"
+          gap={5}
+          align={"stretch"}
+          maxStretchColumnSize={360}
+          useFirstRender={true}
+          onRequestAppend={(e) => {
+            fetchFeedImages()
+          }}
+          onRenderComplete={(e) => {}}
+        >
+          {items.map((item) => (
+            <Item
+              key={item.key}
+              imageUrl={item.imageUrl}
+              isSelected={item.key === selectedImageId}
+              onClick={() => setSelectedImageId(item.key)}
+              data-grid-groupkey={item.groupKey}
+            />
+          ))}
+        </MasonryInfiniteGrid>
+      )}
     </>
   )
 }
