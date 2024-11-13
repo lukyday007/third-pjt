@@ -86,6 +86,9 @@ public class SchedulerConfig implements SchedulingConfigurer {
                                     keywordTemplate.opsForZSet().incrementScore("keyword-ranking", keyword, gap);
                                 }
 
+                                // 이전 gap 값을 별도의 SortedSet에 저장
+                                keywordTemplate.opsForZSet().add("previous-ranking", keyword, gap);
+
                                 // prevCnt 값을 curCnt로 갱신
                                 keywordTemplate.opsForHash().put("keyword", keyword + ":prevCnt", String.valueOf(curCnt));
 
@@ -97,9 +100,9 @@ public class SchedulerConfig implements SchedulingConfigurer {
                 }
             }
         } catch (RedisConnectionFailureException e) {
-            log.error(">>> Redis connection failure while updating keyword ranking.", e);
+            log.error(">>> 키워드 랭킹 갱신 준 레디스 연결에 실패했습니다.", e);
         } catch (Exception e) {
-            log.error(">>> Unexpected error occurred during update Keyword Ranking.", e);
+            log.error(">>> 키워드 랭킹 갱신 중 예기치 못한 에러가 발생했습니다.", e);
         }
     }
 

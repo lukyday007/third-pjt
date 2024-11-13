@@ -11,5 +11,5 @@ public interface KeywordService {
 
     void increaseCurCnt(String keyword);
 
-    List<KeywordRankResponseDTO> getKeywordRankList();
+//    List<KeywordRankResponseDTO> getKeywordRankList();
 }
