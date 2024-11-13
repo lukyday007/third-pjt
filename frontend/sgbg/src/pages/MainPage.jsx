@@ -19,6 +19,15 @@ const rotateImage = keyframes`
   }
 `
 
+// 키워드 아이콘 목록
+const keywordIcons = [
+  FirstKeywordIcon,
+  SecondKeywordIcon,
+  ThirdKeywordIcon,
+  FourthKeywordIcon,
+  FifthKeywordIcon,
+]
+
 const s = {
   Container: styled.div`
     flex: 1 0 auto;
@@ -97,7 +106,7 @@ const s = {
 
 const MainPage = () => {
   const navigate = useNavigate()
-  const [rankingKeword, setRankingKeword] = useState()
+  const [rankingKeyword, setRankingKeyword] = useState()
   const params = new URLSearchParams(window.location.search)
   const code = encodeURIComponent(params.get("code"))
   const googleLogin = async (code) => {
@@ -118,8 +127,8 @@ const MainPage = () => {
   const fetchRankingKeword = async () => {
     getRankingKeywordList(
       (resp) => {
-        setRankingKeword(resp.data)
-        // console.log(resp.data, "결과야 잘 오니")
+        setRankingKeyword(resp.data.keywords)
+        console.log(resp.data.keywords, "결과야 잘 오니")
       },
       (error) => {
         console.log("error", error)
@@ -172,31 +181,21 @@ const MainPage = () => {
           </s.TitleArea>
           <s.KeywordArea>
             <s.KeywordTitle>실시간 싱글벙글</s.KeywordTitle>
-            <s.Keyword>
-              <FirstKeywordIcon />
-              <s.KeywordText>싱글벙글</s.KeywordText>
-              <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
-            </s.Keyword>
-            <s.Keyword>
-              <SecondKeywordIcon />
-              <s.KeywordText>싱글벙글</s.KeywordText>
-              <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
-            </s.Keyword>
-            <s.Keyword>
-              <ThirdKeywordIcon />
-              <s.KeywordText>싱글벙글</s.KeywordText>
-              <KeywordDecreaseIcon style={{ marginLeft: "auto" }} />
-            </s.Keyword>
-            <s.Keyword>
-              <FourthKeywordIcon />
-              <s.KeywordText>싱글벙글</s.KeywordText>
-              <KeywordDecreaseIcon style={{ marginLeft: "auto" }} />
-            </s.Keyword>
-            <s.Keyword>
-              <FifthKeywordIcon />
-              <s.KeywordText>싱글벙글</s.KeywordText>
-              <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
-            </s.Keyword>
+            {rankingKeyword?.map((keyword, index) => {
+              // 아이콘 컴포넌트 선택
+              const KeywordIcon = keywordIcons[index] || keywordIcons[0]
+              return (
+                <s.Keyword key={index}>
+                  <KeywordIcon />
+                  <s.KeywordText>{keyword.keyword}</s.KeywordText>
+                  {keyword.isState === "up" ? (
+                    <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
+                  ) : keyword.isState === "down" ? (
+                    <KeywordDecreaseIcon style={{ marginLeft: "auto" }} />
+                  ) : null}
+                </s.Keyword>
+              )
+            })}
           </s.KeywordArea>
         </s.Container>
         <s.ImageArea>
