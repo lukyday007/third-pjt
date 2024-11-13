@@ -19,7 +19,7 @@ const s = {
 
   SearchButton: styled.button`
     color: white;
-    border-radius: 8px;
+    border-radius: 8px;dd
     padding: 14px 12px;
     background-color: black;
     font-size: 16px;
