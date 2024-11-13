@@ -201,10 +201,43 @@ const MainPage = () => {
         </s.Container>
         <s.ImageArea>
           <s.TitleButton>최신 싱글벙글</s.TitleButton>
-          <s.TitleButtonLight>랜덤 싱글벙글</s.TitleButtonLight>
-        </s.ImageArea>
-      </div>
-    </>
+          <s.TitleButton onClick={handleLoginClick}>
+            로그인하는버튼 (임시)
+          </s.TitleButton>
+        </s.TitleTextArea>
+        <s.SingBungMove>
+          <SingBung />
+        </s.SingBungMove>
+      </s.TitleArea>
+      <s.KeywordArea>
+        <s.KeywordTitle>실시간 싱글벙글</s.KeywordTitle>
+        <s.Keyword>
+          <FirstKeywordIcon />
+          <s.KeywordText>싱글벙글</s.KeywordText>
+          <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
+        </s.Keyword>
+        <s.Keyword>
+          <SecondKeywordIcon />
+          <s.KeywordText>싱글벙글</s.KeywordText>
+          <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
+        </s.Keyword>
+        <s.Keyword>
+          <ThirdKeywordIcon />
+          <s.KeywordText>싱글벙글</s.KeywordText>
+          <KeywordDecreaseIcon style={{ marginLeft: "auto" }} />
+        </s.Keyword>
+        <s.Keyword>
+          <FourthKeywordIcon />
+          <s.KeywordText>싱글벙글</s.KeywordText>
+          <KeywordDecreaseIcon style={{ marginLeft: "auto" }} />
+        </s.Keyword>
+        <s.Keyword>
+          <FifthKeywordIcon />
+          <s.KeywordText>싱글벙글</s.KeywordText>
+          <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
+        </s.Keyword>
+      </s.KeywordArea>
+    </s.Container>
   )
 }
 
