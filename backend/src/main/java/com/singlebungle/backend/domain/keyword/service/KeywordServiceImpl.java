@@ -16,8 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.Duration;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -95,45 +94,67 @@ public class KeywordServiceImpl implements KeywordService {
     }
 
 
-//    @Override
+    @Override
 //    @Cacheable(value = "keywordRankCache", key = "'topRanks'", unless = "#result == null || #result.isEmpty()")
-//    public List<KeywordRankResponseDTO> getKeywordRankList() {
-//        // Redis에서 정확한 등락률 계산을 위해 상위 10위 랭킹 목록 가져오기
-//        Set<ZSetOperations.TypedTuple<Object>> ranks = keywordTemplate.opsForZSet()
-//                .reverseRangeWithScores("keyword-ranking", 0, 9);
-//
-//        if (ranks == null || ranks.isEmpty()) {
-//            throw new EntityNotFoundException(">>> getKeywordRankList >>> 랭킹에 등록된 데이터가 없습니다.");
-//        }
-//
-//        // Redis에서 이전 랭킹 데이터 가져오기 (상위 10위)
-//        Set<ZSetOperations.TypedTuple<Object>> previousRanks = keywordTemplate.opsForZSet()
-//                .reverseRangeWithScores("previous-ranking", 0, 9); // 이전 순위 데이터
-//
-//
-//        return ranks.stream()
-//                .map(rank -> {
-//                    String keyword = rank.getValue().toString();
-//                    Double currentGap = rank.getScore(); // 현재 gap
-//                    Double previousGap = keywordTemplate.opsForZSet().score("previous-ranking", keyword); // 이전 gap
-//
-//                    String state = "same"; // 기본값
-//                    if (currentGap != null && previousGap != null) {
-//                        if (currentGap > previousGap) {
-//                            state = "up";
-//                        } else if (currentGap < previousGap) {
-//                            state = "down";
-//                        }
-//                    }
-//
-////                    return new KeywordRankResponseDTO(
-////                            keyword, // 키워드
-////                            currentGap != null ? currentGap.toString() : "0", // 점수
-////                            state // 등락 상태
-////                    );
-//                })
-//                .collect(Collectors.toList());
-//
-//    }
+    public List<KeywordRankResponseDTO> getKeywordRankList() {
+        log.info(">>>>>>>>>> getKeywordRankList >>>>>>>>> 처리중 ...");
+
+        // Redis에서 정확한 등락률 계산을 위해 상위 10위 랭킹 목록 가져오기
+        Set<ZSetOperations.TypedTuple<Object>> currentRanks = keywordTemplate.opsForZSet()
+                .reverseRangeWithScores("keyword-ranking", 0, 9); // 상위 10위 (0부터 9까지)
+
+        log.info(">>> currentRanks : {}", Arrays.toString(currentRanks.toArray()));
+
+        if (currentRanks == null || currentRanks.isEmpty()) {
+            throw new EntityNotFoundException(">>> getKeywordRankList >>> 랭킹에 등록된 데이터가 없습니다.");
+        }
+
+        // Redis에서 이전 랭킹 데이터 가져오기 (상위 10위)
+        Set<ZSetOperations.TypedTuple<Object>> previousRanks = keywordTemplate.opsForZSet()
+                .reverseRangeWithScores("previous-ranking", 0, 9); // 이전 순위 데이터
+
+        log.info(">>> previousRanks : {}", Arrays.toString(previousRanks.toArray()));
+
+        // 이전 데이터 매핑 (키워드와 점수로 변환)
+        Map<String, Double> previousRankMap = previousRanks != null
+                ? previousRanks.stream()
+                .collect(Collectors.toMap(
+                        rank -> rank.getValue().toString(),
+                        rank -> rank.getScore() != null ? rank.getScore() : 0.0
+                ))
+                : new HashMap<>();
+
+
+        // 현재 랭킹과 이전 랭킹 비교
+        List<KeywordRankResponseDTO> rankedKeywords = currentRanks.stream()
+                .map(rank -> {
+                    String keyword = rank.getValue().toString();
+                    double currentScore = rank.getScore() != null ? rank.getScore() : 0.0;
+
+                    // 이전 점수 가져오기 (없으면 기본값 0.0)
+                    double previousScore = previousRankMap.getOrDefault(keyword, 0.0);
+
+                    String isState;
+                    if (currentScore > previousScore) {
+                        isState = "up";
+                    } else if (currentScore < previousScore) {
+                        isState = "down";
+                    } else {
+                        isState = "same";
+                    }
+
+                    double gap = currentScore - previousScore;
+
+                    log.info(">>> Keyword: {}, CurrentScore: {}, PreviousScore: {}, Gap: {}, State: {}",
+                            keyword, currentScore, previousScore, gap, isState);
+
+                    return new KeywordRankResponseDTO(keyword, isState, gap);
+                })
+                .sorted(Comparator.comparing(KeywordRankResponseDTO::getKeyword))
+                .limit(5) // 상위 5개만 반환
+                .collect(Collectors.toList());
+
+        return rankedKeywords;
+    }
 
 }

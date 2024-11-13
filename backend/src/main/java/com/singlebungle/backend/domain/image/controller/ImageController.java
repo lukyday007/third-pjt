@@ -44,6 +44,7 @@ public class ImageController {
     private final ImageDetailService imageDetailService;
     private final ImageManagementService imageManagementService;
 
+
     @PostMapping("/web")
     @Operation(summary = "웹 이미지 저장", description = "웹에서 새로운 이미지를 등록합니다.")
     public ResponseEntity<BaseResponseBody> saveFromWeb(
@@ -177,19 +178,9 @@ public class ImageController {
             @Parameter(description = "키워드")
             @RequestParam(value = "keyword", required = false) String keywordList,
             @Parameter(description = "정렬기준 (0: 최신, 1: 오래 된, 2: 랜덤")
-            @RequestParam(value = "sort", required = false, defaultValue = "0") int sort,
-            @Parameter(description = "JWT")
-            @RequestHeader(value = "Authorization", required = false) String token
-
+            @RequestParam(value = "sort", required = false, defaultValue = "0") int sort
     ) {
-        Long userId = 0L;
-        if (token != null) {
-            userId = userService.getUserByToken(token);
-        } else {
-            throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
-        }
-
-        log.info(">>> [GET] /images/feed - 요청 파라미터:  userId - {}, page - {}, size - {}, keyword - {}, sort - {}" , userId, page, size, keywordList, sort);
+        log.info(">>> [GET] /images/feed - 요청 파라미터:  page - {}, size - {}, keyword - {}, sort - {}" , page, size, keywordList, sort);
 
         Map<String, Object> imageList;
 
@@ -212,7 +203,6 @@ public class ImageController {
     public ResponseEntity<ImageInfoResponseDTO> getImageDetail(
         @PathVariable Long imageId
     ) {
-        
         log.info(">>> [GET] /images/{} - 요청 파라미터: imageId - {}", imageId, imageId);
         ImageInfoResponseDTO imageInfo = imageService.getImageInfo(imageId);
 

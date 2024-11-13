@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class KeywordRankResponseDTO {
 
     private String keyword;
@@ -13,4 +14,10 @@ public class KeywordRankResponseDTO {
     // "up", "down", "same" 상태
     private String isState;
 
+    private Double gap;
+
+    public KeywordRankResponseDTO(String keyword, String isState) {
+        this.keyword = keyword;
+        this.isState = isState;
+    }
 }

@@ -75,6 +75,13 @@ public class SchedulerConfig implements SchedulingConfigurer {
                         String prevCntStr = (String) keywordTemplate.opsForHash().get("keyword", keyword + ":prevCnt");
                         String curCntStr = (String) keywordTemplate.opsForHash().get("keyword", keyword + ":curCnt");
 
+                        // 기존 keyword-ranking 값을 previous-ranking으로 이동
+                        Double currentKeywordScore = keywordTemplate.opsForZSet().score("keyword-ranking", keyword);
+                        if (currentKeywordScore != null) {
+                            // keyword-ranking의 점수를 previous-ranking으로 이동
+                            keywordTemplate.opsForZSet().add("previous-ranking", keyword, currentKeywordScore);
+                        }
+
                         if (prevCntStr != null && curCntStr != null) {
                             try {
                                 int prevCnt = Integer.parseInt(prevCntStr);
@@ -85,9 +92,6 @@ public class SchedulerConfig implements SchedulingConfigurer {
                                     // ZSet에서 keyword-ranking 점수 업데이트
                                     keywordTemplate.opsForZSet().incrementScore("keyword-ranking", keyword, gap);
                                 }
-
-                                // 이전 gap 값을 별도의 SortedSet에 저장
-                                keywordTemplate.opsForZSet().add("previous-ranking", keyword, gap);
 
                                 // prevCnt 값을 curCnt로 갱신
                                 keywordTemplate.opsForHash().put("keyword", keyword + ":prevCnt", String.valueOf(curCnt));
