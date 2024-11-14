@@ -5,7 +5,6 @@ import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-
 import com.singlebungle.backend.domain.directory.entity.Directory;
 import com.singlebungle.backend.domain.directory.repository.DirectoryRepository;
 import com.singlebungle.backend.domain.image.dto.request.ImageListGetRequestDTO;
@@ -21,11 +20,9 @@ import com.singlebungle.backend.domain.user.entity.User;
 import com.singlebungle.backend.domain.user.repository.UserRepository;
 import com.singlebungle.backend.global.exception.EntityIsFoundException;
 import com.singlebungle.backend.global.exception.EntityNotFoundException;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,12 +30,14 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
