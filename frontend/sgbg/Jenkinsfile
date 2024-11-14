@@ -72,7 +72,27 @@ pipeline {
         stage('Create GitHub Release') {
             steps {
                 script {
+                    // package.json에서 version 가져오기
                     def version = sh(script: "grep '\"version\"' frontend/sgbg/package.json | awk -F: '{ print \$2 }' | sed 's/[\",]//g' | xargs", returnStdout: true).trim()
+                    echo "Local version: ${version}"
+
+                    // 가장 최근 GitHub 릴리스 버전 가져오기
+                    def latestReleaseResponse = sh(
+                        script: """
+                            curl -H "Authorization: token $GITHUB_TOKEN" \
+                            https://api.github.com/repos/${GITHUB_REPO}/releases/latest
+                        """,
+                        returnStdout: true
+                    ).trim()
+
+                    def latestReleaseVersion = readJSON(text: latestReleaseResponse)?.tag_name?.replace("v", "")
+                    echo "Latest GitHub release version: ${latestReleaseVersion}"
+
+                    // 버전이 동일하면 스킵
+                    if (latestReleaseVersion == version) {
+                        echo "Local version matches the latest GitHub release version. Skipping GitHub release creation."
+                        return
+                    }
 
                     withCredentials([string(credentialsId: 'GH_TOKEN', variable: 'GITHUB_TOKEN')]) {
                         // GitHub 릴리스 생성
