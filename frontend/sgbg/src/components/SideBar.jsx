@@ -215,7 +215,11 @@ const SideBar = () => {
   }
 
   const handleFullImageClick = () => {
-    navigate(`/image/-1`)
+    navigate(`/image/all`)
+  }
+
+  const handleBinClick = () => {
+    navigate(`image/bin`)
   }
 
   const handleFolderClick = (id, name) => {
@@ -587,7 +591,7 @@ const SideBar = () => {
               createFunction={createNewFolder}
             />
           )}
-          <s.FolderArea>
+          <s.FolderArea onClick={handleBinClick}>
             <TrashBinIcon />
             <s.FolderTitle>휴지통</s.FolderTitle>
           </s.FolderArea>
