@@ -22,6 +22,7 @@ export const AppProvider = ({ children }) => {
         setSearchKeywords,
         isLatest,
         toggleLatest,
+        setIsLatest,
       }}
     >
       {children}

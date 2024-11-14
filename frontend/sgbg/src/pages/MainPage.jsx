@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import styled, { keyframes } from "styled-components"
 import SingBung from "../asset/images/MainPage/SingBung.svg?react"
 import FirstKeywordIcon from "../asset/images/MainPage/FirstKeywordIcon.svg?react"
@@ -12,6 +12,7 @@ import { replace, useLocation, useNavigate } from "react-router-dom"
 import { googleSignIn } from "../lib/api/user-api"
 import { getFeedImages } from "../lib/api/image-api"
 import { getRankingKeywordList } from "../lib/api/keyword-api"
+import { AppContext } from "../contexts/AppContext"
 
 const rotateImage = keyframes`
   100% {
@@ -58,6 +59,7 @@ const s = {
     border-radius: 8px;
     margin-top: 36px;
     cursor: pointer;
+    height: 40px;
   `,
   TitleButtonLight: styled.button`
     background-color: #ffffff;
@@ -67,6 +69,7 @@ const s = {
     border-radius: 8px;
     margin-top: 36px;
     cursor: pointer;
+    height: 40px;
   `,
   SingBungMove: styled.div`
     width: fit-content;
@@ -101,12 +104,17 @@ const s = {
     flex-direction: column;
     margin-left: auto;
   `,
-  ImageArea: styled.div``,
+  ImageArea: styled.div`
+    display: flex;
+  `,
+  NewImageArea: styled.div``,
 }
 
 const MainPage = () => {
   const navigate = useNavigate()
   const [rankingKeyword, setRankingKeyword] = useState()
+  const [newImage, setNewImage] = useState({})
+  const [randomImage, setRandomImage] = useState({})
   const params = new URLSearchParams(window.location.search)
   const code = encodeURIComponent(params.get("code"))
   const googleLogin = async (code) => {
@@ -137,6 +145,8 @@ const MainPage = () => {
   }
   useEffect(() => {
     fetchRankingKeword()
+    fetchNewImage()
+    fetchRandomImage()
   }, [])
 
   useEffect(() => {
@@ -150,9 +160,26 @@ const MainPage = () => {
       1,
       1,
       "",
-      1,
+      0,
       (resp) => {
-        console.log(resp.data)
+        console.log(resp.data.imageList[0])
+        setNewImage(resp.data.imageList[0])
+      },
+      (error) => {
+        console.error(error)
+      }
+    )
+  }
+
+  const fetchRandomImage = async () => {
+    getFeedImages(
+      1,
+      1,
+      "",
+      2,
+      (resp) => {
+        console.log(resp.data.imageList[0])
+        setRandomImage(resp.data.imageList[0])
       },
       (error) => {
         console.error(error)
@@ -163,6 +190,18 @@ const MainPage = () => {
   const handleLoginClick = () => {
     navigate("/login")
   }
+
+  const handleNewImageClick = () => {
+    navigate("/image")
+    setIsLatest(0)
+  }
+
+  const handleRandomImageClick = () => {
+    navigate("/image")
+    setIsLatest(2)
+  }
+
+  const { isLatest, toggleLatest, setIsLatest } = useContext(AppContext)
 
   return (
     <>
@@ -177,7 +216,9 @@ const MainPage = () => {
               <s.TextWithTitle>
                 실시간 인기 키워드와 랜덤 이미지로 더 많은 즐거움을 만나보세요.
               </s.TextWithTitle>
-              <s.TitleButton>최신 싱글벙글</s.TitleButton>
+              <s.TitleButton onClick={handleLoginClick}>
+                로그인하는버튼 (임시)
+              </s.TitleButton>
             </s.TitleTextArea>
             <s.SingBungMove>
               <SingBung />
@@ -203,12 +244,35 @@ const MainPage = () => {
             })}
           </s.KeywordArea>
         </s.Container>
-        <s.ImageArea>
-          <s.TitleButton>최신 싱글벙글</s.TitleButton>
-          <s.TitleButtonLight>랜덤 싱글벙글</s.TitleButtonLight>
-          <s.TitleButton onClick={handleLoginClick}>
-            로그인하는버튼 (임시)
-          </s.TitleButton>
+        <s.ImageArea style={{ marginLeft: "64px" }}>
+          <s.NewImageArea style={{ marginRight: "64px" }}>
+            <s.TitleButton
+              onClick={handleNewImageClick}
+              style={{ marginBottom: "16px" }}
+            >
+              최신 싱글벙글
+            </s.TitleButton>
+            <div>
+              <img
+                height={"300px"}
+                src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${newImage.imageUrl}`}
+              />
+            </div>
+          </s.NewImageArea>
+          <s.NewImageArea>
+            <s.TitleButtonLight
+              onClick={handleRandomImageClick}
+              style={{ marginBottom: "16px" }}
+            >
+              랜덤 싱글벙글
+            </s.TitleButtonLight>
+            <div>
+              <img
+                height={"300px"}
+                src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${randomImage.imageUrl}`}
+              />
+            </div>
+          </s.NewImageArea>
         </s.ImageArea>
       </div>
     </>
