@@ -23,7 +23,8 @@ const s = {
     background: white;
     padding: 20px;
     border-radius: 8px;
-    max-width: 500px;
+    max-width: 800px;
+    height: 600px;
     width: 100%;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
   `,
