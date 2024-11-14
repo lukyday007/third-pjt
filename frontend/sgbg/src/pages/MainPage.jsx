@@ -19,6 +19,15 @@ const rotateImage = keyframes`
   }
 `
 
+// 키워드 아이콘 목록
+const keywordIcons = [
+  FirstKeywordIcon,
+  SecondKeywordIcon,
+  ThirdKeywordIcon,
+  FourthKeywordIcon,
+  FifthKeywordIcon,
+]
+
 const s = {
   Container: styled.div`
     flex: 1 0 auto;
@@ -97,7 +106,7 @@ const s = {
 
 const MainPage = () => {
   const navigate = useNavigate()
-  const [rankingKeword, setRankingKeword] = useState()
+  const [rankingKeyword, setRankingKeyword] = useState()
   const params = new URLSearchParams(window.location.search)
   const code = encodeURIComponent(params.get("code"))
   const googleLogin = async (code) => {
@@ -118,8 +127,8 @@ const MainPage = () => {
   const fetchRankingKeword = async () => {
     getRankingKeywordList(
       (resp) => {
-        setRankingKeword(resp.data)
-        console.log(resp.data, "결과야 잘 오니")
+        setRankingKeyword(resp.data.keywords)
+        console.log(resp.data.keywords, "결과야 잘 오니")
       },
       (error) => {
         console.log("error", error)
@@ -156,59 +165,53 @@ const MainPage = () => {
   }
 
   return (
-    <div>
-      <s.Container>
-        <s.TitleArea>
-          <s.TitleTextArea>
-            <s.Title>싱글벙글한 이미지를 찾아보아요</s.Title>
-            <s.TextWithTitle>
-              싱글벙글 이미지들을 키워드로 검색하고,
-            </s.TextWithTitle>
-            <s.TextWithTitle>
-              실시간 인기 키워드와 랜덤 이미지로 더 많은 즐거움을 만나보세요.
-            </s.TextWithTitle>
-            <s.TitleButton>최신 싱글벙글</s.TitleButton>
-          </s.TitleTextArea>
-          <s.SingBungMove>
-            <SingBung />
-          </s.SingBungMove>
-        </s.TitleArea>
-        <s.KeywordArea>
-          <s.KeywordTitle>실시간 싱글벙글</s.KeywordTitle>
-          <s.Keyword>
-            <FirstKeywordIcon />
-            <s.KeywordText>싱글벙글</s.KeywordText>
-            <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
-          </s.Keyword>
-          <s.Keyword>
-            <SecondKeywordIcon />
-            <s.KeywordText>싱글벙글</s.KeywordText>
-            <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
-          </s.Keyword>
-          <s.Keyword>
-            <ThirdKeywordIcon />
-            <s.KeywordText>싱글벙글</s.KeywordText>
-            <KeywordDecreaseIcon style={{ marginLeft: "auto" }} />
-          </s.Keyword>
-          <s.Keyword>
-            <FourthKeywordIcon />
-            <s.KeywordText>싱글벙글</s.KeywordText>
-            <KeywordDecreaseIcon style={{ marginLeft: "auto" }} />
-          </s.Keyword>
-          <s.Keyword>
-            <FifthKeywordIcon />
-            <s.KeywordText>싱글벙글</s.KeywordText>
-            <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
-          </s.Keyword>
-        </s.KeywordArea>
-      </s.Container>
-      <s.ImageArea>
-        <s.TitleButton>최신 싱글벙글</s.TitleButton>
-        <s.TitleButton onClick={handleLoginClick}>
-          로그인하는버튼 (임시)
-        </s.TitleButton>
-      </s.ImageArea>
-    </div>
+    <>
+      <div>
+        <s.Container>
+          <s.TitleArea>
+            <s.TitleTextArea>
+              <s.Title>싱글벙글한 이미지를 찾아보아요</s.Title>
+              <s.TextWithTitle>
+                싱글벙글 이미지들을 키워드로 검색하고,
+              </s.TextWithTitle>
+              <s.TextWithTitle>
+                실시간 인기 키워드와 랜덤 이미지로 더 많은 즐거움을 만나보세요.
+              </s.TextWithTitle>
+              <s.TitleButton>최신 싱글벙글</s.TitleButton>
+            </s.TitleTextArea>
+            <s.SingBungMove>
+              <SingBung />
+            </s.SingBungMove>
+          </s.TitleArea>
+          <s.KeywordArea>
+            <s.KeywordTitle>실시간 싱글벙글</s.KeywordTitle>
+            {/*실시간 검색 랭킹 */}
+            {rankingKeyword?.map((keyword, index) => {
+              // 아이콘 컴포넌트 선택
+              const KeywordIcon = keywordIcons[index] || keywordIcons[0]
+              return (
+                <s.Keyword key={index}>
+                  <KeywordIcon />
+                  <s.KeywordText>{keyword.keyword}</s.KeywordText>
+                  {keyword.isState === "up" ? (
+                    <KeywordIncreaseIcon style={{ marginLeft: "auto" }} />
+                  ) : keyword.isState === "down" ? (
+                    <KeywordDecreaseIcon style={{ marginLeft: "auto" }} />
+                  ) : null}
+                </s.Keyword>
+              )
+            })}
+          </s.KeywordArea>
+        </s.Container>
+        <s.ImageArea>
+          <s.TitleButton>최신 싱글벙글</s.TitleButton>
+          <s.TitleButtonLight>랜덤 싱글벙글</s.TitleButtonLight>
+          <s.TitleButton onClick={handleLoginClick}>
+            로그인하는버튼 (임시)
+          </s.TitleButton>
+        </s.ImageArea>
+      </div>
+    </>
   )
 }
 

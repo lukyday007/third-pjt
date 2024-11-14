@@ -10,7 +10,7 @@ import LoginPage from "./pages/LoginPage"
 import LoginCallBackPage from "./pages/LoginCallBackPage"
 import SettingPage from "./pages/SettingPage"
 import { useEffect } from "react"
-
+import { AppProvider } from "./contexts/AppContext"
 const s = {
   Container: styled.div`
     display: flex;
@@ -38,24 +38,26 @@ function App() {
   }
   return (
     <div className="App">
-      <GlobalStyle />
-      <s.Container>
-        {!isLoginPage && <SideBar />}
-        {/* <SideBar /> */}
-        <s.ContentArea>
-          {!isLoginPage && !isSettingPage && <SearchBar />}
-          {/* <SearchBar /> */}
-          <Routes>
-            <Route path="/" element={<MainPage />} />
-            <Route path="image" element={<ImgPage />}>
-              <Route path=":id" />
-            </Route>
-            <Route path="login" element={<LoginPage />} />
-            <Route path="login-callback" element={<LoginCallBackPage />} />
-            <Route path="setting" element={<SettingPage />} />
-          </Routes>
-        </s.ContentArea>
-      </s.Container>
+      <AppProvider>
+        <GlobalStyle />
+        <s.Container>
+          {!isLoginPage && <SideBar />}
+          {/* <SideBar /> */}
+          <s.ContentArea>
+            {!isLoginPage && !isSettingPage && <SearchBar />}
+            {/* <SearchBar /> */}
+            <Routes>
+              <Route path="/" element={<MainPage />} />
+              <Route path="image" element={<ImgPage />}>
+                <Route path=":id" />
+              </Route>
+              <Route path="login" element={<LoginPage />} />
+              <Route path="login-callback" element={<LoginCallBackPage />} />
+              <Route path="setting" element={<SettingPage />} />
+            </Routes>
+          </s.ContentArea>
+        </s.Container>
+      </AppProvider>
     </div>
   )
 }
