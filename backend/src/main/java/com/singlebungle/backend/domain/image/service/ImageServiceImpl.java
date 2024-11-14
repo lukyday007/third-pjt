@@ -175,9 +175,9 @@ public class ImageServiceImpl implements ImageService {
 
         // image
         boolean isImage = imageRepository.existsByImageUrl(imageUrl);
-        if (isImage)
+        if (isImage) {
             throw new EntityIsFoundException("이미 해당 이미지 데이터가 존재합니다");
-
+        }
         Image image = Image.convertToEntity(sourceUrl, imageUrl);
         imageRepository.save(image);
 

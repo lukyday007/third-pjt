@@ -4,10 +4,16 @@ import com.singlebungle.backend.domain.image.entity.Image;
 import com.singlebungle.backend.domain.image.repository.ImageRepository;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
 import com.singlebungle.backend.domain.search.entity.SearchDocument;
+import com.singlebungle.backend.domain.search.repository.SearchCustomRepository;
 import com.singlebungle.backend.domain.search.repository.SearchRepository;
 import com.singlebungle.backend.global.exception.EntityIsFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +26,7 @@ import java.util.stream.Collectors;
 public class SearchServiceImpl implements SearchService {
 
     private final SearchRepository searchRepository;
-    private final KeywordRepository keywordRepository;
+    private final SearchCustomRepository searchCustomRepository;
     private final ImageRepository imageRepository;
 
     @Override
@@ -50,7 +56,10 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public List<String> getKeywordsByTag(String keyword) {
         // 키워드가 포함된 문서 목록을 검색
-        List<SearchDocument> documents = searchRepository.findByTagInfo_TagContaining(keyword);
+//        List<SearchDocument> documents = searchRepository.findByTagInfoContainingTag(keyword);
+        List<SearchDocument> documents = searchCustomRepository.searchByWildcardAndBoost(keyword);
+
+//        List<SearchDocument> documents = searchRepository.findByTagInfoTag(keyword);
 
         // 검색된 문서에서 태그만 추출하여 리스트로 반환
         return documents.stream()
@@ -58,6 +67,30 @@ public class SearchServiceImpl implements SearchService {
                 .distinct()  // 중복 태그
                 .collect(Collectors.toList());
     }
+
+
+//    @Autowired
+//    private ElasticsearchOperations elasticsearchOperations;
+//
+//    public List<String> getKeywordsByTag(String keyword) {
+//        // Criteria를 사용하여 쿼리 구성
+//        Criteria criteria = new Criteria("tagInfo.tag")
+//                .contains(keyword) // 부분 일치 검색
+//                .boost(10);        // 가중치 추가
+//
+//        CriteriaQuery query = new CriteriaQuery(criteria);
+//        query.addSort(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Order.desc("_score")));
+//
+//        // ElasticsearchOperations로 검색 수행
+//        SearchHits<SearchDocument> searchHits = elasticsearchOperations.search(query, SearchDocument.class);
+//
+//        // 결과 태그 리스트로 반환
+//        return searchHits.stream()
+//                .map(hit -> hit.getContent().getTagInfo().getTag())  // 태그 추출
+//                .distinct()  // 중복 제거
+//                .collect(Collectors.toList());
+//    }
+//
 
 
     @Override

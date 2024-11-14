@@ -81,7 +81,10 @@ dependencies {
 
 	// ElasticSearch
 	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
-	implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.17.0'
+	implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.17.10'
+	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'co.elastic.clients:elasticsearch-java:8.9.0'
+
 
 	// 테스트 의존성
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
