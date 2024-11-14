@@ -100,7 +100,7 @@ public class OpenaiServiceImpl implements OpenaiService {
                 log.error(">>> JPEG 변환 실패: 변환된 이미지 크기가 0입니다.");
                 throw new RuntimeException("JPEG 변환 실패: 변환된 이미지 크기가 0입니다.");
             }
-            if (jpegBytes.length > 5 * 1024 * 1024) { // 예: 5MB 초과 제한
+            if (jpegBytes.length > 15 * 1024 * 1024) { // 예: 5MB 초과 제한
                 log.warn(">>> JPEG 이미지가 너무 큽니다. 크기: {} bytes", jpegBytes.length);
                 throw new IllegalArgumentException("JPEG 이미지 크기가 너무 큽니다.");
             }
