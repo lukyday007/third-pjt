@@ -81,6 +81,7 @@ const ImgList = () => {
   useEffect(() => {
     const result = searchKeywords.map((item) => item.keyword).join(",")
     setKeywords(result)
+    console.log(result)
   }, [searchKeywords])
 
   const fetchMyImages = async () => {
