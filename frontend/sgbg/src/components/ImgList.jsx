@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useContext } from "react"
 import styled from "styled-components"
 import { MasonryInfiniteGrid } from "@egjs/react-infinitegrid"
 import "./styles.css"
 import { getFeedImages, getMyImages } from "../lib/api/image-api"
 import { useParams } from "react-router-dom"
 import ImgDetailModal from "./ImgDetailModal"
+import { AppContext } from "../contexts/AppContext"
 
 const s = {
   Image: styled.img.attrs((props) => ({
@@ -69,10 +70,18 @@ const ImgList = () => {
   const [totalPage, setTotalPage] = useState(null)
   const [isFetching, setIsFetching] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [keywords, setKeywords] = useState("")
   const selectedImageKeyRef = useRef(selectedImageKey)
   const itemsRef = useRef(items)
 
   const params = useParams()
+
+  const { searchKeywords, isLatest } = useContext(AppContext)
+
+  useEffect(() => {
+    const result = searchKeywords.map((item) => item.keyword).join(",")
+    setKeywords(result)
+  }, [searchKeywords])
 
   const fetchMyImages = async () => {
     if (isFetching || (totalPage !== null && currentPage > totalPage)) return
@@ -82,8 +91,8 @@ const ImgList = () => {
       params.id,
       currentPage,
       10,
-      "",
-      0,
+      keywords,
+      isLatest,
       false,
       (resp) => {
         const imageList = resp.data.imageList
@@ -109,8 +118,8 @@ const ImgList = () => {
     getFeedImages(
       currentPage,
       10,
-      "",
-      0,
+      keywords,
+      isLatest,
       (resp) => {
         const imageList = resp.data.imageList
         const totalPage = resp.data.totalPage
@@ -132,7 +141,7 @@ const ImgList = () => {
     setItems([])
     setCurrentPage(1)
     setTotalPage(null)
-  }, [params.id])
+  }, [params.id, keywords, isLatest])
 
   // 선택 이미지 변경시 Ref 참조 변경
   useEffect(() => {
