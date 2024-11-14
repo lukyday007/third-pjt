@@ -71,7 +71,7 @@ public class ImageController {
             // chatgpt api
             log.info(">>> ChatGPT API 호출 시작");
             KeywordAndLabels keywordAndLabels = openaiService.requestImageAnalysis(requestDTO.getImageUrl(), labels);
-            log.info(">>> ChatGPT API 호출 완료, 반환 키워드: {}, 태그: {}", keywordAndLabels.getKeywords(), keywordAndLabels.getTags());
+            log.info(">>> ChatGPT API 호출 완료, 반환 키워드: {}", keywordAndLabels.getKeywords());
 
             if (keywordAndLabels.getKeywords() == null) {
                 throw new InvalidImageException();
@@ -87,7 +87,7 @@ public class ImageController {
                 // 이미지 디테일 데이터 생성, 저장
                 imageDetailService.saveImageDetail(requestDTO.getSourceUrl(), filename, keywordAndLabels.getKeywords());
                 // 테그 생성, 저장
-                searchService.saveTags(keywordAndLabels.getTags(), filename);
+                searchService.saveTags(keywordAndLabels.getKeywords(), filename);
 
             }
 
