@@ -47,3 +47,11 @@ export const getImageDetail = async (imageId, success, fail) => {
     .catch(fail)
   return response
 }
+
+// 이미지 휴지통 보내기 / 복원
+export const patchImageToTrash = async (isTrash, data, success, fail) => {
+  jwt
+    .patch(`/directories/bin?toTrash=${isTrash}`, data)
+    .then(success)
+    .catch(fail)
+}

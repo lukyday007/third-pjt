@@ -2,10 +2,15 @@ import { useState, useEffect, useRef, useContext } from "react"
 import styled from "styled-components"
 import { MasonryInfiniteGrid } from "@egjs/react-infinitegrid"
 import "./styles.css"
-import { getFeedImages, getMyImages } from "../lib/api/image-api"
+import {
+  getFeedImages,
+  getMyImages,
+  patchImageToTrash,
+} from "../lib/api/image-api"
 import { useParams } from "react-router-dom"
 import ImgDetailModal from "./ImgDetailModal"
 import { AppContext } from "../contexts/AppContext"
+import ImgListRightClickModal from "./ImgListRightClickModal"
 
 const s = {
   Image: styled.img.attrs((props) => ({
@@ -32,10 +37,11 @@ function getItemsWithImages(images, groupKey) {
     key: groupKey * 100 + index,
     imageUrl: image.imageUrl,
     imageId: image.imageId,
+    imageManagementId: image?.imageManagementId,
   }))
 }
 
-const Item = ({ imageUrl, isSelected, onClick }) => {
+const Item = ({ imageUrl, isSelected, onClick, onContextMenu }) => {
   const selectedRef = useRef(null)
 
   // 선택 이미지가 변경되면 해당 위치로 화면 스크롤 이동
@@ -48,7 +54,7 @@ const Item = ({ imageUrl, isSelected, onClick }) => {
   }, [isSelected])
 
   return (
-    <div className="item" onClick={onClick}>
+    <div className="item" onClick={onClick} onContextMenu={onContextMenu}>
       <div className="thumbnail">
         <s.Image
           src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${imageUrl}`}
@@ -64,6 +70,8 @@ const Item = ({ imageUrl, isSelected, onClick }) => {
 const ImgList = () => {
   const [selectedImageKey, setSelectedImageKey] = useState(null)
   const [selectedImageId, setSelectedImageId] = useState(null)
+  const [selectedImageManagementId, setSelectedImageManagementId] =
+    useState(null)
   const [items, setItems] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [prevPage, setPrevPage] = useState(0)
@@ -73,6 +81,13 @@ const ImgList = () => {
   const [keywords, setKeywords] = useState("")
   const selectedImageKeyRef = useRef(selectedImageKey)
   const itemsRef = useRef(items)
+
+  // 이미지 우클릭 관리
+  const [isRightClickModalOpen, setIsRightClickModalOpen] = useState(false)
+  const [rightClickModalPosition, setRightClickModalPosition] = useState({
+    X: 0,
+    Y: 0,
+  })
 
   const params = useParams()
 
@@ -232,6 +247,62 @@ const ImgList = () => {
     }
   }
 
+  // 이미지 우클릭 모달 관리
+  const toggleRightClickModal = () => {
+    setIsRightClickModalOpen((prev) => !prev)
+  }
+
+  // 우클릭 관리
+  const handleRightClick = (event, itemInfo) => {
+    // 우클릭 이벤트 제한
+    event.preventDefault()
+
+    const currentX = event.clientX
+    const currentY = event.clientY
+
+    if (currentX && currentY) {
+      setRightClickModalPosition({ X: currentX, Y: currentY })
+    }
+
+    if (itemInfo) {
+      console.log(itemInfo)
+      setSelectedImageKey(itemInfo.key)
+      setSelectedImageId(itemInfo.imageId)
+
+      if (itemInfo?.imageManagementId) {
+        setSelectedImageManagementId(itemInfo.imageManagementId)
+      }
+      toggleRightClickModal()
+    }
+  }
+
+  // 이미지 삭제
+  const deleteImage = async () => {
+    const targetManagementId = selectedImageManagementId
+    const targetImages = [selectedImageManagementId]
+    const data = { imageManagementIds: targetImages }
+    try {
+      await patchImageToTrash(
+        true,
+        data,
+        (resp) => {},
+        (error) => {
+          console.log(error)
+        }
+      )
+
+      const targetIndex = items.findIndex((item) => {
+        return item.imageManagementId === targetManagementId
+      })
+      const newItems = [...items]
+
+      newItems.splice(targetIndex, 1)
+      setItems(newItems)
+    } catch (e) {
+      alert("이미지 삭제 실패")
+    }
+  }
+
   return (
     <>
       {params.id ? (
@@ -252,6 +323,7 @@ const ImgList = () => {
               imageUrl={item.imageUrl}
               isSelected={item.key === selectedImageKey}
               onClick={() => handleImageClick(item)}
+              onContextMenu={(event) => handleRightClick(event, item)}
               data-grid-groupkey={item.groupKey}
             />
           ))}
@@ -274,6 +346,7 @@ const ImgList = () => {
               imageUrl={item.imageUrl}
               isSelected={item.key === selectedImageKey}
               onClick={() => handleImageClick(item)}
+              // onContextMenu={(event) => handleRightClick(event, item)}
               data-grid-groupkey={item.groupKey}
             />
           ))}
@@ -281,6 +354,13 @@ const ImgList = () => {
       )}
       {isModalOpen && (
         <ImgDetailModal imageId={selectedImageId} onClose={closeModal} />
+      )}
+      {isRightClickModalOpen && (
+        <ImgListRightClickModal
+          toggleFunction={toggleRightClickModal}
+          position={rightClickModalPosition}
+          deleteFunction={deleteImage}
+        />
       )}
     </>
   )
