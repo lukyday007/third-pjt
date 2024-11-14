@@ -123,15 +123,24 @@ public class OpenaiServiceImpl implements OpenaiService {
     public String generatePrompt(String imageUrl, List<String> labels) {
         String labelsToString = String.join(", ", labels);
 
-//        "### 이미지에 있는 텍스트\n" +
-//                "이미지에 텍스트가 있으면 텍스트를 학습해. 없으면 '텍스트 없음'이라고 작성해.\n\n" +
-
         return String.format(
-                "### 라벨 번역\n" +
-                        "우선 labels 배열에 있는 목록을 명사로 번역해서 리스트로 돌려줘 [%s].\n" +
-                        "이때 들여쓰기하고 번역한 결과를 써야해.\n\n" +
-                        "### 키워드\n" +
-                        "이 이미지에 대한 키워드를 5개 정도 추출해서 번호와 함께 리스트로 반환해줘. 이때 '텍스트' 나 '언어', '유머', '인물', '밈'은 없는 키워드여야 하고, 명사형에 한 단어어야해.",
+                "I am working on a project to analyze images. Please analyze the given image based on the provided labels. The output should strictly follow the instructions below:\n\n" +
+                        "### Labels\n" +
+                        "Translate the following labels into Korean nouns. The result should be returned as a list, and each translated noun should be on a separate line:\n" +
+                        "[%s]\n\n" +
+                        "Example:\n" +
+                        "- 강아지\n" +
+                        "- 고양이\n" +
+                        "- 풍경\n\n" +
+                        "### Keywords\n" +
+                        "Extract exactly 5 main keywords related to this image and return them as a numbered list. The keywords should be one-word Korean nouns without any modifiers (e.g., no adjectives or adverbs).\n\n" +
+                        "Example:\n" +
+                        "1. 동물\n" +
+                        "2. 자연\n" +
+                        "3. 가족\n" +
+                        "4. 여행\n" +
+                        "5. 사진\n\n" +
+                        "All responses must be grammatically correct in Korean.",
                 labelsToString
         );
     }
@@ -189,7 +198,7 @@ public class OpenaiServiceImpl implements OpenaiService {
         List<String> keywords = new ArrayList<>();
 
         // "### 키워드" 이후의 항목만 추출하는 정규 표현식
-        Pattern pattern = Pattern.compile("### 키워드\\s*([\\s\\S]+)");
+        Pattern pattern = Pattern.compile("### Keywords\\s*([\\s\\S]+)");
         Matcher matcher = pattern.matcher(resultContent);
 
         if (matcher.find()) {
@@ -216,7 +225,7 @@ public class OpenaiServiceImpl implements OpenaiService {
         List<String> labels = new ArrayList<>();
 
         // "### 라벨 번역" 이후의 항목만 추출하는 정규 표현식
-        Pattern pattern = Pattern.compile("### 라벨 번역\\s*([\\s\\S]+?)\\n\\n###");
+        Pattern pattern = Pattern.compile("### Labels\\s*([\\s\\S]+?)\\n\\n###");
         Matcher matcher = pattern.matcher(response);
 
         if (matcher.find()) {
