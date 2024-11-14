@@ -33,4 +33,3 @@ yarn.lock
 /playwright/.cache/
 
 build
-!build/icon.ico
