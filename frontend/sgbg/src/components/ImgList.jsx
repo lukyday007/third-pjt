@@ -90,6 +90,9 @@ const ImgList = () => {
   })
 
   const params = useParams()
+  useEffect(() => {
+    console.log(params, "params")
+  }, [params])
 
   const { searchKeywords, isLatest } = useContext(AppContext)
 
@@ -104,12 +107,13 @@ const ImgList = () => {
     setIsFetching(true)
 
     getMyImages(
-      params.id,
+      params.id === "all" ? -1 : params.id === "bin" ? 0 : params.id,
       currentPage,
       10,
       keywords,
       isLatest,
-      false,
+      params.id === "bin" ? true : false,
+      // true,
       (resp) => {
         const imageList = resp.data.imageList
         const totalPage = resp.data.totalPage
