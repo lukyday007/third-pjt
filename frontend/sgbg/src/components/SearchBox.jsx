@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from "react"
+import { useLocation } from "react-router-dom"
 import { AppContext } from "../contexts/AppContext"
 import styled from "styled-components"
 import SearchIcon from "../asset/images/SearchBox/searchIcon.svg?react"
@@ -127,6 +128,7 @@ const s = {
 }
 
 const SearchBox = () => {
+  const location = useLocation()
   const { searchKeywords, setSearchKeywords } = useContext(AppContext)
   const [query, setQuery] = useState("")
   const [filteredKeywords, setFilteredKeywords] = useState([]) // 자동완성 키워드
@@ -134,6 +136,12 @@ const SearchBox = () => {
   const [isDropdownVisible, setDropdownVisible] = useState(false) // 자동완성 드롭다운
   const [activeIndex, setActiveIndex] = useState(0) // 자동완성 인덱스
   const containerRef = useRef(null)
+
+  // 페이지 이동 시 검색 키워드 초기화
+  useEffect(() => {
+    setSearchKeywords([])
+    setQuery("")
+  }, [location.pathname])
 
   // 검색하기
   const handleSearch = async (e) => {
@@ -143,11 +151,12 @@ const SearchBox = () => {
     // 검색어가 입력될 때마다 더미 데이터를 필터링
     // 나중에는 검색어 입력할때마다 api
     if (input) {
+      // console.log("요청 보냄:", input) // 요청 보낼 때 확인
       getKeywordList(
         input,
         (resp) => {
           setFilteredKeywords(resp.data)
-          console.log(resp.data, "키워드 검색 응답...")
+          // console.log(resp.data, "키워드 검색 응답...")
           setDropdownVisible(true)
           setActiveIndex(0)
         },
