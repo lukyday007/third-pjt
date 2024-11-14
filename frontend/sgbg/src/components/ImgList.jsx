@@ -277,20 +277,30 @@ const ImgList = () => {
   }
 
   // 이미지 삭제
-  const deleteImage = () => {
+  const deleteImage = async () => {
+    const targetManagementId = selectedImageManagementId
     const targetImages = [selectedImageManagementId]
     const data = { imageManagementIds: targetImages }
-    patchImageToTrash(
-      true,
-      data,
-      (resp) => {
-        console.log(resp)
-        alert("이미지 삭제")
-      },
-      (error) => {
-        console.log(error)
-      }
-    )
+    try {
+      await patchImageToTrash(
+        true,
+        data,
+        (resp) => {},
+        (error) => {
+          console.log(error)
+        }
+      )
+
+      const targetIndex = items.findIndex((item) => {
+        return item.imageManagementId === targetManagementId
+      })
+      const newItems = [...items]
+
+      newItems.splice(targetIndex, 1)
+      setItems(newItems)
+    } catch (e) {
+      alert("이미지 삭제 실패")
+    }
   }
 
   return (
