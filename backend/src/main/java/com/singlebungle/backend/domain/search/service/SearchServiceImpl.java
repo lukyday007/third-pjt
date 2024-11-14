@@ -24,6 +24,7 @@ public class SearchServiceImpl implements SearchService {
     private final ImageRepository imageRepository;
 
     @Override
+    @Transactional
     public void saveTags(List<String> tags, String imageUrl) {
 
         Image image = imageRepository.findByImageUrl(imageUrl);
@@ -40,6 +41,9 @@ public class SearchServiceImpl implements SearchService {
 
             searchRepository.save(document); // Elasticsearch에 저장
         }
+
+        image.setTag(true);
+        imageRepository.save(image);
     }
 
 
@@ -48,13 +52,13 @@ public class SearchServiceImpl implements SearchService {
         // 키워드가 포함된 문서 목록을 검색
         List<SearchDocument> documents = searchRepository.findByTagInfo_TagContaining(keyword);
 
-
         // 검색된 문서에서 태그만 추출하여 리스트로 반환
         return documents.stream()
                 .map(doc -> doc.getTagInfo().getTag())  // TagInfo에서 tag 값을 추출
                 .distinct()  // 중복 태그
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public void incrementSearchCount(String keyword) {

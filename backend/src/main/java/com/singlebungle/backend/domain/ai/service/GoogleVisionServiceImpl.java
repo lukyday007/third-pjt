@@ -64,7 +64,6 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
                 int count = 0;
                 count += isLikelyOrVeryLikely(annotation.getAdult()) ? 1 : 0;
                 count += isLikelyOrVeryLikely(annotation.getMedical()) ? 1 : 0;
-                count += isLikelyOrVeryLikely(annotation.getSpoof()) ? 1 : 0;
                 count += isLikelyOrVeryLikely(annotation.getViolence()) ? 1 : 0;
                 count += isLikelyOrVeryLikely(annotation.getRacy()) ? 1 : 0;
 
