@@ -1,11 +1,12 @@
 package com.singlebungle.backend.domain.search.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.annotation.Id;
 import java.util.UUID;
 
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
