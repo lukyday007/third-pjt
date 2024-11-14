@@ -72,7 +72,7 @@ pipeline {
         stage('Create GitHub Release') {
             steps {
                 script {
-                    def version = "1.0.${env.BUILD_NUMBER}"
+                    def version = sh(script: "grep '\"version\"' frontend/sgbg/package.json | awk -F: '{ print \$2 }' | sed 's/[\",]//g' | xargs", returnStdout: true).trim()
 
                     withCredentials([string(credentialsId: 'GH_TOKEN', variable: 'GITHUB_TOKEN')]) {
                         // GitHub 릴리스 생성
@@ -97,8 +97,8 @@ pipeline {
                         sh """
                             curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
                             -H "Content-Type: application/octet-stream" \
-                            --data-binary @"frontend/sgbg/build/Sgbg Setup 1.0.0.exe" \
-                            "https://uploads.github.com/repos/${GITHUB_REPO}/releases/${releaseId}/assets?name=Sgbg%20Setup%20v${version}.exe"
+                            --data-binary @"frontend/sgbg/build/Sgbg Setup ${version}.exe" \
+                            "https://uploads.github.com/repos/${GITHUB_REPO}/releases/${releaseId}/assets?name=Sgbg%20Setup%20${version}.exe"
                         """
                         
                         sh """

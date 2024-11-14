@@ -32,4 +32,4 @@ yarn.lock
 /playwright-report/
 /playwright/.cache/
 
-/build
+build
