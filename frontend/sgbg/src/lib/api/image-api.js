@@ -55,3 +55,8 @@ export const patchImageToTrash = async (isTrash, data, success, fail) => {
     .then(success)
     .catch(fail)
 }
+
+// 앱 이미지 저장
+export const postAppImage = async (data, success, fail) => {
+  jwt.post(`/images/app`, data).then(success).catch(fail)
+}
