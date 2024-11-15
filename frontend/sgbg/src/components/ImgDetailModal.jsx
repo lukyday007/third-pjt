@@ -1,8 +1,9 @@
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
 import styled from "styled-components"
 import { getImageDetail } from "../lib/api/image-api"
 import { AppContext } from "../contexts/AppContext"
 import { useParams } from "react-router-dom"
+import axios from "axios"
 
 // 태그 컬러 일단 여기에...
 const colorPairs = [
@@ -139,6 +140,8 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
   // context 사용 : 키워드
   const { searchKeywords, setSearchKeywords } = useContext(AppContext)
   const parmas = useParams()
+  const imageRef = useRef(null)
+  const canvasRef = useRef(null)
 
   useEffect(() => {
     fetchImageDetail(imageId)
@@ -152,6 +155,21 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
       window.removeEventListener("keydown", handleKeyDown)
     }
   }, [])
+
+  useEffect(() => {
+    if (canvasRef.current && imageDetail?.imageUrl) {
+      const ctx = canvasRef.current.getContext("2d")
+      const img = new Image()
+      img.src = `https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${imageDetail?.imageUrl}`
+      img.onload = () => {
+        // Canvas 크기를 이미지 크기에 맞게 조정
+        canvasRef.current.width = img.width
+        canvasRef.current.height = img.height
+        // 이미지를 Canvas에 그리기
+        ctx.drawImage(img, 0, 0, img.width, img.height)
+      }
+    }
+  }, [imageDetail])
 
   const fetchImageDetail = async (id) => {
     const imageId = id
@@ -197,6 +215,26 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
     }
   }
 
+  // 이미지 복사
+  const handleImageSaveClick = async () => {
+    try {
+      if (canvasRef.current) {
+        const dataUrl = canvasRef.current.toDataURL("image/png")
+        navigator.clipboard
+          .writeText(dataUrl)
+          .then(() => {
+            console.log("Canvas image copied to clipboard as Base64!")
+          })
+          .catch((err) => {
+            console.error("Failed to copy canvas image:", err)
+          })
+      }
+      console.log("이미지가 클립보드에 복사됐습니다.")
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
   // 키워드 클릭시 해당 키워드로 이동
   const handleKeyWordClick = (keyword) => {
     const { background, text } = getRandomColorPair()
@@ -214,11 +252,13 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
     <s.Overlay onClick={onClose}>
       {imageDetail && (
         <s.Container onClick={(e) => e.stopPropagation()}>
+          <canvas ref={canvasRef}></canvas>
           <s.CloseButton onClick={onClose}>X</s.CloseButton>
           <s.ImageArea>
             <s.DetailImage
               src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${imageDetail?.imageUrl}`}
               alt="Selected"
+              ref={imageRef}
             />
           </s.ImageArea>
           <s.InfoArea>
@@ -255,7 +295,11 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
               >
                 URL 복사
               </s.Button>
-              <s.Button>이미지 복사</s.Button>
+              <s.Button
+                onClick={() => handleImageSaveClick(imageDetail.imageUrl)}
+              >
+                이미지 복사
+              </s.Button>
             </s.ButtonArea>
           </s.InfoArea>
         </s.Container>
