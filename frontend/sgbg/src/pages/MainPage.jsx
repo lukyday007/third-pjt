@@ -123,6 +123,7 @@ const MainPage = () => {
       (resp) => {
         console.log("resp", resp.data["access-token"])
         localStorage.setItem("accessToken", resp.data["access-token"])
+        window.dispatchEvent(new Event("localStorageUpdate"))
         navigate("/", { replace: true })
         history.replaceState(null, "", "/#/")
       },

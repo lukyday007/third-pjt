@@ -21,6 +21,11 @@ const s = {
     flex: 1 0 auto;
     flex-direction: column;
   `,
+  MainContent: styled.div`
+    flex: 1 0 auto;
+    padding-top: 90px;
+    overflow-y: auto;
+  `,
 }
 
 function App() {
@@ -46,15 +51,17 @@ function App() {
           <s.ContentArea>
             {!isLoginPage && !isSettingPage && <SearchBar />}
             {/* <SearchBar /> */}
-            <Routes>
-              <Route path="/" element={<MainPage />} />
-              <Route path="image" element={<ImgPage />}>
-                <Route path=":id" />
-              </Route>
-              <Route path="login" element={<LoginPage />} />
-              <Route path="login-callback" element={<LoginCallBackPage />} />
-              <Route path="setting" element={<SettingPage />} />
-            </Routes>
+            <s.MainContent>
+              <Routes>
+                <Route path="/" element={<MainPage />} />
+                <Route path="image" element={<ImgPage />}>
+                  <Route path=":id" />
+                </Route>
+                <Route path="login" element={<LoginPage />} />
+                <Route path="login-callback" element={<LoginCallBackPage />} />
+                <Route path="setting" element={<SettingPage />} />
+              </Routes>
+            </s.MainContent>
           </s.ContentArea>
         </s.Container>
       </AppProvider>

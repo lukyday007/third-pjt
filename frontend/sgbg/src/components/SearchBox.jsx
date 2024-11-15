@@ -59,14 +59,14 @@ const s = {
     padding: 8px 12px;
     background-color: rgba(245, 245, 245, 1);
     border-radius: 16px;
-    gap: 10px;
+    gap: auto;
     flex: 1 0 auto;
     position: relative;
   `,
   SearchArea: styled.div`
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: auto;
   `,
   SearchInput: styled.input`
     background-color: inherit;
