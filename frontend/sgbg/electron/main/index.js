@@ -1,12 +1,21 @@
-import { app, BrowserWindow, shell, ipcMain } from "electron"
+import { app, BrowserWindow, shell, ipcMain, Tray, Menu } from "electron"
 import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
 import path from "node:path"
 import os from "node:os"
 import { update } from "./update"
+import Store from "electron-store"
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const store = new Store()
+ipcMain.handle("get-settings", () => {
+  return {
+    isAutoStartEnabled: store.get("isAutoStartEnabled", false),
+    isTrayMinimizeEnabled: store.get("isTrayMinimizeEnabled", false),
+  }
+})
 
 // The built directory structure
 //
@@ -40,6 +49,9 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 let win = BrowserWindow
+let tray = null // 시스템 트레이 변수 추가
+let isTrayMinimizeEnabled = false // 트레이 최소화 설정 상태
+
 const preload = path.join(__dirname, "../preload/index.mjs")
 const indexHtml = path.join(RENDERER_DIST, "index.html")
 
@@ -81,9 +93,57 @@ async function createWindow() {
 
   // Auto update
   update(win)
+
+  // 시스템 트레이 생성
+  tray = new Tray(path.join(process.env.VITE_PUBLIC, "singlebungle128.svg"))
+  const trayMenu = Menu.buildFromTemplate([
+    {
+      label: "열기",
+      click: () => {
+        if (win.isMinimized()) win.restore()
+        if (!win.isVisible()) win.show()
+        win.focus()
+      },
+    },
+    {
+      label: "종료",
+      click: () => {
+        app.isQuiting = true
+        app.quit()
+      },
+    },
+  ])
+  tray.setContextMenu(trayMenu)
+  tray.setToolTip("싱글벙글 앱")
 }
 
-app.whenReady().then(createWindow)
+// 창을 닫을 때 트레이에 최소화 여부 확인
+app.on("before-quit", () => (app.isQuiting = true))
+app.on("window-all-closed", () => {
+  win = null
+  if (process.platform !== "darwin") app.quit()
+})
+
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow()
+})
+
+// 창을 닫을 때 트레이에 남기기 (isTrayMinimizeEnabled에 따라)
+app.whenReady().then(() => {
+  createWindow()
+
+  win.on("close", (event) => {
+    if (!app.isQuiting && isTrayMinimizeEnabled) {
+      event.preventDefault()
+      win.hide()
+    }
+  })
+})
+
+// 트레이 최소화 설정 받기
+ipcMain.handle("set-tray-minimize", (_, isEnabled) => {
+  store.set("isTrayMinimizeEnabled", isEnabled)
+})
 
 app.on("window-all-closed", () => {
   win = null
@@ -105,6 +165,15 @@ app.on("activate", () => {
   } else {
     createWindow()
   }
+})
+
+// ipcMain: 시작 앱 설정 처리
+ipcMain.handle("set-auto-start", (_, isEnabled) => {
+  store.set("isAutoStartEnabled", isEnabled)
+  app.setLoginItemSettings({
+    openAtLogin: isEnabled,
+    path: app.getPath("exe"),
+  })
 })
 
 // New window example arg: new windows url
