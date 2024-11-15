@@ -95,7 +95,7 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
     }
 
     @Override
-    public List<String> analyzeImage(String imageUrl) throws IOException {
+    public boolean analyzeImage(String imageUrl) throws IOException {
         // 단일 처리 메서드 사용
         Image image = buildImage(imageUrl);
 
@@ -103,7 +103,7 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
             throw new InvalidImageException(">>> Google Vision - 부적절한 이미지 입니다.");
         }
 
-        return detectLabels(image);
+        return true;
     }
 
     @Override
@@ -192,32 +192,5 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
     }
 
 
-    // 외부 이미지 URL을 사용하여 라벨 검출 실행
-    @Override
-    public List<String> detectLabels(Image image) throws IOException {
 
-        AnnotateImageRequest request = AnnotateImageRequest.newBuilder()
-                .addFeatures(Feature.newBuilder().setType(Feature.Type.LABEL_DETECTION).build())
-                .setImage(image)
-                .build();
-
-        try (ImageAnnotatorClient client = createVisionClient()) {
-            BatchAnnotateImagesResponse response = client.batchAnnotateImages(Collections.singletonList(request));
-            AnnotateImageResponse res = response.getResponsesList().get(0);
-
-            if (res.hasError()) {
-                System.out.format("Error: %s%n", res.getError().getMessage());
-                return null;
-            }
-
-            // description 값만 추출하여 리스트로 반환
-            return res.getLabelAnnotationsList().stream()
-                    .map(EntityAnnotation::getDescription)
-                    .collect(Collectors.toList());
-
-        } catch (Exception e) {
-            log.error(">>> Google Vision API label request failed: {}", e.getMessage());
-            throw new InvalidImageException(">>> Google Vision 부적절한 이미지 입니다. - " + e);
-        }
-    }
 }

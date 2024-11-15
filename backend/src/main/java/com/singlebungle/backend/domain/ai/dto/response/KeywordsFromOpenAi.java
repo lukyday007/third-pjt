@@ -11,7 +11,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class KeywordAndLabels {
+public class KeywordsFromOpenAi {
     private List<String> keywords;
-    private List<String> tags;
+
 }

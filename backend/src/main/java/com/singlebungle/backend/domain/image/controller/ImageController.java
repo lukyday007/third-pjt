@@ -1,6 +1,6 @@
 package com.singlebungle.backend.domain.image.controller;
 
-import com.singlebungle.backend.domain.ai.dto.response.KeywordAndLabels;
+import com.singlebungle.backend.domain.ai.dto.response.KeywordsFromOpenAi;
 import com.singlebungle.backend.domain.ai.service.GoogleVisionService;
 import com.singlebungle.backend.domain.ai.service.OpenaiService;
 import com.singlebungle.backend.domain.image.dto.request.ImageAppRequestDTO;
@@ -65,16 +65,16 @@ public class ImageController {
 
             // google vision api -> 라벨 번역 안됨
             log.info(">>> Google Vision API 호출 시작");
-            List<String> labels = googleVisionService.analyzeImage(requestDTO.getImageUrl());
-            log.info(">>> Google Vision API 호출 완료, 반환 라벨: {}", labels);
+            boolean result = googleVisionService.analyzeImage(requestDTO.getImageUrl());
+            log.info(">>> Google Vision API 호출 완료, 반환 결과: {}", result);
 
             // chatgpt api
             log.info(">>> ChatGPT API 호출 시작");
-            KeywordAndLabels keywordAndLabels = openaiService.requestImageAnalysis(requestDTO.getImageUrl(), labels);
-            log.info(">>> ChatGPT API 호출 완료, 반환 키워드: {}", keywordAndLabels.getKeywords());
+            KeywordsFromOpenAi keywordsFromOpenAi = openaiService.requestImageAnalysis(requestDTO.getImageUrl(), result);
+            log.info(">>> ChatGPT API 호출 완료, 반환 키워드: {}", keywordsFromOpenAi.getKeywords());
 
-            if (keywordAndLabels.getKeywords() == null || keywordAndLabels.getKeywords().isEmpty()) {
-                log.warn(">>> 이미지에서 키워드 라벨일 추출되지 않았습니다.");
+            if (keywordsFromOpenAi.getKeywords() == null || keywordsFromOpenAi.getKeywords().isEmpty()) {
+                log.warn(">>> 이미지에서 키워드가 추출되지 않았습니다.");
                 throw new InvalidImageException();
 
             } else {
@@ -84,11 +84,11 @@ public class ImageController {
                 // 이미지 데이터 생성, 저장
                 imageService.saveImage(userId, requestDTO.getSourceUrl(), filename, directoryId);
                 // 키워드 데이터 생성, 저장
-                keywordService.saveKeyword(keywordAndLabels.getKeywords());
+                keywordService.saveKeyword(keywordsFromOpenAi.getKeywords());
                 // 이미지 디테일 데이터 생성, 저장
-                imageDetailService.saveImageDetail(requestDTO.getSourceUrl(), filename, keywordAndLabels.getKeywords());
+                imageDetailService.saveImageDetail(requestDTO.getSourceUrl(), filename, keywordsFromOpenAi.getKeywords());
                 // 테그 생성, 저장
-                searchService.saveTags(keywordAndLabels.getKeywords(), filename);
+                searchService.saveTags(keywordsFromOpenAi.getKeywords(), filename);
 
             }
 
