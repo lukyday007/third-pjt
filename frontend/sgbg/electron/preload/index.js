@@ -1,31 +1,34 @@
-const { ipcRenderer, contextBridge } = require('electron')
+const { ipcRenderer, contextBridge } = require("electron")
 
 // --------- Expose some API to the Renderer process ---------
-contextBridge.exposeInMainWorld('ipcRenderer', {
-  on(channel, listener) {
-    return ipcRenderer.on(channel, (event, ...args) => listener(event, ...args))
+console.log("Preload script loaded") // Preload 파일의 시작 부분에 추가
+contextBridge.exposeInMainWorld("electron", {
+  ipcRenderer: {
+    on(channel, listener) {
+      return ipcRenderer.on(channel, (event, ...args) =>
+        listener(event, ...args)
+      )
+    },
+    off(channel, ...args) {
+      return ipcRenderer.off(channel, ...args)
+    },
+    send(channel, ...args) {
+      return ipcRenderer.send(channel, ...args)
+    },
+    invoke(channel, ...args) {
+      return ipcRenderer.invoke(channel, ...args)
+    },
   },
-  off(channel, ...args) {
-    return ipcRenderer.off(channel, ...args)
-  },
-  send(channel, ...args) {
-    return ipcRenderer.send(channel, ...args)
-  },
-  invoke(channel, ...args) {
-    return ipcRenderer.invoke(channel, ...args)
-  },
-
-  // You can expose other APIs you need here.
-  // ...
 })
+console.log("Electron API exposed to renderer") // API 노출 후 추가
 
 // --------- Preload scripts loading ---------
-function domReady(condition = ['complete', 'interactive']) {
+function domReady(condition = ["complete", "interactive"]) {
   return new Promise((resolve) => {
     if (condition.includes(document.readyState)) {
       resolve(true)
     } else {
-      document.addEventListener('readystatechange', () => {
+      document.addEventListener("readystatechange", () => {
         if (condition.includes(document.readyState)) {
           resolve(true)
         }
@@ -82,12 +85,12 @@ function useLoading() {
   z-index: 9;
 }
     `
-  const oStyle = document.createElement('style')
-  const oDiv = document.createElement('div')
+  const oStyle = document.createElement("style")
+  const oDiv = document.createElement("div")
 
-  oStyle.id = 'app-loading-style'
+  oStyle.id = "app-loading-style"
   oStyle.innerHTML = styleContent
-  oDiv.className = 'app-loading-wrap'
+  oDiv.className = "app-loading-wrap"
   oDiv.innerHTML = `<div class="${className}"><div></div></div>`
 
   return {
@@ -108,7 +111,7 @@ const { appendLoading, removeLoading } = useLoading()
 domReady().then(appendLoading)
 
 window.onmessage = (ev) => {
-  ev.data.payload === 'removeLoading' && removeLoading()
+  ev.data.payload === "removeLoading" && removeLoading()
 }
 
 setTimeout(removeLoading, 4999)
