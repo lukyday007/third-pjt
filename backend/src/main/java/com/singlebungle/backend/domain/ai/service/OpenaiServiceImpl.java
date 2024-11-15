@@ -186,9 +186,27 @@ public class OpenaiServiceImpl implements OpenaiService {
             log.error(">>> OpenAI 응답이 비어 있습니다.");
             throw new InvalidResponseException("응답을 처리할 수 없습니다. OpenAI에서 빈 응답을 반환했습니다.");
         }
-
+        // 첫 번째 choice 가져오기
         ChatGPTResponse.Choice choice = response.getChoices().get(0);
-        return choice.getMessage().getContent();
+
+        // choice가 null이거나 message가 null인지 확인
+        if (choice == null || choice.getMessage() == null) {
+            log.error(">>> OpenAI 응답에서 choice나 message가 null입니다: {}", choice);
+            throw new InvalidResponseException("응답을 처리할 수 없습니다. choice나 message가 null입니다.");
+        }
+
+        // message content 가져오기
+        String content = choice.getMessage().getContent();
+
+        // content가 null인지 확인
+        if (content == null || content.isEmpty()) {
+            log.warn(">>> OpenAI 응답에서 content가 비어 있습니다: {}", choice);
+            throw new InvalidResponseException("응답을 처리할 수 없습니다. OpenAI에서 빈 content를 반환했습니다.");
+        }
+
+        // 정상적인 content 반환
+        log.info(">>> OpenAI 응답에서 추출된 content: {}", content);
+        return content;
     }
 
 
