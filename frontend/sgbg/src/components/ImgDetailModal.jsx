@@ -141,7 +141,7 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
   const { searchKeywords, setSearchKeywords } = useContext(AppContext)
   const parmas = useParams()
   const imageRef = useRef(null)
-  const canvasRef = useRef(null)
+  const [canvas, setCanvas] = useState(null)
 
   useEffect(() => {
     fetchImageDetail(imageId)
@@ -157,16 +157,21 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
   }, [])
 
   useEffect(() => {
-    if (canvasRef.current && imageDetail?.imageUrl) {
-      const ctx = canvasRef.current.getContext("2d")
+    if (imageDetail?.imageUrl) {
+      const newCanvas = document.createElement("canvas")
+      const ctx = newCanvas.getContext("2d")
       const img = new Image()
-      img.src = `https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${imageDetail?.imageUrl}`
+      img.crossOrigin = "anonymous" // crossorigin 설정
+      img.src = `https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${
+        imageDetail?.imageUrl
+      }?nocache=${new Date().getTime()}`
       img.onload = () => {
         // Canvas 크기를 이미지 크기에 맞게 조정
-        canvasRef.current.width = img.width
-        canvasRef.current.height = img.height
+        newCanvas.width = img.width
+        newCanvas.height = img.height
         // 이미지를 Canvas에 그리기
         ctx.drawImage(img, 0, 0, img.width, img.height)
+        setCanvas(newCanvas)
       }
     }
   }, [imageDetail])
@@ -218,16 +223,19 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
   // 이미지 복사
   const handleImageSaveClick = async () => {
     try {
-      if (canvasRef.current) {
-        const dataUrl = canvasRef.current.toDataURL("image/png")
-        navigator.clipboard
-          .writeText(dataUrl)
-          .then(() => {
-            console.log("Canvas image copied to clipboard as Base64!")
-          })
-          .catch((err) => {
-            console.error("Failed to copy canvas image:", err)
-          })
+      // 이미지를 Blob 데이터로 클립보드에 복사
+      if (canvas) {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const item = new ClipboardItem({ "image/png": blob })
+            navigator.clipboard
+              .write([item])
+              .then(() => {})
+              .catch((err) => {})
+          } else {
+            console.error("Failed to convert canvas to Blob.")
+          }
+        }, "image/png")
       }
       console.log("이미지가 클립보드에 복사됐습니다.")
     } catch (e) {
@@ -252,7 +260,6 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
     <s.Overlay onClick={onClose}>
       {imageDetail && (
         <s.Container onClick={(e) => e.stopPropagation()}>
-          <canvas ref={canvasRef}></canvas>
           <s.CloseButton onClick={onClose}>X</s.CloseButton>
           <s.ImageArea>
             <s.DetailImage
