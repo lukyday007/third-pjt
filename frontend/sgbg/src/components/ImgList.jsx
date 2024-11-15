@@ -6,6 +6,7 @@ import {
   getFeedImages,
   getMyImages,
   patchImageToTrash,
+  postAppImage,
 } from "../lib/api/image-api"
 import { useParams } from "react-router-dom"
 import ImgDetailModal from "./ImgDetailModal"
@@ -307,6 +308,22 @@ const ImgList = () => {
     }
   }
 
+  // 웹 이미지 저장
+  const handleImageSaveClick = async () => {
+    const targetImageId = selectedImageId
+    const data = { imageId: targetImageId, directoryId: 0 }
+    try {
+      postAppImage(data, (resp) => {
+        console.log(resp),
+          (error) => {
+            console.log(error)
+          }
+      })
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
   return (
     <>
       {params.id ? (
@@ -350,7 +367,7 @@ const ImgList = () => {
               imageUrl={item.imageUrl}
               isSelected={item.key === selectedImageKey}
               onClick={() => handleImageClick(item)}
-              // onContextMenu={(event) => handleRightClick(event, item)}
+              onContextMenu={(event) => handleRightClick(event, item)}
               data-grid-groupkey={item.groupKey}
             />
           ))}
@@ -364,6 +381,7 @@ const ImgList = () => {
           toggleFunction={toggleRightClickModal}
           position={rightClickModalPosition}
           deleteFunction={deleteImage}
+          saveFunction={handleImageSaveClick}
         />
       )}
     </>
