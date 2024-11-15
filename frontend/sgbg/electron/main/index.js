@@ -52,7 +52,11 @@ let win = BrowserWindow
 let tray = null // 시스템 트레이 변수 추가
 let isTrayMinimizeEnabled = false // 트레이 최소화 설정 상태
 
-const preload = path.join(__dirname, "../preload/index.js")
+const preload = path.join(
+  process.env.APP_ROOT,
+  "./dist-electron/preload/index.mjs"
+)
+console.log("Preload 경로:", preload) // 경로 확인용 로그 추가
 const indexHtml = path.join(RENDERER_DIST, "index.html")
 
 async function createWindow() {
