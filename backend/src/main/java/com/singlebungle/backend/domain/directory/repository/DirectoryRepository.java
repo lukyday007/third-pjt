@@ -29,4 +29,8 @@ public interface DirectoryRepository extends JpaRepository<Directory, Long> {
     Optional<Directory> findByUserAndStatus(User user, int status);
 
     boolean existsByNameAndUser(String name, User user);
+
+    List<Directory> findByUserAndStatusNot(User user, int status);
+
+    List<Directory> findByUserAndDirectoryId(User user, Long directoryId);
 }
