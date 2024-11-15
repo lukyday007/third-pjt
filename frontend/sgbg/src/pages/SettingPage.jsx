@@ -1,5 +1,6 @@
 import styled from "styled-components"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+const ipcRenderer = window.electron?.ipcRenderer;
 
 const s = {
   Container: styled.div`
@@ -76,6 +77,25 @@ const s = {
 const SettingPage = () => {
   const [isAutoStartEnabled, setIsAutoStartEnabled] = useState(false)
   const [isTrayMinimizeEnabled, setIsTrayMinimizeEnabled] = useState(false)
+
+  // 초기값 로드
+  useEffect(() => {
+    ipcRenderer.invoke("get-settings").then((settings) => {
+      console.log("현재 electron-store 데이터:", settings) // 콘솔에 출력
+      setIsAutoStartEnabled(settings.isAutoStartEnabled)
+      setIsTrayMinimizeEnabled(settings.isTrayMinimizeEnabled)
+    })
+  }, [])
+
+  // 시작 앱 설정 업데이트
+  useEffect(() => {
+    ipcRenderer.invoke("set-auto-start", isAutoStartEnabled)
+  }, [isAutoStartEnabled])
+
+  // 트레이 최소화 설정 상태 업데이트
+  useEffect(() => {
+    ipcRenderer.invoke("set-tray-minimize", isTrayMinimizeEnabled)
+  }, [isTrayMinimizeEnabled])
 
   return (
     <s.Container>

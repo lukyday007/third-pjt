@@ -1,6 +1,6 @@
 {
   "name": "sgbg",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "main": "dist-electron/main/index.js",
   "description": "Single Bungle Project",
   "author": "B205",
@@ -25,6 +25,7 @@
     "axios": "^1.7.7",
     "electron-progressbar": "^2.2.1",
     "electron-reload": "^2.0.0-alpha.1",
+    "electron-store": "^10.0.0",
     "electron-updater": "^6.3.9",
     "prop-types": "^15.8.1",
     "react-responsive-masonry": "^2.4.1",
