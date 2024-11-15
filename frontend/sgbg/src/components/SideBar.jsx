@@ -19,7 +19,8 @@ import DefaultFolderIcon from "../asset/images/SideBar/DefaultFolderIcon.svg?rea
 import SettingsIcon from "../asset/images/SideBar/SettingsIcon.svg?react"
 import TrashBinIcon from "../asset/images/SideBar/TrashBinIcon.svg?react"
 
-import TestImage from "../asset/images/TestImage.png"
+import TestImage from "../asset/images/TestImage.png" // ~보라미~
+
 import {
   deleteDirectory,
   getDirectoryList,
@@ -132,8 +133,9 @@ const SideBar = () => {
   // 디렉토리 이름 상태
   const { setFolderName } = useContext(AppContext)
   // 사이드바 열림 여부
-  const [isSideBarOpen, setIsSideBarOpen] = useState(true)
-  // 디렉토리 리스트 정보
+  const { isSideBarOpen, setIsSideBarOpen } = useContext(AppContext)
+  // const [isSideBarOpen, setIsSideBarOpen] = useState(true)
+  // 디렉토리 리스트 정보v
   const [directoryInfos, setDirectoryInfos] = useState([])
   const [directorySequence, setDirectorySequence] = useState([])
   // 새폴더 모달 열림 여부

@@ -9,9 +9,16 @@ import ImgToggleButton from "./ImgToggleButton"
 const s = {
   Container: styled.div`
     display: flex;
+    margin-left: 1px;
     padding: ${({ isHome }) => (isHome ? "20px 60px" : "20px")};
     align-items: center;
     gap: 50px;
+    position: fixed;
+    top: 0;
+    left: ${({ isSideBarOpen }) => (isSideBarOpen ? "356px" : "76px")};
+    right: 0;
+    background-color: #fff;
+    z-index: 10;
   `,
   Title: styled.div`
     white-space: nowrap;
@@ -30,11 +37,11 @@ const s = {
 }
 
 const SearchBar = () => {
-  const { folderName } = useContext(AppContext)
+  const { folderName, isSideBarOpen } = useContext(AppContext)
   const location = useLocation()
   const isHome = location.pathname === "/"
   return (
-    <s.Container isHome={isHome}>
+    <s.Container isHome={isHome} isSideBarOpen={isSideBarOpen}>
       {!isHome && <s.Title>{folderName}</s.Title>}
       <SearchBox />
       {isHome ? (
