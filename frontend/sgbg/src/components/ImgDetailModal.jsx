@@ -183,6 +183,20 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
     window.open(url)
   }
 
+  // 원본 url 복사
+  const handleSaveUrlClick = async (url) => {
+    try {
+      const copyUrl = url
+      if (!url) return
+
+      await navigator.clipboard.writeText(copyUrl)
+
+      console.log("복사 성공")
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
   // 키워드 클릭시 해당 키워드로 이동
   const handleKeyWordClick = (keyword) => {
     const { background, text } = getRandomColorPair()
@@ -236,7 +250,11 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
               ) : (
                 <></>
               )}
-              <s.Button>URL 복사</s.Button>
+              <s.Button
+                onClick={() => handleSaveUrlClick(imageDetail.sourceUrl)}
+              >
+                URL 복사
+              </s.Button>
               <s.Button>이미지 복사</s.Button>
             </s.ButtonArea>
           </s.InfoArea>
