@@ -1,5 +1,5 @@
-import { useContext } from "react"
-import { useLocation } from "react-router-dom"
+import { useContext, useEffect } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
 import { AppContext } from "../contexts/AppContext"
 
 import styled from "styled-components"
@@ -37,9 +37,17 @@ const s = {
 }
 
 const SearchBar = () => {
-  const { folderName, isSideBarOpen } = useContext(AppContext)
+  const { folderName, searchKeywords, isSideBarOpen } = useContext(AppContext)
   const location = useLocation()
+  const navigate = useNavigate()
   const isHome = location.pathname === "/"
+
+  useEffect(() => {
+    if (isHome && Boolean(searchKeywords.length)) {
+      navigate("/image")
+    }
+  }, [searchKeywords])
+
   return (
     <s.Container isHome={isHome} isSideBarOpen={isSideBarOpen}>
       {!isHome && <s.Title>{folderName}</s.Title>}
