@@ -79,6 +79,13 @@ const SettingPage = () => {
   const [isAutoStartEnabled, setIsAutoStartEnabled] = useState(false)
   const [isTrayMinimizeEnabled, setIsTrayMinimizeEnabled] = useState(false)
 
+  useEffect(() => {
+    console.log("window.electron:", window.electron) // electron 객체 확인
+    if (!window.electron) {
+      console.error("window.electron이 정의되지 않았습니다.")
+    }
+  }, [])
+
   // 초기값 로드
   useEffect(() => {
     if (!ipcRenderer) {

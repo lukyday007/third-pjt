@@ -1,6 +1,7 @@
 const { ipcRenderer, contextBridge } = require("electron")
 
 // --------- Expose some API to the Renderer process ---------
+console.log("Preload script loaded") // Preload 파일의 시작 부분에 추가
 contextBridge.exposeInMainWorld("electron", {
   ipcRenderer: {
     on(channel, listener) {
@@ -19,6 +20,7 @@ contextBridge.exposeInMainWorld("electron", {
     },
   },
 })
+console.log("Electron API exposed to renderer") // API 노출 후 추가
 
 // --------- Preload scripts loading ---------
 function domReady(condition = ["complete", "interactive"]) {
