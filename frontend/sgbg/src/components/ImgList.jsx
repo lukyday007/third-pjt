@@ -3,6 +3,7 @@ import styled from "styled-components"
 import { MasonryInfiniteGrid } from "@egjs/react-infinitegrid"
 import "./styles.css"
 import {
+  deleteImages,
   getFeedImages,
   getMyImages,
   patchImageToTrash,
@@ -286,15 +287,28 @@ const ImgList = () => {
     const targetManagementId = selectedImageManagementId
     const targetImages = [selectedImageManagementId]
     const data = { imageManagementIds: targetImages }
+    console.log(data)
     try {
-      await patchImageToTrash(
-        true,
-        data,
-        (resp) => {},
-        (error) => {
-          console.log(error)
-        }
-      )
+      if (params.id === "bin") {
+        await deleteImages(
+          data,
+          (resp) => {
+            console.log(resp)
+          },
+          (error) => {
+            throw new Error(error)
+          }
+        )
+      } else {
+        await patchImageToTrash(
+          true,
+          data,
+          (resp) => {},
+          (error) => {
+            throw new Error(error)
+          }
+        )
+      }
 
       const targetIndex = items.findIndex((item) => {
         return item.imageManagementId === targetManagementId
