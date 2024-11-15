@@ -11,7 +11,6 @@ public class OpenAiConfig {
     @Value("${openai.api.url}")
     private String apiUrl;
 
-    // Todo : openai api
     @Value("${openai.api.key}")
     private String openAiApiKey;
 

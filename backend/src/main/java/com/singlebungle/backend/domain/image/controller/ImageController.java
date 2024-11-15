@@ -73,7 +73,8 @@ public class ImageController {
             KeywordAndLabels keywordAndLabels = openaiService.requestImageAnalysis(requestDTO.getImageUrl(), labels);
             log.info(">>> ChatGPT API 호출 완료, 반환 키워드: {}", keywordAndLabels.getKeywords());
 
-            if (keywordAndLabels.getKeywords() == null) {
+            if (keywordAndLabels.getKeywords() == null || keywordAndLabels.getKeywords().isEmpty()) {
+                log.warn(">>> 이미지에서 키워드 라벨일 추출되지 않았습니다.");
                 throw new InvalidImageException();
 
             } else {

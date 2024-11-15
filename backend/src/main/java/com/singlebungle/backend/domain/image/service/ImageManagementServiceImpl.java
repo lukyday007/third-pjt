@@ -5,8 +5,11 @@ import com.singlebungle.backend.domain.directory.repository.DirectoryRepository;
 import com.singlebungle.backend.domain.image.dto.request.ImageIdDeleteRequestDTO;
 import com.singlebungle.backend.domain.image.entity.Image;
 import com.singlebungle.backend.domain.image.entity.ImageManagement;
+import com.singlebungle.backend.domain.image.repository.ImageDetailRepository;
 import com.singlebungle.backend.domain.image.repository.ImageManagementRepository;
 import com.singlebungle.backend.domain.image.repository.ImageRepository;
+import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
+import com.singlebungle.backend.domain.keyword.service.KeywordService;
 import com.singlebungle.backend.domain.user.entity.User;
 import com.singlebungle.backend.domain.user.repository.UserRepository;
 import com.singlebungle.backend.global.exception.EntityIsFoundException;
@@ -16,6 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -23,8 +31,10 @@ public class ImageManagementServiceImpl implements ImageManagementService {
 
     private final UserRepository userRepository;
     private final ImageRepository imageRepository;
+    private final ImageDetailRepository imageDetailRepository;
     private final ImageManagementRepository imageManagementRepository;
     private final DirectoryRepository directoryRepository;
+    private final KeywordService keywordService;
 
     @Override
     @Transactional
@@ -56,9 +66,22 @@ public class ImageManagementServiceImpl implements ImageManagementService {
 
         /*
         TODO 키워드 증가 로직 반영
-         */
+        */
+        List<String> keywords = imageDetailRepository.findAllByImage(image)
+                .stream() // List<ImageDetail>에서 스트림 생성
+                .map(imageDetail -> imageDetail.getKeyword().getKeywordName()) // Keyword의 이름 추출
+                .distinct() // 중복 키워드 제거
+                .collect(Collectors.toList()); // 리스트로 변환
+
+        if (keywords != null) {
+            for (String keyword: keywords) {
+                keywordService.increaseCurCnt(keyword);
+            }
+        }
+
         imageRepository.save(image);
     }
+
 
     @Override
     @Transactional
