@@ -202,7 +202,13 @@ public class KeywordServiceImpl implements KeywordService {
         List<Long> imageIds = imageManagementRepository.findImageIdsByDirectories(directories);
 
         // 이미지와 연결된 키워드 중 검색어(keyword)가 포함된 키워드 조회
-        return imageDetailRepository.findKeywordsByImageIdsAndKeyword(imageIds, keyword);
+        List<String> keywords = imageDetailRepository.findKeywordsByImageIdsAndKeyword(imageIds, keyword);
+
+        // Set을 사용하여 중복된 키워드를 제거
+        Set<String> uniqueKeywords = new HashSet<>(keywords);
+
+        // Set을 List로 변환하여 반환
+        return new ArrayList<>(uniqueKeywords);
     }
 
     private Long extractUserIdFromToken(String token) {
