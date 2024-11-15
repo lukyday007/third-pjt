@@ -50,13 +50,11 @@ if (!app.requestSingleInstanceLock()) {
 
 let win = BrowserWindow
 let tray = null // 시스템 트레이 변수 추가
-let isTrayMinimizeEnabled = false // 트레이 최소화 설정 상태
+let isTrayMinimizeEnabled = store.get("isTrayMinimizeEnabled", false) // 초기값 설정
 
-const preload = path.join(
-  process.env.APP_ROOT,
-  "./dist-electron/preload/index.mjs"
-)
+const preload = path.join(__dirname, "../preload/index.mjs")
 console.log("Preload 경로:", preload) // 경로 확인용 로그 추가
+
 const indexHtml = path.join(RENDERER_DIST, "index.html")
 
 async function createWindow() {
@@ -143,11 +141,14 @@ app.whenReady().then(() => {
 // 트레이 최소화 설정 받기
 ipcMain.handle("set-tray-minimize", (_, isEnabled) => {
   store.set("isTrayMinimizeEnabled", isEnabled)
+  isTrayMinimizeEnabled = isEnabled // 상태 동기화
 })
 
+// 창이 모두 닫혔을 때 앱 종료 여부 결정
 app.on("window-all-closed", () => {
-  win = null
-  if (process.platform !== "darwin") app.quit()
+  if (!isTrayMinimizeEnabled) {
+    app.quit() // 트레이 최소화 비활성화 시 앱 종료
+  }
 })
 
 app.on("second-instance", () => {
