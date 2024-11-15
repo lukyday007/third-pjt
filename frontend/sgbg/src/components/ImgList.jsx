@@ -91,12 +91,43 @@ const ImgList = () => {
     Y: 0,
   })
 
+  const {
+    searchKeywords,
+    isLatest,
+    setDirectoryId,
+    setIsBin,
+    setFolderName,
+    directoryInfos,
+  } = useContext(AppContext)
+
   const params = useParams()
+  const { id } = params
   useEffect(() => {
     console.log(params, "params")
-  }, [params])
+    if (id === "all") {
+      setDirectoryId(-1)
+      setFolderName("내 이미지")
+    } else if (id === "bin") {
+      setDirectoryId(1)
+      setIsBin(true)
+      setFolderName("휴지통")
+    } else if (id) {
+      setDirectoryId(id)
 
-  const { searchKeywords, isLatest } = useContext(AppContext)
+      const directoryInfo = directoryInfos.find(
+        (directory) => directory.directoryId === Number(id) // id와 directoryId 비교
+      )
+      if (id === "0") {
+        setFolderName("기본폴더")
+      }
+      if (directoryInfo) {
+        setFolderName(directoryInfo.directoryName)
+      }
+    } else {
+      setDirectoryId(null)
+      setFolderName(null)
+    }
+  }, [params])
 
   useEffect(() => {
     const result = searchKeywords.map((item) => item.keyword).join(",")
