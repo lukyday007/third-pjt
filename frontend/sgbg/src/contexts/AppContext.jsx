@@ -28,7 +28,7 @@ export const AppProvider = ({ children }) => {
         setIsLatest,
       }}
     >
-      {children}
+      d{children}
     </AppContext.Provider>
   )
 }
