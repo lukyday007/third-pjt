@@ -184,7 +184,9 @@ ipcMain.handle("open-win", (_, arg) => {
 
   if (VITE_DEV_SERVER_URL) {
     childWindow.loadURL(`${VITE_DEV_SERVER_URL}#${arg}`)
+    win.webContents.openDevTools() // 개발자 도구 활성화
   } else {
     childWindow.loadFile(indexHtml, { hash: arg })
+    win.webContents.openDevTools() // 패키지된 상태에서도 개발자 도구 활성화
   }
 })
