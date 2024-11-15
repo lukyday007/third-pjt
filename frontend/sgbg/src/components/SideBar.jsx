@@ -132,12 +132,12 @@ const s = {
 
 const SideBar = () => {
   // 디렉토리 이름 상태
-  const { setFolderName } = useContext(AppContext)
+  const { directoryInfos, setDirectoryInfos } = useContext(AppContext)
   // 사이드바 열림 여부
   const { isSideBarOpen, setIsSideBarOpen } = useContext(AppContext)
   // const [isSideBarOpen, setIsSideBarOpen] = useState(true)
-  // 디렉토리 리스트 정보v
-  const [directoryInfos, setDirectoryInfos] = useState([])
+  // 디렉토리 리스트 정보
+  // const [directoryInfos, setDirectoryInfos] = useState([])
   const [directorySequence, setDirectorySequence] = useState([])
   // 새폴더 모달 열림 여부
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -151,7 +151,6 @@ const SideBar = () => {
   })
   // 현재 선택된 디렉토리
   const [selectedDirectory, setSelectedDirectory] = useState(0)
-  const [selectedDirectoryName, setSelectedDirectoryName] = useState("")
   const [changeNameTarget, setChangeNameTarget] = useState(0)
   const [changeNameText, setChangeNameText] = useState("")
   const [prevNameText, setPrevNameText] = useState("")
@@ -229,11 +228,9 @@ const SideBar = () => {
     navigate(`image/bin`)
   }
 
-  const handleFolderClick = (id, name) => {
+  const handleFolderClick = (id) => {
     console.log("1")
-    setFolderName(name)
     navigate(`/image/${id}`)
-    // console.log(id, name, "아디랑 이름")
   }
 
   const handleSettingClick = () => {
@@ -299,7 +296,7 @@ const SideBar = () => {
   }
 
   // 우클릭 관리
-  const handleRightClick = (event, id, name) => {
+  const handleRightClick = (event, id) => {
     console.log(directoryInfos, "디렉토리 정보조회")
     // 우클릭 이벤트 제한
     event.preventDefault()
@@ -313,7 +310,6 @@ const SideBar = () => {
 
     if (id) {
       setSelectedDirectory(id)
-      setSelectedDirectoryName(name)
       toggleRightClickModal()
     }
   }
@@ -527,7 +523,7 @@ const SideBar = () => {
             <AllImagesIcon />
             <s.FolderTitle>내 이미지</s.FolderTitle>
           </s.FolderArea>
-          <s.FolderArea onClick={() => handleFolderClick(0, "기본폴더")}>
+          <s.FolderArea onClick={() => handleFolderClick(0)}>
             <DefaultFolderIcon />
             <s.FolderTitle>기본폴더</s.FolderTitle>
           </s.FolderArea>
@@ -541,9 +537,7 @@ const SideBar = () => {
               toggleFunction={toggleRightClickModal}
               position={rightClickModalPosition}
               changeFunction={handleChangeDirectoryName}
-              openFunction={() =>
-                handleFolderClick(selectedDirectory, selectedDirectoryName)
-              }
+              openFunction={() => handleFolderClick(selectedDirectory)}
               deleteFunction={handleDeleteDirectory}
             />
           )}
@@ -552,18 +546,9 @@ const SideBar = () => {
               <React.Fragment key={index}>
                 <s.FolderArea
                   key={directoryInfo.directoryId}
-                  onClick={() =>
-                    handleFolderClick(
-                      directoryInfo.directoryId,
-                      directoryInfo.directoryName
-                    )
-                  }
+                  onClick={() => handleFolderClick(directoryInfo.directoryId)}
                   onContextMenu={(event) =>
-                    handleRightClick(
-                      event,
-                      directoryInfo.directoryId,
-                      directoryInfo.directoryName
-                    )
+                    handleRightClick(event, directoryInfo.directoryId)
                   }
                   onDragStart={(event) => handleDragStart(event, directoryInfo)}
                   onDrag={(event) => handleDrag(event)}

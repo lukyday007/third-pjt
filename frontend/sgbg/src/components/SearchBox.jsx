@@ -4,7 +4,7 @@ import { AppContext } from "../contexts/AppContext"
 import styled from "styled-components"
 import SearchIcon from "../asset/images/SearchBox/searchIcon.svg?react"
 import KeywordIcon from "../asset/images/SearchBox/keywordIcon.svg?react"
-import { getKeywordList } from "../lib/api/keyword-api"
+import { getKeywordList, getDirectoryKeywordList } from "../lib/api/keyword-api"
 
 // 태그 컬러 일단 여기에...
 const colorPairs = [
@@ -66,7 +66,7 @@ const s = {
   SearchArea: styled.div`
     display: flex;
     align-items: center;
-    gap: auto;
+    gap: 10px;
   `,
   SearchInput: styled.input`
     background-color: inherit;
@@ -129,7 +129,8 @@ const s = {
 
 const SearchBox = () => {
   const location = useLocation()
-  const { searchKeywords, setSearchKeywords } = useContext(AppContext)
+  const { searchKeywords, setSearchKeywords, directoryId, isBin } =
+    useContext(AppContext)
   const [query, setQuery] = useState("")
   const [filteredKeywords, setFilteredKeywords] = useState([]) // 자동완성 키워드
   // const [searchKeywords, setSearchKeywords] = useState([]) // 검색창 키워드
@@ -151,19 +152,36 @@ const SearchBox = () => {
     // 검색어가 입력될 때마다 더미 데이터를 필터링
     // 나중에는 검색어 입력할때마다 api
     if (input) {
-      // console.log("요청 보냄:", input) // 요청 보낼 때 확인
-      getKeywordList(
-        input,
-        (resp) => {
-          setFilteredKeywords(resp.data)
-          // console.log(resp.data, "키워드 검색 응답...")
-          setDropdownVisible(true)
-          setActiveIndex(0)
-        },
-        (error) => {
-          console.error("검색오류:", error)
-        }
-      )
+      if (directoryId) {
+        getDirectoryKeywordList(
+          input,
+          directoryId,
+          isBin,
+          (resp) => {
+            setFilteredKeywords(resp.data)
+            setDropdownVisible(true)
+            setActiveIndex(0)
+            console.log("내 폴더 검색")
+          },
+          (error) => {
+            console.error("검색오류:", error)
+          }
+        )
+      } else {
+        getKeywordList(
+          input,
+          (resp) => {
+            setFilteredKeywords(resp.data)
+            setDropdownVisible(true)
+            setActiveIndex(0)
+            console.log("전체 이미지 검색")
+          },
+          (error) => {
+            console.error("검색오류:", error)
+          }
+        )
+      }
+
       // const results = dummyKeywords.filter((keyword) => keyword.includes(input))
       // setFilteredKeywords(results)
     } else {
