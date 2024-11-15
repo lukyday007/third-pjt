@@ -388,7 +388,11 @@ const ImgList = () => {
         </MasonryInfiniteGrid>
       )}
       {isModalOpen && (
-        <ImgDetailModal imageId={selectedImageId} onClose={closeModal} />
+        <ImgDetailModal
+          imageId={selectedImageId}
+          saveFunction={handleImageSaveClick}
+          onClose={closeModal}
+        />
       )}
       {isRightClickModalOpen && (
         <ImgListRightClickModal

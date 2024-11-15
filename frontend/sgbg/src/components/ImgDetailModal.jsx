@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react"
 import styled from "styled-components"
 import { getImageDetail } from "../lib/api/image-api"
 import { AppContext } from "../contexts/AppContext"
+import { useParams } from "react-router-dom"
 
 // 태그 컬러 일단 여기에...
 const colorPairs = [
@@ -133,10 +134,11 @@ const s = {
   `,
 }
 
-const ImgDetailModal = ({ imageId, onClose }) => {
+const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
   const [imageDetail, setImageDetail] = useState(null)
   // context 사용 : 키워드
   const { searchKeywords, setSearchKeywords } = useContext(AppContext)
+  const parmas = useParams()
 
   useEffect(() => {
     fetchImageDetail(imageId)
@@ -229,7 +231,11 @@ const ImgDetailModal = ({ imageId, onClose }) => {
               </s.SourceUrl>
             </s.SourceArea>
             <s.ButtonArea>
-              <s.Button>이미지 저장</s.Button>
+              {!parmas.id ? (
+                <s.Button onClick={saveFunction}>이미지 저장</s.Button>
+              ) : (
+                <></>
+              )}
               <s.Button>URL 복사</s.Button>
               <s.Button>이미지 복사</s.Button>
             </s.ButtonArea>
