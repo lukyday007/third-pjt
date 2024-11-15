@@ -13,5 +13,5 @@ public interface KeywordService {
 
     List<KeywordRankResponseDTO> getKeywordRankList();
 
-    List<String> getKeywords(Long userId, String keyword, Long directoryId, boolean bin);
+    List<String> getKeywords(String token, String keyword, Long directoryId, boolean bin);
 }

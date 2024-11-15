@@ -9,6 +9,7 @@ import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
 import com.singlebungle.backend.domain.user.entity.User;
 import com.singlebungle.backend.domain.user.repository.UserRepository;
+import com.singlebungle.backend.global.auth.auth.JwtProvider;
 import com.singlebungle.backend.global.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class KeywordServiceImpl implements KeywordService {
     private final ImageManagementRepository imageManagementRepository;
     private final ImageDetailRepository imageDetailRepository;
     private final UserRepository userRepository;
+    private final JwtProvider jwtProvider;
 
     // @Qualifier로 특정 RedisTemplate을 주입받음
     @Qualifier("redisKeywordTemplate")
@@ -163,7 +165,8 @@ public class KeywordServiceImpl implements KeywordService {
         return rankedKeywords;
     }
 
-    public List<String> getKeywords(Long userId, String keyword, Long directoryId, boolean bin) {
+    public List<String> getKeywords(String token, String keyword, Long directoryId, boolean bin) {
+        Long userId = extractUserIdFromToken(token);
 
         // userId로 User 객체를 먼저 조회
         User user = userRepository.findById(userId)
@@ -177,7 +180,7 @@ public class KeywordServiceImpl implements KeywordService {
                     .orElseThrow(() -> new EntityNotFoundException("No directories found in bin"));
             directories.add(directory);  // Optional에서 값을 가져와서 리스트에 추가
         } else {
-            if (directoryId == 0) {
+            if (directoryId == null || directoryId == 0) {
                 // directoryId가 0일 경우: 유저의 기본 디렉토리(status = 0)만 조회
                 Directory directory = directoryRepository.findByUserAndStatus(user, 0)
                         .orElseThrow(() -> new EntityNotFoundException("No default directory found"));
@@ -200,6 +203,15 @@ public class KeywordServiceImpl implements KeywordService {
 
         // 이미지와 연결된 키워드 중 검색어(keyword)가 포함된 키워드 조회
         return imageDetailRepository.findKeywordsByImageIdsAndKeyword(imageIds, keyword);
+    }
+
+    private Long extractUserIdFromToken(String token) {
+        // 토큰에서 "Bearer "를 제거
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        // 토큰에서 userId 추출 로직 (예: jwtProvider 사용)
+        return jwtProvider.getUserIdFromToken(token);
     }
 
 }
