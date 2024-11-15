@@ -62,15 +62,6 @@ pipeline {
         }
         stage('Build Electron App') {  // Electron 빌드 단계 추가
             steps {
-                dir('frontend/sgbg') {
-                    sh 'npm install'
-                    sh 'npm run electron:build'  // electron-builder를 사용해 빌드
-                }
-            }
-        }
-        // GitHub 릴리스 생성 및 설치 파일 업로드 단계
-        stage('Create GitHub Release') {
-            steps {
                 script {
                     // package.json에서 version 가져오기
                     def version = sh(script: "grep '\"version\"' frontend/sgbg/package.json | awk -F: '{ print \$2 }' | sed 's/[\",]//g' | xargs", returnStdout: true).trim()
@@ -88,6 +79,24 @@ pipeline {
                     def latestReleaseVersion = readJSON(text: latestReleaseResponse)?.tag_name?.replace("v", "")
                     echo "Latest GitHub release version: ${latestReleaseVersion}"
 
+                    // 버전이 동일하면 빌드 스킵
+                    if (latestReleaseVersion == version) {
+                        echo "Local version matches the latest GitHub release version. Skipping Electron build."
+                        return
+                    }
+
+                    // 버전이 다르면 빌드 진행
+                    dir('frontend/sgbg') {
+                        sh 'npm install'
+                        sh 'npm run electron:build'  // electron-builder를 사용해 빌드
+                    }
+                }
+            }
+        }
+        // GitHub 릴리스 생성 및 설치 파일 업로드 단계
+        stage('Create GitHub Release') {
+            steps {
+                script {
                     // 버전이 동일하면 스킵
                     if (latestReleaseVersion == version) {
                         echo "Local version matches the latest GitHub release version. Skipping GitHub release creation."
