@@ -137,7 +137,7 @@ const MainPage = () => {
     getRankingKeywordList(
       (resp) => {
         setRankingKeyword(resp.data.keywords)
-        console.log(resp.data.keywords, "결과야 잘 오니")
+        // console.log(resp.data.keywords, "결과야 잘 오니")
       },
       (error) => {
         console.log("error", error)

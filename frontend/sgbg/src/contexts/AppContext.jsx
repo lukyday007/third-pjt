@@ -13,6 +13,8 @@ export const AppProvider = ({ children }) => {
   const [directoryInfos, setDirectoryInfos] = useState([]) // 디렉토리 정보
   const [directoryId, setDirectoryId] = useState()
   const [isBin, setIsBin] = useState(false)
+  const [keywords, setKeywords] = useState("")
+
   // console.log(folderName, searchKeywords, isLatest, "잘 되고 잇니")
   const toggleLatest = () => setIsLatest((prev) => (prev === 0 ? 2 : 0))
 
@@ -34,6 +36,8 @@ export const AppProvider = ({ children }) => {
         setDirectoryId,
         isBin,
         setIsBin,
+        keywords,
+        setKeywords,
       }}
     >
       {children}

@@ -9,7 +9,7 @@ import {
   patchImageToTrash,
   postAppImage,
 } from "../lib/api/image-api"
-import { useParams } from "react-router-dom"
+import { useLocation, useParams } from "react-router-dom"
 import ImgDetailModal from "./ImgDetailModal"
 import { AppContext } from "../contexts/AppContext"
 import ImgListRightClickModal from "./ImgListRightClickModal"
@@ -80,9 +80,11 @@ const ImgList = () => {
   const [totalPage, setTotalPage] = useState(null)
   const [isFetching, setIsFetching] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [keywords, setKeywords] = useState("")
+  // const [keywords, setKeywords] = useState("")
   const selectedImageKeyRef = useRef(selectedImageKey)
   const itemsRef = useRef(items)
+  const location = useLocation()
+  const stateKeyword = location.state?.stateKeyword
 
   // 이미지 우클릭 관리
   const [isRightClickModalOpen, setIsRightClickModalOpen] = useState(false)
@@ -98,6 +100,8 @@ const ImgList = () => {
     setIsBin,
     setFolderName,
     directoryInfos,
+    keywords,
+    setKeywords,
   } = useContext(AppContext)
 
   const params = useParams()
@@ -129,11 +133,28 @@ const ImgList = () => {
     }
   }, [params])
 
-  useEffect(() => {
-    const result = searchKeywords.map((item) => item.keyword).join(",")
-    setKeywords(result)
-    console.log(result)
-  }, [searchKeywords])
+  // 일단 주석
+  // useEffect(() => {
+  //   if (stateKeyword) {
+  //     setKeywords(stateKeyword)
+  //     console.log("statekeyword", stateKeyword)
+  //   } else {
+  //     const result = searchKeywords.map((item) => item.keyword).join(",")
+  //     setKeywords(result)
+  //     console.log(result)
+  //   }
+  // }, [searchKeywords, stateKeyword])
+
+  // useEffect(() => {
+  // console.log("여기에 키워드가 나왔으면 좋갯다", keywords)
+  // }, [keywords])
+
+  // useEffect(() => {
+  //   if (stateKeyword) {
+  //     console.log("stateKeyword", stateKeyword)
+  //     setKeywords(stateKeyword)
+  //   }
+  // }, [stateKeyword])
 
   const fetchMyImages = async () => {
     if (isFetching || (totalPage !== null && currentPage > totalPage)) return
