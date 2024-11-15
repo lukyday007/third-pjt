@@ -44,7 +44,7 @@ public class ImageRepositorySupport extends QuerydslRepositorySupport {
         if (requestDTO.getKeywords() != null && !requestDTO.getKeywords().isEmpty()) {
             BooleanBuilder keywordBuilder = new BooleanBuilder();
             for (String keyword : requestDTO.getKeywords()) {
-                keywordBuilder.or(qKeyword.keywordName.containsIgnoreCase(keyword));
+                keywordBuilder.or(qKeyword.keywordName.eq(keyword));
             }
             builder.and(keywordBuilder);
         }

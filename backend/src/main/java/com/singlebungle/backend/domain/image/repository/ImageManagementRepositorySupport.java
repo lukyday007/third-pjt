@@ -61,7 +61,7 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
             BooleanBuilder keywordBuilder = new BooleanBuilder();
 
             for (String keyword : requestDTO.getKeywords()) {
-                keywordBuilder.or(qImageDetail.keyword.keywordName.containsIgnoreCase(keyword));
+                keywordBuilder.or(qImageDetail.keyword.keywordName.eq(keyword));
             }
             builder.and(keywordBuilder);
         }
