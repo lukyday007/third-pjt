@@ -1,6 +1,6 @@
 {
   "name": "sgbg",
-  "version": "1.0.3",
+  "version": "1.0.6",
   "main": "dist-electron/main/index.js",
   "description": "Single Bungle Project",
   "author": "B205",
@@ -61,6 +61,7 @@
       "dist-electron/"
     ],
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         {
           "target": "nsis",

@@ -47,3 +47,24 @@ export const getImageDetail = async (imageId, success, fail) => {
     .catch(fail)
   return response
 }
+
+// 이미지 휴지통 보내기 / 복원
+export const patchImageToTrash = async (isTrash, data, success, fail) => {
+  jwt
+    .patch(`/directories/bin?toTrash=${isTrash}`, data)
+    .then(success)
+    .catch(fail)
+}
+
+// 앱 이미지 저장
+export const postAppImage = async (data, success, fail) => {
+  jwt.post(`/images/app`, data).then(success).catch(fail)
+}
+
+// 이미지 영구 삭제
+export const deleteImages = async (data, success, fail) => {
+  jwt
+    .request({ method: "delete", url: `/images`, data: data })
+    .then(success)
+    .catch(fail)
+}

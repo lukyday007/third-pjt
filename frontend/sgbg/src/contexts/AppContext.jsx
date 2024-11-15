@@ -25,6 +25,7 @@ export const AppProvider = ({ children }) => {
         toggleLatest,
         isSideBarOpen,
         setIsSideBarOpen,
+        setIsLatest,
       }}
     >
       {children}

@@ -18,6 +18,7 @@ import CreateFolderIcon from "../asset/images/SideBar/CreateFolderIcon.svg?react
 import DefaultFolderIcon from "../asset/images/SideBar/DefaultFolderIcon.svg?react"
 import SettingsIcon from "../asset/images/SideBar/SettingsIcon.svg?react"
 import TrashBinIcon from "../asset/images/SideBar/TrashBinIcon.svg?react"
+import FeedImagesIcon from "../asset/images/SideBar/FeedImagesIcon.svg?react"
 
 import TestImage from "../asset/images/TestImage.png" // ~보라미~
 
@@ -214,6 +215,18 @@ const SideBar = () => {
 
   const handleBasicClick = () => {
     navigate(`/login`)
+  }
+
+  const handleFullImageClick = () => {
+    navigate(`/image/all`)
+  }
+
+  const handleFeedImageClick = () => {
+    navigate(`/image`)
+  }
+
+  const handleBinClick = () => {
+    navigate(`image/bin`)
   }
 
   const handleFolderClick = (id, name) => {
@@ -502,10 +515,17 @@ const SideBar = () => {
             />
             <s.Email onClick={handleEmailClick}>{userInfo.email}</s.Email>
           </s.UserInfoArea>
-          <s.FolderCaption onClick={handleBasicClick}>기본</s.FolderCaption>
-          <s.FolderArea>
-            <AllImagesIcon />
+          <s.FolderArea
+            onClick={handleFeedImageClick}
+            style={{ marginTop: "32px" }}
+          >
+            <FeedImagesIcon />
             <s.FolderTitle>전체 이미지</s.FolderTitle>
+          </s.FolderArea>
+          <s.FolderCaption onClick={handleBasicClick}>기본</s.FolderCaption>
+          <s.FolderArea onClick={handleFullImageClick}>
+            <AllImagesIcon />
+            <s.FolderTitle>내 이미지</s.FolderTitle>
           </s.FolderArea>
           <s.FolderArea onClick={() => handleFolderClick(0, "기본폴더")}>
             <DefaultFolderIcon />
@@ -585,7 +605,7 @@ const SideBar = () => {
               createFunction={createNewFolder}
             />
           )}
-          <s.FolderArea>
+          <s.FolderArea onClick={handleBinClick}>
             <TrashBinIcon />
             <s.FolderTitle>휴지통</s.FolderTitle>
           </s.FolderArea>
