@@ -42,6 +42,14 @@ const SearchBar = () => {
   const navigate = useNavigate()
   const isHome = location.pathname === "/"
 
+  // 일단 주석
+  // useEffect(() => {
+  //   if (isHome && Boolean(searchKeywords.length)) {
+  //     const stateKeyword = searchKeywords[0].keyword
+  //     navigate("/image", { state: { stateKeyword } })
+  //   }
+  // }, [searchKeywords])
+
   useEffect(() => {
     if (isHome && Boolean(searchKeywords.length)) {
       navigate("/image")

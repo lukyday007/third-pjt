@@ -129,8 +129,14 @@ const s = {
 
 const SearchBox = () => {
   const location = useLocation()
-  const { searchKeywords, setSearchKeywords, directoryId, isBin } =
-    useContext(AppContext)
+  const {
+    searchKeywords,
+    setSearchKeywords,
+    directoryId,
+    isBin,
+    keywords,
+    setKeywords,
+  } = useContext(AppContext)
   const [query, setQuery] = useState("")
   const [filteredKeywords, setFilteredKeywords] = useState([]) // 자동완성 키워드
   // const [searchKeywords, setSearchKeywords] = useState([]) // 검색창 키워드
@@ -138,10 +144,16 @@ const SearchBox = () => {
   const [activeIndex, setActiveIndex] = useState(0) // 자동완성 인덱스
   const containerRef = useRef(null)
 
+  const prevPathnameRef = useRef(location.pathname) // 이전 경로 저장
+
   // 페이지 이동 시 검색 키워드 초기화
   useEffect(() => {
-    setSearchKeywords([])
-    setQuery("")
+    const prevPathname = prevPathnameRef.current
+    if (prevPathname !== "/") {
+      setSearchKeywords([])
+      setQuery("")
+    }
+    prevPathnameRef.current = location.pathname
   }, [location.pathname])
 
   // 검색하기
@@ -251,6 +263,14 @@ const SearchBox = () => {
       setDropdownVisible(false)
     }
   }
+
+  // 키워드만 뽑아
+  useEffect(() => {
+    const result = searchKeywords.map((item) => item.keyword).join(",")
+    // console.log(result, "키워드만 뽑기")
+    // console.log(keywords, "이거떄문이지 지금")
+    setKeywords(result)
+  }, [searchKeywords])
 
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside)
