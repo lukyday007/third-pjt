@@ -60,7 +60,7 @@ public class KeywordController {
     public ResponseEntity<List<String>> getKeywords(
             @RequestHeader("Authorization") String token,
             @RequestParam String keyword,
-            @RequestParam Long directoryId,
+            @RequestParam(defaultValue = "0") Long directoryId,
             @RequestParam(defaultValue = "false") boolean bin) {
 
 
