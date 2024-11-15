@@ -52,7 +52,7 @@ let win = BrowserWindow
 let tray = null // 시스템 트레이 변수 추가
 let isTrayMinimizeEnabled = false // 트레이 최소화 설정 상태
 
-const preload = path.join(__dirname, "../preload/index.mjs")
+const preload = path.join(__dirname, "../preload/index.js")
 const indexHtml = path.join(RENDERER_DIST, "index.html")
 
 async function createWindow() {
@@ -61,12 +61,8 @@ async function createWindow() {
     icon: path.join(process.env.VITE_PUBLIC, "singlebungle128.svg"),
     webPreferences: {
       preload,
-      // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
-      // nodeIntegration: true,
-
-      // Consider using contextBridge.exposeInMainWorld
-      // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
-      // contextIsolation: false,
+      contextIsolation: true, // 반드시 true로 설정
+      enableRemoteModule: false, // 보안 상 필요시 false로 유지
     },
   })
 

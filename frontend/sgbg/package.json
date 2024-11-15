@@ -1,6 +1,6 @@
 {
   "name": "sgbg",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "main": "dist-electron/main/index.js",
   "description": "Single Bungle Project",
   "author": "B205",

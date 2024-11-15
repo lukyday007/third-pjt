@@ -1,6 +1,7 @@
 import styled from "styled-components"
 import { useState, useEffect } from "react"
-const ipcRenderer = window.electron?.ipcRenderer;
+
+const ipcRenderer = window.electron?.ipcRenderer
 
 const s = {
   Container: styled.div`
@@ -80,21 +81,35 @@ const SettingPage = () => {
 
   // 초기값 로드
   useEffect(() => {
-    ipcRenderer.invoke("get-settings").then((settings) => {
-      console.log("현재 electron-store 데이터:", settings) // 콘솔에 출력
-      setIsAutoStartEnabled(settings.isAutoStartEnabled)
-      setIsTrayMinimizeEnabled(settings.isTrayMinimizeEnabled)
-    })
+    if (!ipcRenderer) {
+      console.error("ipcRenderer가 정의되지 않았습니다. Electron 환경에서 실행되지 않았을 수 있습니다.")
+      return
+    }
+
+    ipcRenderer
+      .invoke("get-settings")
+      .then((settings) => {
+        console.log("현재 electron-store 데이터:", settings)
+        setIsAutoStartEnabled(settings.isAutoStartEnabled)
+        setIsTrayMinimizeEnabled(settings.isTrayMinimizeEnabled)
+      })
+      .catch((error) => {
+        console.error("설정 데이터를 가져오는 중 오류 발생:", error)
+      })
   }, [])
 
   // 시작 앱 설정 업데이트
   useEffect(() => {
-    ipcRenderer.invoke("set-auto-start", isAutoStartEnabled)
+    if (ipcRenderer) {
+      ipcRenderer.invoke("set-auto-start", isAutoStartEnabled)
+    }
   }, [isAutoStartEnabled])
 
   // 트레이 최소화 설정 상태 업데이트
   useEffect(() => {
-    ipcRenderer.invoke("set-tray-minimize", isTrayMinimizeEnabled)
+    if (ipcRenderer) {
+      ipcRenderer.invoke("set-tray-minimize", isTrayMinimizeEnabled)
+    }
   }, [isTrayMinimizeEnabled])
 
   return (
