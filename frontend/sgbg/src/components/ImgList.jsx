@@ -3,9 +3,11 @@ import styled from "styled-components"
 import { MasonryInfiniteGrid } from "@egjs/react-infinitegrid"
 import "./styles.css"
 import {
+  deleteImages,
   getFeedImages,
   getMyImages,
   patchImageToTrash,
+  postAppImage,
 } from "../lib/api/image-api"
 import { useParams } from "react-router-dom"
 import ImgDetailModal from "./ImgDetailModal"
@@ -285,15 +287,28 @@ const ImgList = () => {
     const targetManagementId = selectedImageManagementId
     const targetImages = [selectedImageManagementId]
     const data = { imageManagementIds: targetImages }
+    console.log(data)
     try {
-      await patchImageToTrash(
-        true,
-        data,
-        (resp) => {},
-        (error) => {
-          console.log(error)
-        }
-      )
+      if (params.id === "bin") {
+        await deleteImages(
+          data,
+          (resp) => {
+            console.log(resp)
+          },
+          (error) => {
+            throw new Error(error)
+          }
+        )
+      } else {
+        await patchImageToTrash(
+          true,
+          data,
+          (resp) => {},
+          (error) => {
+            throw new Error(error)
+          }
+        )
+      }
 
       const targetIndex = items.findIndex((item) => {
         return item.imageManagementId === targetManagementId
@@ -304,6 +319,22 @@ const ImgList = () => {
       setItems(newItems)
     } catch (e) {
       alert("이미지 삭제 실패")
+    }
+  }
+
+  // 웹 이미지 저장
+  const handleImageSaveClick = async () => {
+    const targetImageId = selectedImageId
+    const data = { imageId: targetImageId, directoryId: 0 }
+    try {
+      postAppImage(data, (resp) => {
+        console.log(resp),
+          (error) => {
+            console.log(error)
+          }
+      })
+    } catch (e) {
+      console.log(e)
     }
   }
 
@@ -350,7 +381,7 @@ const ImgList = () => {
               imageUrl={item.imageUrl}
               isSelected={item.key === selectedImageKey}
               onClick={() => handleImageClick(item)}
-              // onContextMenu={(event) => handleRightClick(event, item)}
+              onContextMenu={(event) => handleRightClick(event, item)}
               data-grid-groupkey={item.groupKey}
             />
           ))}
@@ -364,6 +395,7 @@ const ImgList = () => {
           toggleFunction={toggleRightClickModal}
           position={rightClickModalPosition}
           deleteFunction={deleteImage}
+          saveFunction={handleImageSaveClick}
         />
       )}
     </>

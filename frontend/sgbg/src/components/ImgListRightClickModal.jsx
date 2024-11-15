@@ -1,3 +1,5 @@
+import { useEffect } from "react"
+import { useParams } from "react-router-dom"
 import styled from "styled-components"
 
 const s = {
@@ -44,12 +46,29 @@ const ImgListRightClickModal = ({
   openFunction,
   toggleFunction,
   deleteFunction,
+  saveFunction,
 }) => {
+  const params = useParams()
+  useEffect(() => {
+    console.log(params.id)
+  }, [params])
+
   return (
     <s.Overlay onClick={toggleFunction} onContextMenu={toggleFunction}>
       <s.Container $positionX={position.X} $positionY={position.Y}>
         <s.MenuTextArea onClick={openFunction}>열기</s.MenuTextArea>
-        <s.MenuTextArea onClick={deleteFunction}>이미지 삭제</s.MenuTextArea>
+        {params.id && params.id !== "bin" ? (
+          <s.MenuTextArea onClick={deleteFunction}>이미지 삭제</s.MenuTextArea>
+        ) : (
+          params.id !== "bin" && (
+            <s.MenuTextArea onClick={saveFunction}>이미지 저장</s.MenuTextArea>
+          )
+        )}
+        {params.id === "bin" && (
+          <s.MenuTextArea onClick={deleteFunction}>
+            이미지 영구 삭제
+          </s.MenuTextArea>
+        )}
       </s.Container>
     </s.Overlay>
   )
