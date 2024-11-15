@@ -14,12 +14,10 @@ public interface GoogleVisionService {
 
     boolean detectSafeSearchGoogleVision(Image image) throws IOException;
 
-    List<String> detectLabels(Image image) throws IOException;
-
     Image buildImage(String imageUrl);
 
     Image buildImageFromWebp(byte[] webpBytes);
 
-    List<String> analyzeImage(String imageUrl) throws IOException;
+    boolean analyzeImage(String imageUrl) throws IOException;
 
 }

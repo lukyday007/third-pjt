@@ -2,8 +2,7 @@ package com.singlebungle.backend.domain.ai.service;
 
 import com.singlebungle.backend.domain.ai.dto.request.ChatGPTRequest;
 import com.singlebungle.backend.domain.ai.dto.response.ChatGPTResponse;
-import com.singlebungle.backend.domain.ai.dto.response.KeywordAndLabels;
-import com.singlebungle.backend.domain.search.service.SearchService;
+import com.singlebungle.backend.domain.ai.dto.response.KeywordsFromOpenAi;
 import com.singlebungle.backend.global.exception.InvalidApiUrlException;
 import com.singlebungle.backend.global.exception.InvalidResponseException;
 import com.singlebungle.backend.global.exception.UnAuthorizedApiKeyException;
@@ -21,7 +20,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,7 +44,7 @@ public class OpenaiServiceImpl implements OpenaiService {
     private String apiKey;
 
     @Override
-    public KeywordAndLabels requestImageAnalysis(String imageUrl, List<String> labels) {
+    public KeywordsFromOpenAi requestImageAnalysis(String imageUrl, boolean result) {
         try {
 
             // WebP 처리 (URL 이미지)
@@ -56,7 +54,7 @@ public class OpenaiServiceImpl implements OpenaiService {
             }
 
             // 프롬프트 생성
-            String gptPrompt = generatePrompt(imageUrl, labels);
+            String gptPrompt = generatePrompt(imageUrl, result);
             // OpenAI api 요청
             ChatGPTResponse response = sendOpenAiRequest(imageUrl, gptPrompt);
             // 응답 처리
@@ -67,7 +65,7 @@ public class OpenaiServiceImpl implements OpenaiService {
             tags = extractTags(resultContent);
 
 
-            return new KeywordAndLabels(keywords, tags);
+            return new KeywordsFromOpenAi(keywords);
 
         } catch (WebClientRequestException e) {
             throw new InvalidApiUrlException(">>> ChatGPT api url이 부정확합니다. 확인해주세요. : " + e  );
@@ -120,28 +118,20 @@ public class OpenaiServiceImpl implements OpenaiService {
 
     // 1. 프롬프트 생성 메서드
     @Override
-    public String generatePrompt(String imageUrl, List<String> labels) {
-        String labelsToString = String.join(", ", labels);
+    public String generatePrompt(String imageUrl, boolean result) {
 
         return String.format(
-                "I am working on a project to analyze images. Please analyze the given image based on the provided labels. The output should strictly follow the instructions below:\n\n" +
-                        "### Labels\n" +
-                        "Translate the following labels into Korean nouns. The result should be returned as a list, and each translated noun should be on a separate line:\n" +
-                        "[%s]\n\n" +
-                        "Example:\n" +
-                        "- 강아지\n" +
-                        "- 고양이\n" +
-                        "- 풍경\n\n" +
-                        "### Keywords\n" +
-                        "Extract exactly 5 main keywords related to this image and return them as a numbered list. The keywords should be one-word Korean nouns without any modifiers (e.g., no adjectives or adverbs).\n\n" +
-                        "Example:\n" +
+                "아래 지침을 엄격히 따라주세요:\n\n" +
+                        "### 키워드\n" +
+                        "이 이미지와 관련된 주요 키워드 5개를 추출하여 번호가 매겨진 목록으로 반환해주세요. 키워드는 반드시 수식어(예: 형용사, 부사)가 없는 한 단어의 한국어 명사여야 합니다.\n\n" +
+                        "예시:\n" +
                         "1. 동물\n" +
                         "2. 자연\n" +
                         "3. 가족\n" +
                         "4. 여행\n" +
                         "5. 사진\n\n" +
-                        "All responses must be grammatically correct in Korean.",
-                labelsToString
+                        "응답 형식:\n" +
+                        "'### 라벨' 아래에 라벨을 번역하여 반환하고, '### 키워드' 아래에 지정된 형식에 따라 키워드를 반환하세요. 모든 응답은 반드시 문법적으로 올바르고 한국어로 작성되어야 합니다."
         );
     }
 
@@ -216,7 +206,7 @@ public class OpenaiServiceImpl implements OpenaiService {
         List<String> keywords = new ArrayList<>();
 
         // "### 키워드" 이후의 항목만 추출하는 정규 표현식
-        Pattern pattern = Pattern.compile("### Keywords\\s*([\\s\\S]+)");
+        Pattern pattern = Pattern.compile("### 키워드\\s*([\\s\\S]+)");
         Matcher matcher = pattern.matcher(resultContent);
 
         if (matcher.find()) {
