@@ -33,8 +33,7 @@ export const authAxios = () => {
       if (error.response && error.response.status === 401) {
         try {
           const tokenRefreshResult = await instance.post(`/users/refresh-token`)
-          const newAccessToken = tokenRefreshResult.data
-
+          const newAccessToken = tokenRefreshResult.data.accessToken
           localStorage.setItem("accessToken", newAccessToken)
 
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`

@@ -165,10 +165,26 @@ const SideBar = () => {
   const [dropAreaPositions, setDropAreaPositions] = useState([])
   const [closestDropAreaIndex, setClosestDropAreaIndex] = useState(null)
 
+  const [isTokenTriggered, setIsTokenTriggered] = useState(false)
+
   // 컴포넌트가 로드될 때 요청
   useEffect(() => {
     fetchDirectoryInfos()
     fetchUserInfo()
+    setIsTokenTriggered(false)
+  }, [isTokenTriggered])
+
+  // storage 이벤트로 accessToken 값 변경을 감지
+  useEffect(() => {
+    const handleStorageChange = async (event) => {
+      setIsTokenTriggered(true)
+    }
+
+    window.addEventListener("localStorageUpdate", handleStorageChange)
+
+    return () => {
+      window.removeEventListener("localStorageUpdate", handleStorageChange)
+    }
   }, [])
 
   useEffect(() => {}, [dragPosition])
