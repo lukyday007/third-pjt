@@ -144,7 +144,6 @@ const MainPage = () => {
     )
   }
   useEffect(() => {
-    if (code !== null) return
     fetchRankingKeword()
     fetchNewImage()
     fetchRandomImage()
