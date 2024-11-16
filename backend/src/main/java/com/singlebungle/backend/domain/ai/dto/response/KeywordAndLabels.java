@@ -4,12 +4,12 @@ import lombok.*;
 
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
+@Getter @Setter
+@RequiredArgsConstructor
 @AllArgsConstructor
+@Builder
 @ToString
-public class KeywordsFromOpenAi {
+public class KeywordAndLabels {
     private List<String> keywords;
-
+    private List<String> labels;
 }

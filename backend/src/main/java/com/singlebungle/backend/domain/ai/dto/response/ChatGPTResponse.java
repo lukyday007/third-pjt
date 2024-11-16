@@ -1,16 +1,14 @@
 package com.singlebungle.backend.domain.ai.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class ChatGPTResponse {
 
     private String id;
@@ -19,6 +17,7 @@ public class ChatGPTResponse {
     private List<Choice> choices;
     private Usage usage;
 
+    @ToString
     @Getter
     public static class Choice {
         private int index;
@@ -26,12 +25,14 @@ public class ChatGPTResponse {
         private String finish_reason;
     }
 
+    @ToString
     @Getter
     public static class Message {
         private String role;
         private String content;
     }
 
+    @ToString
     @Getter
     public static class Usage {
         private int prompt_tokens;

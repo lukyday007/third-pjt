@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface SearchService {
 
-    void saveTags(List<String> tags, String imageUrl);
+    void saveTagsByKeywords(List<String> tags, String imageUrl);
 
     List<String> getKeywordsByTag(String keyword);
 
