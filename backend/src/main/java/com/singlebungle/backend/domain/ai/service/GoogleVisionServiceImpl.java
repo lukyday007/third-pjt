@@ -6,6 +6,8 @@ import com.google.protobuf.ByteString;
 import com.singlebungle.backend.global.config.GoogleVisionConfig;
 import com.singlebungle.backend.global.exception.InvalidApiUrlException;
 import com.singlebungle.backend.global.exception.InvalidImageException;
+import com.singlebungle.backend.global.exception.InvalidRequestException;
+import com.singlebungle.backend.global.exception.UrlAccessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +43,7 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
 
         return ImageAnnotatorClient.create(settings);
     }
+
 
     @Override
     public boolean detectSafeSearchGoogleVision(Image image) throws IOException {
@@ -87,13 +92,15 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
         return true;
     }
 
+
     // Likelihood 값이 LIKELY 또는 VERY_LIKELY인지 확인하는 메서드
     private static boolean isLikelyOrVeryLikely(Likelihood likelihood) {
         return likelihood == Likelihood.LIKELY || likelihood == Likelihood.VERY_LIKELY;
     }
 
+
     @Override
-    public boolean analyzeImage(String imageUrl) throws IOException {
+    public List<String> analyzeImage(String imageUrl) throws IOException {
         // 단일 처리 메서드 사용
         Image image = buildImage(imageUrl);
 
@@ -101,14 +108,16 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
             throw new InvalidImageException(">>> Google Vision - 부적절한 이미지 입니다.");
         }
 
-        return true;
+        return detectLabels(image);
     }
+
 
     @Override
     public Image buildImage(String imageUrl) {
         try {
             if (imageUrl.startsWith("data:image")) {
                 return buildImageFromBase64(imageUrl);
+
             } else if (imageUrl.endsWith(".webp")) {
                 log.info(">>> WebP 이미지 감지, 변환을 시도합니다. URL: {}", imageUrl);
 
@@ -118,14 +127,72 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
                 }
 
                 return buildImageFromWebp(new URL(imageUrl).openStream().readAllBytes());
+
             } else {
-                return buildImageFromUrl(imageUrl);
+                if (isUrlAccessible(imageUrl)) {
+                    log.info(">>> 일반 URL 이미지 처리 시작...");
+                    try {
+                        return buildImageFromUrlDirect(imageUrl);
+                    } catch (Exception e) {
+                        log.warn(">>> URL 직접 접근 실패, 바이너리로 전환: {}", imageUrl);
+                        return buildImageFromUrlFallback(imageUrl);
+                    }
+                } else {
+                    throw new UrlAccessException("해당 이미지 URL에 접근할 수 없습니다: " + imageUrl);
+                }
             }
         } catch (IOException e) {
             log.error(">>> 이미지 처리 중 오류 발생: {}", e.getMessage(), e);
             throw new RuntimeException("이미지 처리 중 오류가 발생했습니다.", e);
         }
     }
+
+
+    // URL 접근 가능 여부 확인
+    private boolean isUrlAccessible(String imageUrl) {
+        try {
+            URL url = new URL(imageUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("HEAD"); // HEAD 요청으로 리소스 확인
+            connection.setInstanceFollowRedirects(true); // 리다이렉션 허용
+            connection.setConnectTimeout(3000); // 연결 제한 시간 3초
+            connection.setReadTimeout(3000); // 읽기 제한 시간 3초
+            int responseCode = connection.getResponseCode();
+
+            log.info(">>> URL 접근 테스트: {} - 응답 코드: {}", imageUrl, responseCode);
+
+            // 리다이렉션 및 성공 상태 코드 처리
+            return (responseCode == HttpURLConnection.HTTP_OK ||
+                    (responseCode >= 300 && responseCode < 400));
+        } catch (Exception e) {
+            log.error(">>> URL 접근 실패: {} - 예외 메시지: {}", imageUrl, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    // URL 직접 사용
+    private Image buildImageFromUrlDirect(String imageUrl) {
+        log.info(">>> URL을 통해 직접 이미지 사용: {}", imageUrl);
+        ImageSource imgSource = ImageSource.newBuilder().setImageUri(imageUrl).build();
+
+        return Image.newBuilder().setSource(imgSource).build();
+    }
+
+    private Image buildImageFromUrlFallback(String imageUrl) {
+        log.info(">>> URL 접근 불가, 바이너리 데이터로 다운로드 처리: {}", imageUrl);
+        try {
+            URL url = new URL(imageUrl);
+            InputStream inputStream = url.openStream();
+            byte[] imageBytes = inputStream.readAllBytes();
+            log.info(">>> URL을 통해 이미지 다운로드 성공: {} (크기: {} 바이트)", imageUrl, imageBytes.length);
+            return Image.newBuilder().setContent(ByteString.copyFrom(imageBytes)).build();
+
+        } catch (IOException e) {
+            log.error(">>> URL을 통해 이미지를 다운로드할 수 없습니다: {}", imageUrl, e);
+            throw new RuntimeException("URL을 통해 이미지를 다운로드하는 동안 오류가 발생했습니다.", e);
+        }
+    }
+
 
     // Base64 이미지 처리
     private Image buildImageFromBase64(String imageUrl) {
@@ -136,15 +203,17 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
             log.info(">>> WebP(Base64) 감지, JPG로 변환 중...");
             return buildImageFromWebp(decodedBytes);
         }
-
+        log.info("=== Base64을 통한 이미지 변환중 ===>");
         return Image.newBuilder().setContent(ByteString.copyFrom(decodedBytes)).build();
     }
+
 
     private boolean isWebpSupported() {
         boolean isSupported = ImageIO.getImageReadersByFormatName("webp").hasNext();
         log.info(">>> WebP 지원 여부: {}", isSupported);
         return isSupported;
     }
+
 
     // WebP 이미지 처리
     @Override
@@ -183,12 +252,36 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
     }
 
 
-    // URL 이미지 처리
-    private Image buildImageFromUrl(String imageUrl) {
-        ImageSource imgSource = ImageSource.newBuilder().setImageUri(imageUrl).build();
-        return Image.newBuilder().setSource(imgSource).build();
-    }
+    // 외부 이미지 URL을 사용하여 라벨 검출 실행
+    private List<String> detectLabels(Image image) throws IOException {
 
+        AnnotateImageRequest request = AnnotateImageRequest.newBuilder()
+                .addFeatures(Feature.newBuilder().setType(Feature.Type.LABEL_DETECTION).build())
+                .setImage(image)
+                .build();
+
+        try (ImageAnnotatorClient client = createVisionClient()) {
+            BatchAnnotateImagesResponse response = client.batchAnnotateImages(Collections.singletonList(request));
+            AnnotateImageResponse res = response.getResponsesList().get(0);
+
+            if (res.hasError()) {
+                log.error(">>> Google Vision API 라벨 검출 실패: {}", res.getError().getMessage());
+                throw new InvalidImageException("Google Vision - 라벨 검출 실패: " + res.getError().getMessage());
+            }
+
+//            // 라벨 검출 결과 로그 출력
+//            log.info(">>> Google Vision API 라벨 응답: {}", res.getLabelAnnotationsList());
+
+            // description 값만 추출하여 리스트로 반환
+            return res.getLabelAnnotationsList().stream()
+                    .map(EntityAnnotation::getDescription)
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            log.error(">>> Google Vision API 라벨 요청 중 오류 발생: {}", e.getMessage(), e);
+            throw new InvalidImageException("Google Vision - 라벨 요청 중 오류 발생 : "+ e);
+        }
+    }
 
 
 }

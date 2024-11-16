@@ -45,6 +45,9 @@ public class KeywordServiceImpl implements KeywordService {
     @Override
     @Transactional
     public void saveKeyword(List<String> keywords) {
+
+        log.info(">>>> 키워드 저장 중... >>> keywords: {}", keywords.toString());
+
         /*
             키워드가 새로 저장되면 일단 redisKeyword에 저장
             중복된 키워드가 있으면 redisKeyword의 value + 1

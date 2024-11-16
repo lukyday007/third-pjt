@@ -1,5 +1,6 @@
 package com.singlebungle.backend.domain.image.controller;
 
+import com.singlebungle.backend.domain.ai.dto.response.KeywordAndLabels;
 import com.singlebungle.backend.domain.ai.dto.response.KeywordsFromOpenAi;
 import com.singlebungle.backend.domain.ai.service.GoogleVisionService;
 import com.singlebungle.backend.domain.ai.service.OpenaiService;
@@ -15,6 +16,8 @@ import com.singlebungle.backend.domain.keyword.service.KeywordService;
 import com.singlebungle.backend.domain.search.service.SearchService;
 import com.singlebungle.backend.domain.user.service.UserService;
 import com.singlebungle.backend.global.exception.InvalidImageException;
+import com.singlebungle.backend.global.exception.InvalidResponseException;
+import com.singlebungle.backend.global.exception.UrlAccessException;
 import com.singlebungle.backend.global.exception.model.NoTokenRequestException;
 import com.singlebungle.backend.global.model.BaseResponseBody;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -65,37 +69,49 @@ public class ImageController {
 
             // google vision api -> 라벨 번역 안됨
             log.info(">>> Google Vision API 호출 시작");
-            boolean result = googleVisionService.analyzeImage(requestDTO.getImageUrl());
-            log.info(">>> Google Vision API 호출 완료, 반환 결과: {}", result);
+            List<String> labels = googleVisionService.analyzeImage(requestDTO.getImageUrl());
+            log.info(">>> Google Vision API 호출 완료, 반환 라벨: {}", labels);
 
             // chatgpt api
             log.info(">>> ChatGPT API 호출 시작");
-            KeywordsFromOpenAi keywordsFromOpenAi = openaiService.requestImageAnalysis(requestDTO.getImageUrl(), result);
-            log.info(">>> ChatGPT API 호출 완료, 반환 키워드: {}", keywordsFromOpenAi.getKeywords());
+            KeywordAndLabels keywordAndLabels = openaiService.requestImageAnalysis(requestDTO.getImageUrl(), labels);
+            log.info(">>> ChatGPT API 호출 완료, 반환 키워드: {}, 태그: {}", keywordAndLabels.getKeywords(), keywordAndLabels.getLabels());
 
-            if (keywordsFromOpenAi.getKeywords() == null || keywordsFromOpenAi.getKeywords().isEmpty()) {
-                log.warn(">>> 이미지에서 키워드가 추출되지 않았습니다.");
-                throw new InvalidImageException();
+            List<String> result = null;
 
+            // OpenAI에서 키워드가 반환된 경우
+            if (keywordAndLabels.getKeywords() != null && !keywordAndLabels.getKeywords().isEmpty()) {
+                result = keywordAndLabels.getKeywords();
+
+            // OpenAI에서 키워드가 반환되지 않은 경우 Google Vision의 라벨로 대체
+            } else if (keywordAndLabels.getLabels() != null && !keywordAndLabels.getLabels().isEmpty()) {
+                result = keywordAndLabels.getLabels();
+
+            // 둘 다 비어 있거나 null인 경우 예외 처리
             } else {
-                // s3 이미지 저장
-                String filename = imageService.uploadImageFromUrlToS3(requestDTO.getImageUrl());
-
-                // 이미지 데이터 생성, 저장
-                imageService.saveImage(userId, requestDTO.getSourceUrl(), filename, directoryId);
-                // 키워드 데이터 생성, 저장
-                keywordService.saveKeyword(keywordsFromOpenAi.getKeywords());
-                // 이미지 디테일 데이터 생성, 저장
-                imageDetailService.saveImageDetail(requestDTO.getSourceUrl(), filename, keywordsFromOpenAi.getKeywords());
-                // 테그 생성, 저장
-                searchService.saveTags(keywordsFromOpenAi.getKeywords(), filename);
-
+                throw new InvalidResponseException(">>>> 키워드를 저장할 수 없는 이미지입니다.");
             }
+
+            // s3 이미지 저장
+            String filename = imageService.uploadImageFromUrlToS3(requestDTO.getImageUrl());
+            // 이미지 데이터 생성, 저장
+            imageService.saveImage(userId, requestDTO.getSourceUrl(), filename, directoryId);
+            // 키워드 데이터 생성, 저장
+            keywordService.saveKeyword(result);
+            // 이미지 디테일 데이터 생성, 저장
+            imageDetailService.saveImageDetail(requestDTO.getSourceUrl(), filename, result);
+            // 테그 생성, 저장
+            searchService.saveTagsByKeywords(result, filename);
 
             log.info(">>> [POST] /images/web - 요청 dto : {}", requestDTO.toString());
 
+        } catch (UrlAccessException e) {
+            log.error(">>> URL 접근 불가: {}", e.getMessage());
+            throw e;
+
         } catch (Exception e) {
-            throw new RuntimeException(">>> imageController - 웹 이미지 저장을 실패했습니다. " + e);
+            log.error(">>> 이미지 저장 중 알 수 없는 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("웹 이미지 저장 중 오류가 발생했습니다.", e);
         }
 
         return ResponseEntity.status(201).body(BaseResponseBody.of(201, "웹 이미지를 저장했습니다."));

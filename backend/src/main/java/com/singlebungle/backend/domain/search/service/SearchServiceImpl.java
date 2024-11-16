@@ -31,7 +31,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     @Transactional
-    public void saveTags(List<String> tags, String imageUrl) {
+    public void saveTagsByKeywords(List<String> tags, String imageUrl) {
 
         Image image = imageRepository.findByImageUrl(imageUrl);
 

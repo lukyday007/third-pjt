@@ -18,6 +18,6 @@ public interface GoogleVisionService {
 
     Image buildImageFromWebp(byte[] webpBytes);
 
-    boolean analyzeImage(String imageUrl) throws IOException;
+    List<String> analyzeImage(String imageUrl) throws IOException;
 
 }

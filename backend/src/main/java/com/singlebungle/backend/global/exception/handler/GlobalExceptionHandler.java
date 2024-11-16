@@ -16,6 +16,22 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(UrlAccessException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseEntity<ExceptionResponseDto> handleUrlAccessException(UrlAccessException ex, HttpServletRequest request) {
+        log.error("UrlAccessException 발생 - URL: {}, Message: {}", request.getRequestURI(), ex.getMessage());
+
+        ExceptionResponseDto response = ExceptionResponseDto.of(
+                request.getMethod(),
+                request.getRequestURI(),
+                HttpStatus.FORBIDDEN.value(),
+                ex.getMessage()
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+    }
+
+
     @ExceptionHandler(EntityIsFoundException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ResponseEntity<ExceptionResponseDto> handleEntityIsFoundException(EntityIsFoundException ex, HttpServletRequest request) {

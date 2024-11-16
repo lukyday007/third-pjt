@@ -2,11 +2,8 @@ package com.singlebungle.backend.domain.ai.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.*;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
 @Getter
