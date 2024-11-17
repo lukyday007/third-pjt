@@ -245,19 +245,18 @@ public class ImageServiceImpl implements ImageService {
         // Redis에 키워드 조회수 반영
         if (keywordList != null && ! keywordList.isEmpty()) {
             for (String keyword: keywordList) {
-
                 String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss"));
-
                 updateKeywordInRedis(keyword, currentTime);
-
             }
         }
 
         return ImageInfoResponseDTO.convertToDTO(image, keywordToStr);
     }
 
+
     // Redis 키워드 업데이트 로직
     private void updateKeywordInRedis(String keyword, String currentTime) {
+
         String curCntKey = getRedisKey(keyword, "curCnt");
         String prevCntKey = getRedisKey(keyword, "prevCnt");
         String updatedKey = getRedisKey(keyword, "updated");
@@ -276,6 +275,7 @@ public class ImageServiceImpl implements ImageService {
         }
 
         // 업데이트 시간 저장
+
         redisKeywordTemplate.opsForHash().put("keyword", updatedKey, currentTime);
     }
 
