@@ -117,8 +117,6 @@ public class SchedulerConfig implements SchedulingConfigurer {
                     }
                 }
             }
-            keywordTemplate.expire("keyword-ranking", Duration.ofHours(1));
-
         } catch (RedisConnectionFailureException e) {
             log.error(">>> 키워드 랭킹 갱신 준 레디스 연결에 실패했습니다.", e);
         } catch (Exception e) {
