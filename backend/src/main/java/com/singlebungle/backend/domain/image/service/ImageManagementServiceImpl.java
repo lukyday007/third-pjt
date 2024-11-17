@@ -88,7 +88,16 @@ public class ImageManagementServiceImpl implements ImageManagementService {
     public void deleteImages(ImageIdDeleteRequestDTO requestDTO) {
 
         for (Long imageManagementId : requestDTO.getImageManagementIds()) {
-            if (imageManagementRepository.existsById(imageManagementId)) {
+            ImageManagement imageManagement = imageManagementRepository.findById(imageManagementId).orElseThrow(() -> new EntityNotFoundException("해당하는 이미지 관리 데이터가 없습니다." + imageManagementId));
+            if (imageManagement != null) {
+                Image image = imageRepository.findById(imageManagement.getImage().getImageId()).orElseThrow(()-> new EntityNotFoundException("해당하는 이미지 데이터가 없습니다."));
+                image.setCount(image.getCount() - 1);
+
+                if (image.getCount() <= 0 && !image.isDeleted()) {
+                    image.setDeleted(true);
+                }
+                imageRepository.save(image);
+
                 imageManagementRepository.deleteById(imageManagementId);
             }
         }
