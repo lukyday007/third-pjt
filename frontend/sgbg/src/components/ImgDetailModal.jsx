@@ -63,12 +63,13 @@ const s = {
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 1px solid #cccccc;
+    border: 1px solid #eeeeee;
     height: 600px;
     width: 600px;
   `,
   DetailImage: styled.img`
-    max-height: 100%;
+    width: 600px;
+    max-height: 600px;
     max-width: 100%;
   `,
   InfoArea: styled.div`
