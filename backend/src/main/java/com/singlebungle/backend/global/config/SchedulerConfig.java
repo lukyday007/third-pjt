@@ -83,21 +83,30 @@ public class SchedulerConfig implements SchedulingConfigurer {
                                 int gap = curCnt - prevCnt;
 
                                 if (gap > 0) {
-                                    // 이전 gap 저장
-                                    double prevGap = keywordTemplate.opsForZSet().score("keyword-ranking", keyword);
+                                    // 이전 점수 가져오기, 없으면 0으로 초기화
+                                    Double currentScore = keywordTemplate.opsForZSet().score("keyword-ranking", keyword);
+                                    if (currentScore == null) {
+                                        // keyword-ranking에 키워드가 없을 경우 초기화
+                                        keywordTemplate.opsForZSet().add("keyword-ranking", keyword, 0.0);
+                                        currentScore = 0.0;
+                                    }
 
-                                    // 현재 랭킹 keyword-ranking 갱신
+                                    Double previousScore = keywordTemplate.opsForZSet().score("previous-ranking", keyword);
+                                    if (previousScore == null) {
+                                        // previous-ranking에 키워드가 없을 경우 초기화
+                                        keywordTemplate.opsForZSet().add("previous-ranking", keyword, 0.0);
+                                        previousScore = 0.0;
+                                    }
+
+                                    // keyword-ranking 갱신
                                     keywordTemplate.opsForZSet().incrementScore("keyword-ranking", keyword, gap);
-                                    // 이전 랭킹 previous-ranking 갱신
-                                    keywordTemplate.opsForZSet().incrementScore("previous-ranking", keyword, prevGap);
+
+                                    // previous-ranking 갱신
+                                    keywordTemplate.opsForZSet().incrementScore("previous-ranking", keyword, currentScore);
                                 }
 
                                 // 해쉬 객제의 이전 값을 현재 값으로 갱신
                                 keywordTemplate.opsForHash().put("keyword", keyword + ":prevCnt", String.valueOf(curCnt));
-
-                                /*
-                                    todo ttl 설정을 할지 말지?
-                                */
 
                             } catch (NumberFormatException e) {
                                 log.error("Number format exception for keyword: {}, prevCnt: {}, curCnt: {}", keyword, prevCntStr, curCntStr, e);
