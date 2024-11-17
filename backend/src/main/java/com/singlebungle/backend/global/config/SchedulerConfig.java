@@ -127,7 +127,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
 
     // 12시간마다 SQL 데이터베이스와 동기화
     @Transactional
-    @Scheduled(fixedRate = 2 * 60 * 60 * 1000)  // text 용 2 시간 마다
+    @Scheduled(fixedRate = 12 * 60 * 60 * 1000)
     public void updateSQL() {
         try {
             Map<Object, Object> keywordMap = keywordTemplate.opsForHash().entries("keyword");

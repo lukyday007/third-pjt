@@ -236,10 +236,6 @@ public class ImageServiceImpl implements ImageService {
                 .map(Keyword::getKeywordName)   // Keyword 엔티티에서 keywordName 추출
                 .collect(Collectors.toList());
 
-        /*
-         todo 이미지가 상세조회되면 관련된 키워드의 cnt + 1
-         레디스에 반영
-        */
         List<String> keywordList = imageManagementRepositorySupport.findKeywordList(image);
 
         // Redis에 키워드 조회수 반영
