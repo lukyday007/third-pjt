@@ -14,6 +14,7 @@ import com.singlebungle.backend.global.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
@@ -22,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,11 +46,11 @@ public class KeywordServiceImpl implements KeywordService {
     @Transactional
     public void saveKeyword(List<String> keywords) {
 
-        log.info(">>>> 키워드 저장 중... >>> keywords: {}", keywords.toString());
+        log.info(">>> 키워드 저장 중... >>> keywords: {}", keywords.toString());
 
         /*
             키워드가 새로 저장되면 일단 redisKeyword에 저장
-            중복된 키워드가 있으면 redisKeyword의 value + 1
+            중복된 키워드가 있으면 {keyword}:curCnt + 1
             레디스에 다시 저장
         */
         for (String name : keywords) {
@@ -110,7 +110,7 @@ public class KeywordServiceImpl implements KeywordService {
 
 
     @Override
-//    @Cacheable(value = "keywordRankCache", key = "'ranking'", unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = "keywordRankCache", key = "'ranking'", unless = "#result == null || #result.isEmpty()")
     public List<KeywordRankResponseDTO> getKeywordRankList() {
 
         // Redis에서 정확한 등락률 계산을 위해 상위 10위 랭킹 목록 가져오기
@@ -137,7 +137,6 @@ public class KeywordServiceImpl implements KeywordService {
                         rank -> rank.getScore() != null ? rank.getScore() : 0.0
                 ))
                 : new HashMap<>();
-
 
         // 현재 랭킹과 이전 랭킹 비교
         List<KeywordRankResponseDTO> rankedKeywords = currentRanks.stream()
@@ -168,6 +167,10 @@ public class KeywordServiceImpl implements KeywordService {
         return rankedKeywords;
     }
 
+
+    /*
+        디렉토리 내 키워드 검색
+    */
     public List<String> getKeywords(String token, String keyword, Long directoryId, boolean bin) {
         Long userId = extractUserIdFromToken(token);
 
@@ -213,6 +216,7 @@ public class KeywordServiceImpl implements KeywordService {
         // Set을 List로 변환하여 반환
         return new ArrayList<>(uniqueKeywords);
     }
+
 
     private Long extractUserIdFromToken(String token) {
         // 토큰에서 "Bearer "를 제거

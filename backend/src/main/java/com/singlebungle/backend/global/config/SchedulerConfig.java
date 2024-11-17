@@ -4,7 +4,7 @@ import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
@@ -19,6 +19,7 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -50,81 +51,72 @@ public class SchedulerConfig implements SchedulingConfigurer {
     }
 
 
-    @Cacheable(value = "keywordCache", key = "#keyword", unless = "#result == null")
-    public Keyword findKeywordByName(String keyword) {
-        return keywordRepository.findByKeywordName(keyword);
-    }
-
-
     // todo 테스트 후 2시간 간격으로 수정 2 * 60 * 60 * 1000 : 2시간마다 실행
-    @Scheduled(fixedRate = 60 * 60 * 1000)      // 1시간마다 실행
+//    @Scheduled(fixedRate = 60 * 60 * 1000)    // 1시간마다 실행
+    @Scheduled(fixedRate = 10 * 60 * 1000)    // *** test 용 10분마다 실행 ***
+    @CacheEvict(value = "keywordRankCache", key = "'ranking'")
     public void updateKeywordRanking() {
         try {
-            // Redis Lock 설정
-            Boolean locked = keywordTemplate.opsForValue().setIfAbsent("lock:keyword-ranking", "locked", Duration.ofMinutes(2));
+            Map<Object, Object> keywordMap = keywordTemplate.opsForHash().entries("keyword");
 
-            if (locked != null && locked) {
-                try {
-                    Set<Object> keywordObjs = keywordTemplate.opsForHash().keys("keyword");
+            if (keywordMap != null) {
+                for (Map.Entry<Object, Object> temp : keywordMap.entrySet()) {
+                    String fullField = temp.getKey().toString();
+                    String[] parts = fullField.split(":");
+                    if (parts.length != 2) {
+                        log.warn("부적절한 데이터: {}", fullField);
+                        continue;
+                    }
 
-                    if (keywordObjs != null) {
-                        for (Object keywordObj : keywordObjs) {
-                            String fullField = keywordObj.toString();  // 예: "apple:curCnt"
-                            String[] parts = fullField.split(":");
-                            if (parts.length < 2) continue;
+                    String keyword = parts[0];      // {keyword}
+                    String fieldType = parts[1];    // curCnt, prevCnt
 
-                            String keyword = parts[0];
-                            String fieldType = parts[1];
+                    // 현재 값 curCnt를 기준으로 {keyword} 조회
+                    if ("curCnt".equals(fieldType)) {
+                        String curCntStr = temp.getValue() != null ? temp.getValue().toString() : null;
+                        String prevCntStr = keywordMap.get(keyword + ":prevCnt") != null ? keywordMap.get(keyword + ":prevCnt").toString() : null;
 
-                            if (fieldType.equals("curCnt")) {
-                                // prevCnt와 curCnt 값 가져오기
-                                String prevCntStr = (String) keywordTemplate.opsForHash().get("keyword", keyword + ":prevCnt");
-                                String curCntStr = (String) keywordTemplate.opsForHash().get("keyword", keyword + ":curCnt");
+                        if (prevCntStr != null && curCntStr != null) {
+                            try {
+                                int prevCnt = Integer.parseInt(prevCntStr);
+                                int curCnt = Integer.parseInt(curCntStr);
+                                int gap = curCnt - prevCnt;
 
-                                // 기존 keyword-ranking 값을 previous-ranking으로 이동
-                                Double currentKeywordScore = keywordTemplate.opsForZSet().score("keyword-ranking", keyword);
-                                if (currentKeywordScore != null) {
-                                    // keyword-ranking의 점수를 previous-ranking으로 이동
-                                    keywordTemplate.opsForZSet().add("previous-ranking", keyword, currentKeywordScore);
-                                }
-
-                                if (prevCntStr != null && curCntStr != null) {
-                                    try {
-                                        int prevCnt = Integer.parseInt(prevCntStr);
-                                        int curCnt = Integer.parseInt(curCntStr);
-                                        int gap = curCnt - prevCnt;
-
-                                        if (gap > 0) {
-                                            // ZSet에서 keyword-ranking 점수 업데이트
-                                            keywordTemplate.opsForZSet().incrementScore("keyword-ranking", keyword, gap);
-                                        }
-
-                                        // prevCnt 값을 curCnt로 갱신
-                                        keywordTemplate.opsForHash().put("keyword", keyword + ":prevCnt", String.valueOf(curCnt));
-
-                                        //  keywordTemplate.expire("keyword", Duration.ofMinutes(1));
-                                        keywordTemplate.expire("keyword-ranking", Duration.ofMinutes(10));
-                                        keywordTemplate.expire("previous-ranking", Duration.ofMinutes(10));
-
-                                    } catch (NumberFormatException e) {
-                                        log.error(">>> updateKeywordRanking >>> Number format exception for keyword: {}, prevCnt: {}, curCnt: {}", keyword, prevCntStr, curCntStr, e);
+                                if (gap > 0) {
+                                    // 이전 점수 가져오기, 없으면 0으로 초기화
+                                    Double currentScore = keywordTemplate.opsForZSet().score("keyword-ranking", keyword);
+                                    if (currentScore == null) {
+                                        // keyword-ranking에 키워드가 없을 경우 초기화
+                                        keywordTemplate.opsForZSet().add("keyword-ranking", keyword, 0.0);
+                                        currentScore = 0.0;
                                     }
+
+                                    Double previousScore = keywordTemplate.opsForZSet().score("previous-ranking", keyword);
+                                    if (previousScore == null) {
+                                        // previous-ranking에 키워드가 없을 경우 초기화
+                                        keywordTemplate.opsForZSet().add("previous-ranking", keyword, 0.0);
+                                        previousScore = 0.0;
+                                    }
+
+                                    // keyword-ranking 갱신
+                                    keywordTemplate.opsForZSet().incrementScore("keyword-ranking", keyword, gap);
+
+                                    // previous-ranking 갱신
+                                    keywordTemplate.opsForZSet().incrementScore("previous-ranking", keyword, currentScore);
                                 }
+
+                                // 해쉬 객제의 이전 값을 현재 값으로 갱신
+                                keywordTemplate.opsForHash().put("keyword", keyword + ":prevCnt", String.valueOf(curCnt));
+
+                            } catch (NumberFormatException e) {
+                                log.error("Number format exception for keyword: {}, prevCnt: {}, curCnt: {}", keyword, prevCntStr, curCntStr, e);
                             }
+                        } else {
+                            log.warn("현재 값 혹은 이전 값이 없는 키워드: {}", keyword);
                         }
                     }
-                } catch (RedisConnectionFailureException e) {
-                    log.error("Redis connection failure while updating keyword ranking.", e);
-                } catch (Exception e) {
-                    log.error("Unexpected error occurred during keyword ranking update.", e);
-                } finally {
-                    // 락 해제
-                    keywordTemplate.delete("lock:keyword-ranking");
                 }
-            } else {
-                log.info(">>> 다른 작업에서 이미 락을 사용 중입니다. 작업을 중복 실행하지 않습니다.");
             }
-
         } catch (RedisConnectionFailureException e) {
             log.error(">>> 키워드 랭킹 갱신 준 레디스 연결에 실패했습니다.", e);
         } catch (Exception e) {
@@ -135,23 +127,26 @@ public class SchedulerConfig implements SchedulingConfigurer {
 
     // 12시간마다 SQL 데이터베이스와 동기화
     @Transactional
-    @Scheduled(fixedRate = 60 * 60 * 1000)  // 1시간마다
+    @Scheduled(fixedRate = 2 * 60 * 60 * 1000)  // text 용 2 시간 마다
     public void updateSQL() {
         try {
-            Set<Object> keywordObjs = keywordTemplate.opsForHash().keys("keyword");
+            Map<Object, Object> keywordMap = keywordTemplate.opsForHash().entries("keyword");
 
-            if (keywordObjs != null) {
-                for (Object keywordObj : keywordObjs) {
-                    String fullField = keywordObj.toString();
+            if (keywordMap != null) {
+                for (Map.Entry<Object, Object> temp : keywordMap.entrySet()) {
+                    String fullField = temp.getKey().toString();
                     String[] parts = fullField.split(":");
-                    if (parts.length < 2) continue;
+                    if (parts.length != 2) {
+                        log.warn("부적절한 데이터: {}", fullField);
+                        continue;
+                    }
 
                     String keyword = parts[0];
                     String fieldType = parts[1];
 
                     if (fieldType.equals("curCnt")) {
                         // curCnt 값을 가져와서 SQL 데이터베이스에 저장
-                        String curCntStr = (String) keywordTemplate.opsForHash().get("keyword", keyword + ":curCnt");
+                        String curCntStr = temp.getValue() != null ? temp.getValue().toString() : null;
 
                         if (curCntStr != null) {
                             try {
