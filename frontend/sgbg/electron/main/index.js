@@ -113,6 +113,17 @@ async function createWindow() {
   ])
   tray.setContextMenu(trayMenu)
   tray.setToolTip("싱글벙글 앱")
+
+  // 트레이 아이콘 더블 클릭 이벤트 추가
+  tray.on("double-click", () => {
+    if (win) {
+      if (win.isMinimized()) win.restore() // 최소화된 경우 복구
+      if (!win.isVisible()) win.show() // 숨겨진 경우 표시
+      win.focus() // 창에 포커스
+    } else {
+      createWindow() // 창이 없는 경우 새 창 생성
+    }
+  })
 }
 
 // 창을 닫을 때 트레이에 최소화 여부 확인
