@@ -112,60 +112,65 @@ public class KeywordServiceImpl implements KeywordService {
     @Override
     @Cacheable(value = "keywordRankCache", key = "'ranking'", unless = "#result == null || #result.isEmpty()")
     public List<KeywordRankResponseDTO> getKeywordRankList() {
+        // Redis에서 현재 순위 데이터 가져오기
+        Set<Object> currentRanks = keywordTemplate.opsForZSet()
+                .reverseRange("keyword-ranking", 0, 9); // 상위 10위 (0부터 9까지)
 
-        // Redis에서 정확한 등락률 계산을 위해 상위 10위 랭킹 목록 가져오기
-        Set<ZSetOperations.TypedTuple<Object>> currentRanks = keywordTemplate.opsForZSet()
-                .reverseRangeWithScores("keyword-ranking", 0, 9); // 상위 10위 (0부터 9까지)
-
-        log.info(">>> currentRanks : {}", Arrays.toString(currentRanks.toArray()));
+        log.info(">>> currentRanks : {}", currentRanks);
 
         if (currentRanks == null || currentRanks.isEmpty()) {
-            throw new EntityNotFoundException(">>> getKeywordRankList >>> 랭킹에 등록된 데이터가 없습니다.");
+            throw new EntityNotFoundException(">>> getKeywordRankList >>> 현재 랭킹 데이터가 없습니다.");
         }
 
-        // Redis에서 이전 랭킹 데이터 가져오기 (상위 10위)
-        Set<ZSetOperations.TypedTuple<Object>> previousRanks = keywordTemplate.opsForZSet()
-                .reverseRangeWithScores("previous-ranking", 0, 9); // 이전 순위 데이터
+        // Redis에서 이전 순위 데이터 가져오기
+        Set<Object> previousRanks = keywordTemplate.opsForZSet()
+                .reverseRange("previous-ranking", 0, 9); // 상위 10위 (0부터 9까지)
 
-        log.info(">>> previousRanks : {}", Arrays.toString(previousRanks.toArray()));
+        log.info(">>> previousRanks : {}", previousRanks);
 
-        // 이전 데이터 매핑 (키워드와 점수로 변환)
-        Map<String, Double> previousRankMap = previousRanks != null
-                ? previousRanks.stream()
-                .collect(Collectors.toMap(
-                        rank -> rank.getValue().toString(),
-                        rank -> rank.getScore() != null ? rank.getScore() : 0.0
-                ))
+        // 이전 순위를 Map으로 변환 (키워드 -> 순위)
+        Map<String, Integer> previousRankMap = previousRanks != null
+                ? createRankMap(previousRanks)
                 : new HashMap<>();
 
-        // 현재 랭킹과 이전 랭킹 비교
-        List<KeywordRankResponseDTO> rankedKeywords = currentRanks.stream()
-                .map(rank -> {
-                    String keyword = rank.getValue().toString();
-                    double currentScore = rank.getScore() != null ? rank.getScore() : 0.0;
+        // 현재 순위를 Map으로 변환 (키워드 -> 순위)
+        Map<String, Integer> currentRankMap = createRankMap(currentRanks);
 
-                    // 이전 점수 가져오기 (없으면 기본값 0.0)
-                    double previousScore = previousRankMap.getOrDefault(keyword, 0.0);
+        // 현재 랭킹 기준으로 상태 비교
+        List<KeywordRankResponseDTO> rankedKeywords = currentRankMap.keySet().stream()
+                .map(keyword -> {
+                    Integer previousRank = previousRankMap.get(keyword);
+                    Integer currentRank = currentRankMap.get(keyword);
 
                     String isState;
-                    if (currentScore > previousScore) {
+                    if (previousRank == null) {
+                        isState = "up"; // 새롭게 추가된 키워드
+                    } else if (currentRank < previousRank) {
                         isState = "up";
-                    } else if (currentScore < previousScore) {
-                        isState = "down";
-                    } else {
+                    } else if (currentRank.equals(previousRank)) {
                         isState = "same";
+                    } else {
+                        isState = "down";
                     }
 
-                    double gap = currentScore - previousScore;
-
-                    return new KeywordRankResponseDTO(keyword, isState, gap);
+                    return new KeywordRankResponseDTO(keyword, isState, 0.0); // gap은 필요 없으므로 0.0으로 고정
                 })
-                .sorted(Comparator.comparing(KeywordRankResponseDTO::getKeyword))
-                .limit(5) // 상위 5개만 반환
+                .sorted(Comparator.comparing(KeywordRankResponseDTO::getKeyword)) // 키워드 알파벳 순 정렬
                 .collect(Collectors.toList());
 
         return rankedKeywords;
     }
+
+    // 순위를 Map으로 변환하는 유틸리티 메서드
+    private Map<String, Integer> createRankMap(Set<Object> ranks) {
+        Map<String, Integer> rankMap = new HashMap<>();
+        int rank = 1; // 순위는 1부터 시작
+        for (Object obj : ranks) {
+            rankMap.put(obj.toString(), rank++);
+        }
+        return rankMap;
+    }
+
 
 
     /*

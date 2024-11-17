@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -104,11 +105,37 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
         // 단일 처리 메서드 사용
         Image image = buildImage(imageUrl);
 
-        if (!detectSafeSearchGoogleVision(image)) {
-            throw new InvalidImageException(">>> Google Vision - 부적절한 이미지 입니다.");
+        // 병렬 처리 시작
+        CompletableFuture<Boolean> safeSearchFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return detectSafeSearchGoogleVision(image);
+            } catch (IOException e) {
+                log.error(">>> SafeSearch 검증 중 오류 발생: {}", e.getMessage(), e);
+                throw new RuntimeException("SafeSearch 검증 실패", e);
+            }
+        });
+
+        CompletableFuture<List<String>> labelsFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return detectLabels(image);
+            } catch (IOException e) {
+                log.error(">>> 라벨 검출 중 오류 발생: {}", e.getMessage(), e);
+                throw new RuntimeException("라벨 검출 실패", e);
+            }
+        });
+
+        // 결과 병합
+        try {
+            boolean isSafe = safeSearchFuture.get(); // SafeSearch 결과
+            if (!isSafe) {
+                throw new InvalidImageException(">>> Google Vision - 부적절한 이미지 입니다.");
+            }
+            return labelsFuture.get(); // 라벨 검출 결과
+        } catch (Exception e) {
+            log.error(">>> 이미지 분석 병렬 처리 중 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("이미지 분석 병렬 처리 실패", e);
         }
 
-        return detectLabels(image);
     }
 
 
@@ -172,7 +199,7 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
 
     // URL 직접 사용
     private Image buildImageFromUrlDirect(String imageUrl) {
-        log.info(">>> URL을 통해 직접 이미지 사용: {}", imageUrl);
+//        log.info(">>> URL을 통해 직접 이미지 사용: {}", imageUrl);
         ImageSource imgSource = ImageSource.newBuilder().setImageUri(imageUrl).build();
 
         return Image.newBuilder().setSource(imgSource).build();

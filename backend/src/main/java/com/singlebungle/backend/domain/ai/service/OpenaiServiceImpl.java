@@ -3,7 +3,6 @@ package com.singlebungle.backend.domain.ai.service;
 import com.singlebungle.backend.domain.ai.dto.request.ChatGPTRequest;
 import com.singlebungle.backend.domain.ai.dto.response.ChatGPTResponse;
 import com.singlebungle.backend.domain.ai.dto.response.KeywordAndLabels;
-import com.singlebungle.backend.domain.ai.dto.response.KeywordsFromOpenAi;
 import com.singlebungle.backend.global.exception.InvalidApiUrlException;
 import com.singlebungle.backend.global.exception.InvalidResponseException;
 import com.singlebungle.backend.global.exception.UnAuthorizedApiKeyException;
@@ -22,6 +21,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,21 +34,15 @@ import java.util.regex.Pattern;
 public class OpenaiServiceImpl implements OpenaiService {
 
     private final WebClient openAiConfig;  // WebClient 빈을 openAiConfig로 주입받음
-
-    public List<String> tags;
+    private final ExecutorService executorService = Executors.newFixedThreadPool(2); // 병렬 처리를 위한 스레드풀 생성
 
     @Value("${openai.model}")
     private String apiModel;
 
-    @Value("${openai.api.url}")
-    private String apiUrl;
-
-    @Value("${openai.api.key}")
-    private String apiKey;
-
     @Override
     public KeywordAndLabels requestImageAnalysis(String imageUrl, List<String> labels) {
         try {
+            final String imageUrlStr = imageUrl;
 
             // WebP 처리 (URL 이미지)
             if (imageUrl.endsWith(".webp")) {
@@ -54,33 +50,32 @@ public class OpenaiServiceImpl implements OpenaiService {
                 imageUrl = convertWebPToJpegUrl(imageUrl);
             }
 
-            // OpenAI API 요청: Keywords 추출
-            String gptPromptForKeywords = generateKeywordsPrompt(imageUrl);
-            List<String> keywords = null;
-            try {
-                ChatGPTResponse keywordsResponse = sendOpenAiRequest(imageUrl, gptPromptForKeywords);
-                String keywordsContent = extractResponseContent(keywordsResponse);
-//                System.out.println("============= keywords ===============");
-//                System.out.println(keywordsContent);
-                keywords = extractKeywords(keywordsContent); // 키워드 추출
-                log.info(">>> 추출된 키워드 결과 : {}", keywords.toArray());
-            } catch (Exception e) {
-                log.warn(">>> Keywords 분석 실패, 기본값 적용: {}", e.getMessage());
-            }
+            // OpenAI API 요청: Keywords 추출 -> 비동기
+            CompletableFuture<List<String>> keywordsFuture = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return requestKeywords(imageUrlStr);
+                } catch (Exception e) {
+                    log.warn(">>> Keywords 분석 실패: {}", e.getMessage());
+                    return null; // 실패 시 null 반환
+                }
+            }, executorService);
 
-            // OpenAI API 요청: Labels 번역
-            String gptPromptWithLabels = generateLabelsPrompt(labels);
-            List<String> tags = null;
-            try {
-                ChatGPTResponse labelsResponse = sendOpenAiRequest(null, gptPromptWithLabels);
-                String labelsContent = extractResponseContent(labelsResponse);
-//                System.out.println("============= label ===============");
-//                System.out.println(labelsContent);
-                tags = extractLabels(labelsContent); // 라벨 추출
-                log.info(">>> 추출된 라벨 결과 : {}", tags.toArray());
-            } catch (Exception e) {
-                log.warn(">>> Labels 분석 실패, 기본값 적용: {}", e.getMessage());
-            }
+            // OpenAI API 요청: Labels 번역 -> 비동기
+            CompletableFuture<List<String>> labelsFuture = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return requestLabels(labels);
+                } catch (Exception e) {
+                    log.warn(">>> Labels 번역 실패: {}", e.getMessage());
+                    return null; // 실패 시 null 반환
+                }
+            }, executorService);
+
+            // 두 비동기 작업이 완료될 때까지 기다림
+            CompletableFuture.allOf(keywordsFuture, labelsFuture).join();
+
+            // 결과 가져오기
+            List<String> keywords = keywordsFuture.join();
+            List<String> tags = labelsFuture.join();
 
             return new KeywordAndLabels(keywords, tags);
 
@@ -95,6 +90,21 @@ public class OpenaiServiceImpl implements OpenaiService {
             throw new RuntimeException(">>> api 요청 중 오류가 발생했습니다.");
         }
     }
+
+    private List<String> requestKeywords(String imageUrl) throws Exception {
+        String gptPromptForKeywords = generateKeywordsPrompt(imageUrl);
+        ChatGPTResponse keywordsResponse = sendOpenAiRequest(imageUrl, gptPromptForKeywords);
+        String keywordsContent = extractResponseContent(keywordsResponse);
+        return extractKeywords(keywordsContent); // 키워드 추출
+    }
+
+    private List<String> requestLabels(List<String> labels) throws Exception {
+        String gptPromptWithLabels = generateLabelsPrompt(labels);
+        ChatGPTResponse labelsResponse = sendOpenAiRequest(null, gptPromptWithLabels);
+        String labelsContent = extractResponseContent(labelsResponse);
+        return extractLabels(labelsContent); // 라벨 번역
+    }
+
 
 
     private String convertWebPToJpegUrl(String webpUrl) throws IOException {
@@ -239,8 +249,8 @@ public class OpenaiServiceImpl implements OpenaiService {
             throw new InvalidResponseException("응답을 처리할 수 없습니다. OpenAI에서 빈 content를 반환했습니다.");
         }
 
-        // 정상적인 content 반환
-        log.info(">>> OpenAI 응답에서 추출된 content: {}", content);
+//        // 정상적인 content 반환
+//        log.info(">>> OpenAI 응답에서 추출된 content: {}", content);
         return content;
     }
 
@@ -266,8 +276,6 @@ public class OpenaiServiceImpl implements OpenaiService {
                     keywords.add(line.replaceFirst("-\\s*", "")); // "-" 문자 제거 후 리스트에 추가
                 }
             }
-        } else {
-            log.warn(">>> OpenAI 응답에서 '### Keywords' 섹션을 찾을 수 없습니다.");
         }
 
         return keywords;
@@ -294,8 +302,6 @@ public class OpenaiServiceImpl implements OpenaiService {
                     labels.add(line.replaceFirst("-\\s*", "")); // "-" 문자 제거 후 리스트에 추가
                 }
             }
-        } else {
-            log.warn(">>> OpenAI 응답에서 '### Labels' 섹션을 찾을 수 없습니다.");
         }
 
         // 결과 출력

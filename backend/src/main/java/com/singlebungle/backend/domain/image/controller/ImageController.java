@@ -64,18 +64,25 @@ public class ImageController {
             throw new NoTokenRequestException("유효한 유저 토큰이 없습니다.");
         }
 
+        long totalStartTime = System.currentTimeMillis();
+
         try {
             Long directoryId = requestDTO.getDirectoryId();
 
             // google vision api -> 라벨 번역 안됨
-            log.info(">>> Google Vision API 호출 시작");
+            long startTime = System.currentTimeMillis();
+            log.info(">>> Google Vision 병렬 호출 시작");
             List<String> labels = googleVisionService.analyzeImage(requestDTO.getImageUrl());
             log.info(">>> Google Vision API 호출 완료, 반환 라벨: {}", labels);
+            log.info(">>> Google Vision 처리 시간: {} ms", System.currentTimeMillis() - startTime);
+
 
             // chatgpt api
+            startTime = System.currentTimeMillis();
             log.info(">>> ChatGPT API 호출 시작");
             KeywordAndLabels keywordAndLabels = openaiService.requestImageAnalysis(requestDTO.getImageUrl(), labels);
             log.info(">>> ChatGPT API 호출 완료, 반환 키워드: {}, 태그: {}", keywordAndLabels.getKeywords(), keywordAndLabels.getLabels());
+            log.info(">>> OpenAI 처리 시간: {} ms", System.currentTimeMillis() - startTime);
 
             List<String> result = null;
 
@@ -103,7 +110,8 @@ public class ImageController {
             // 테그 생성, 저장
             searchService.saveTagsByKeywords(result, filename);
 
-            log.info(">>> [POST] /images/web - 요청 dto : {}", requestDTO.toString());
+            long totalEndTime = System.currentTimeMillis();
+            log.info(">>> [POST] /images/web - 전체 처리 시간: {} ms", totalEndTime - totalStartTime);
 
         } catch (UrlAccessException e) {
             log.error(">>> URL 접근 불가: {}", e.getMessage());
