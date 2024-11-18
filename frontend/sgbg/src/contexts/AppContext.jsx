@@ -37,7 +37,10 @@ export const AppProvider = ({ children }) => {
   // storage 이벤트로 accessToken 값 변경을 감지
   useEffect(() => {
     const handleStorageChange = async (event) => {
-      setIsAuthenticated(true)
+      const token = localStorage.getItem("accessToken")
+      if (token) {
+        setIsAuthenticated(true)
+      }
     }
 
     window.addEventListener("localStorageUpdate", handleStorageChange)
