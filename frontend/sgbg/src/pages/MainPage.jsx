@@ -29,6 +29,13 @@ const keywordIcons = [
   FifthKeywordIcon,
 ]
 
+const rankingColors = [
+  { background: "rgba(251, 216, 210, 1)", text: "rgba(239, 92, 68, 1)" },
+  { background: "rgba(255, 231, 194, 1)", text: "rgba(255, 153, 0, 1)" },
+  { background: "rgba(255, 238, 194, 1)", text: "rgba(255, 184, 0, 1)" },
+  { background: "rgba(206, 238, 223, 1)", text: "rgba(50, 182, 122, 1)" },
+  { background: "rgba(210, 236, 251, 1)", text: "rgba(67, 176, 239, 1)" },
+]
 const s = {
   Container: styled.div`
     flex: 1 0 auto;
@@ -202,7 +209,20 @@ const MainPage = () => {
     setIsLatest(2)
   }
 
-  const { isLatest, toggleLatest, setIsLatest } = useContext(AppContext)
+  const handleKeywordClick = (keyword, background, text) => {
+    navigate("/image")
+    setKeywords(keyword)
+    setIsLatest(0)
+    setSearchKeywords([{ keyword, background, text }])
+  }
+
+  const {
+    isLatest,
+    toggleLatest,
+    setIsLatest,
+    setKeywords,
+    setSearchKeywords,
+  } = useContext(AppContext)
 
   return (
     <>
@@ -231,8 +251,18 @@ const MainPage = () => {
             {rankingKeyword?.map((keyword, index) => {
               // 아이콘 컴포넌트 선택
               const KeywordIcon = keywordIcons[index] || keywordIcons[0]
+              const RankingColor = rankingColors[index] || rankingColors[0]
               return (
-                <s.Keyword key={index}>
+                <s.Keyword
+                  key={index}
+                  onClick={() =>
+                    handleKeywordClick(
+                      keyword.keyword,
+                      RankingColor.background,
+                      RankingColor.text
+                    )
+                  }
+                >
                   <KeywordIcon />
                   <s.KeywordText>{keyword.keyword}</s.KeywordText>
                   {keyword.isState === "up" ? (
