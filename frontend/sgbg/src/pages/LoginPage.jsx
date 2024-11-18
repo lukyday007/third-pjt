@@ -57,6 +57,7 @@ const LoginPage = () => {
     )
   }
 
+  const params = new URLSearchParams(window.location.search)
   const code = encodeURIComponent(params.get("code"))
 
   const googleLogin = async (code) => {
