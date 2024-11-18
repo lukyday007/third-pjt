@@ -34,6 +34,19 @@ export const AppProvider = ({ children }) => {
     console.log("auth", isAuthenticated)
   }, [isAuthenticated])
 
+  // storage 이벤트로 accessToken 값 변경을 감지
+  useEffect(() => {
+    const handleStorageChange = async (event) => {
+      setIsAuthenticated(true)
+    }
+
+    window.addEventListener("localStorageUpdate", handleStorageChange)
+
+    return () => {
+      window.removeEventListener("localStorageUpdate", handleStorageChange)
+    }
+  }, [])
+
   // console.log(folderName, searchKeywords, isLatest, "잘 되고 잇니")
   const toggleLatest = () => setIsLatest((prev) => (prev === 0 ? 2 : 0))
 
