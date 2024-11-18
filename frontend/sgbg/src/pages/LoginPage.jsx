@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import styled, { keyframes } from "styled-components"
 import LoginButton from "../asset/images/LoginPage/LoginButton.svg?react"
 import LoginButtonSmall from "../asset/images/LoginPage/LoginButtonSmall.svg?react"
@@ -6,6 +6,7 @@ import SingBung from "../asset/images/MainPage/SingBung.svg?react"
 import BigSingBung from "../asset/images/LoginPage/BigSingBung.svg?react"
 import { getLoginUrl, googleSignIn } from "../lib/api/user-api"
 import { useNavigate } from "react-router-dom"
+import { AppContext } from "../contexts/AppContext"
 
 const s = {
   Container: styled.div`
@@ -84,6 +85,13 @@ const LoginPage = () => {
     }
     console.log("code", code)
   }, [code])
+
+  const { isAuthenticated } = useContext(AppContext)
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/")
+    }
+  }, [isAuthenticated])
 
   return (
     <s.Container>
