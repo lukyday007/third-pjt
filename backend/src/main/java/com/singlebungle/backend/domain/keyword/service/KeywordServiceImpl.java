@@ -162,6 +162,7 @@ public class KeywordServiceImpl implements KeywordService {
         return rankedKeywords;
     }
 
+
     // 순위를 Map으로 변환하는 유틸리티 메서드
     private Map<String, Integer> createRankMap(Set<Object> ranks) {
         Map<String, Integer> rankMap = new HashMap<>();
