@@ -6,7 +6,7 @@ import React, { createContext, useState } from "react"
 export const AppContext = createContext()
 
 export const AppProvider = ({ children }) => {
-  const [folderName, setFolderName] = useState("d")
+  const [folderName, setFolderName] = useState("")
   const [searchKeywords, setSearchKeywords] = useState([])
   const [isLatest, setIsLatest] = useState(0) // 최신:0 랜덤:2
   const [isSideBarOpen, setIsSideBarOpen] = useState(true) // 사이드바 열림 여부
