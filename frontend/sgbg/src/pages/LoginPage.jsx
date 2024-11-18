@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import styled, { keyframes } from "styled-components"
 import LoginButton from "../asset/images/LoginPage/LoginButton.svg?react"
 import LoginButtonSmall from "../asset/images/LoginPage/LoginButtonSmall.svg?react"
