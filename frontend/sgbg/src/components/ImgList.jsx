@@ -122,7 +122,7 @@ const ImgList = () => {
         (directory) => directory.directoryId === Number(id) // id와 directoryId 비교
       )
       if (id === "0") {
-        setFolderName("기본폴더")
+        setFolderName("기본 폴더")
       }
       if (directoryInfo) {
         setFolderName(directoryInfo.directoryName)
