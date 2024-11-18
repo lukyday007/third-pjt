@@ -45,7 +45,7 @@ const s = {
     display: ${(props) => (props.$isopen === true ? "none" : "flex")};
   `,
   Container: styled.div`
-    z-index: 10;
+    z-index: 20;
     position: fixed;
     background-color: #ffffff;
     border-right: solid 1px #e1e3e1;
@@ -75,6 +75,7 @@ const s = {
     font-size: 14px;
     color: #838383;
     margin-top: 32px;
+    margin-bottom: 8px;
   `,
   FolderTitle: styled.span`
     font-size: 16px;
@@ -92,7 +93,7 @@ const s = {
   FolderArea: styled.div`
     display: flex;
     align-items: center;
-    margin-top: 8px;
+    margin: 4px 0;
     cursor: pointer;
   `,
   DragFolderArea: styled.div.attrs((props) => ({
@@ -396,6 +397,12 @@ const SideBar = () => {
     setClosestDropAreaIndex(null)
   }
 
+  // 드래그오버 이벤트 정의
+  const handleDragOver = (event) => {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = "move"
+  }
+
   // 디렉토리 순서 변경 처리 함수
   const updateDirectorySequence = async (draggedDirectoryId, dropIndex) => {
     // 기존 sequence 복사
@@ -505,7 +512,7 @@ const SideBar = () => {
 
   return (
     <>
-      <s.Test $isopen={isSideBarOpen}>
+      <s.Test $isopen={isSideBarOpen} onDragOver={handleDragOver}>
         <s.Container $isopen={isSideBarOpen}>
           <s.HomeIconArea>
             <HomeIcon
@@ -541,7 +548,7 @@ const SideBar = () => {
           </s.FolderArea>
           <s.FolderArea onClick={() => handleFolderClick(0)}>
             <DefaultFolderIcon />
-            <s.FolderTitle>기본폴더</s.FolderTitle>
+            <s.FolderTitle>기본 폴더</s.FolderTitle>
           </s.FolderArea>
           <s.FolderCaption>내 폴더</s.FolderCaption>
           <s.DragDropArea
