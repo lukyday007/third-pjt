@@ -4,6 +4,7 @@ import { getImageDetail } from "../lib/api/image-api"
 import { AppContext } from "../contexts/AppContext"
 import { useParams } from "react-router-dom"
 import axios from "axios"
+import AlertModal from "./AlertModal"
 
 // 태그 컬러 일단 여기에...
 const colorPairs = [
@@ -143,6 +144,8 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
   const parmas = useParams()
   const imageRef = useRef(null)
   const [canvas, setCanvas] = useState(null)
+  const [isModalVisible, setIsModalVisible] = useState(false)
+  const [alertMessage, setAlertMessage] = useState("")
 
   useEffect(() => {
     fetchImageDetail(imageId)
@@ -215,10 +218,19 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
 
       await navigator.clipboard.writeText(copyUrl)
 
-      console.log("복사 성공")
+      setAlertMessage("URL이 클립보드에 복사됐습니다.")
+      handleShowModal()
     } catch (e) {
       console.log(e)
     }
+  }
+
+  const handleShowModal = () => {
+    setIsModalVisible(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false)
   }
 
   // 이미지 복사
@@ -238,7 +250,8 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
           }
         }, "image/png")
       }
-      console.log("이미지가 클립보드에 복사됐습니다.")
+      setAlertMessage("이미지가 클립보드에 복사됐습니다.")
+      handleShowModal()
     } catch (e) {
       console.log(e)
     }
@@ -294,7 +307,20 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
             </s.SourceArea>
             <s.ButtonArea>
               {!parmas.id ? (
-                <s.Button onClick={saveFunction}>이미지 저장</s.Button>
+                <s.Button
+                  onClick={async () => {
+                    try {
+                      await saveFunction()
+                      setAlertMessage("이미지가 기본 폴더에 복사됐습니다.")
+                      handleShowModal()
+                    } catch (e) {
+                      setAlertMessage("이미지 저장을 실패했습니다.")
+                      handleShowModal()
+                    }
+                  }}
+                >
+                  이미지 저장
+                </s.Button>
               ) : (
                 <></>
               )}
@@ -312,6 +338,11 @@ const ImgDetailModal = ({ imageId, onClose, saveFunction }) => {
           </s.InfoArea>
         </s.Container>
       )}
+      <AlertModal
+        message={alertMessage}
+        isVisible={isModalVisible}
+        onClose={handleCloseModal}
+      ></AlertModal>
     </s.Overlay>
   )
 }
