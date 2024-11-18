@@ -53,9 +53,11 @@ public class SchedulerConfig implements SchedulingConfigurer {
 
     // todo 테스트 후 2시간 간격으로 수정 2 * 60 * 60 * 1000 : 2시간마다 실행
 //    @Scheduled(fixedRate = 60 * 60 * 1000)    // 1시간마다 실행
-    @Scheduled(fixedRate = 30 * 60 * 1000)    // *** test 용 10분마다 실행 ***
+    @Scheduled(fixedRate = 30 * 60 * 1000)    // *** test 용 30분마다 실행 ***
     @CacheEvict(value = "keywordRankCache", key = "'ranking'")
     public void updateKeywordRanking() {
+        long startTime = System.currentTimeMillis(); // 시작 시간 기록
+        log.info(">>>>>> updateKeywordRanking 시작...");
         try {
             Map<Object, Object> keywordMap = keywordTemplate.opsForHash().entries("keyword");
 
@@ -64,7 +66,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
                     String fullField = temp.getKey().toString();
                     String[] parts = fullField.split(":");
                     if (parts.length != 2) {
-                        log.warn("부적절한 데이터: {}", fullField);
+                        log.warn("==> 부적절한 데이터: {}", fullField);
                         continue;
                     }
 
@@ -122,6 +124,8 @@ public class SchedulerConfig implements SchedulingConfigurer {
         } catch (Exception e) {
             log.error(">>> 키워드 랭킹 갱신 중 예기치 못한 에러가 발생했습니다.", e);
         }
+        long endTime = System.currentTimeMillis(); // 종료 시간 기록
+        log.info(">>> updateKeywordRanking 종료. 총 수행 시간: {}ms", (endTime - startTime));
     }
 
 
@@ -129,6 +133,9 @@ public class SchedulerConfig implements SchedulingConfigurer {
     @Transactional
     @Scheduled(fixedRate = 12 * 60 * 60 * 1000)
     public void updateSQL() {
+        long startTime = System.currentTimeMillis(); // 시작 시간 기록
+        log.info(">>> updateSQL 시작...");
+
         try {
             Map<Object, Object> keywordMap = keywordTemplate.opsForHash().entries("keyword");
 
@@ -170,5 +177,8 @@ public class SchedulerConfig implements SchedulingConfigurer {
         } catch (Exception e) {
             log.error("Unexpected error occurred during update SQL.", e);
         }
+
+        long endTime = System.currentTimeMillis(); // 종료 시간 기록
+        log.info(">>> updateSQL 종료. 총 수행 시간: {}ms", (endTime - startTime));
     }
 }

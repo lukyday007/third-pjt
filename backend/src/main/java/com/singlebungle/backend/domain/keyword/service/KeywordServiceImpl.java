@@ -156,6 +156,7 @@ public class KeywordServiceImpl implements KeywordService {
                     return new KeywordRankResponseDTO(keyword, isState, 0.0); // gap은 필요 없으므로 0.0으로 고정
                 })
                 .sorted(Comparator.comparing(KeywordRankResponseDTO::getKeyword)) // 키워드 알파벳 순 정렬
+                .limit(5)
                 .collect(Collectors.toList());
 
         return rankedKeywords;
@@ -170,7 +171,6 @@ public class KeywordServiceImpl implements KeywordService {
         }
         return rankMap;
     }
-
 
 
     /*
