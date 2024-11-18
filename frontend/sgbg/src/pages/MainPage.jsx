@@ -101,6 +101,7 @@ const s = {
     border-radius: 12px;
     width: 240px;
     margin-bottom: 16px;
+    cursor: pointer;
   `,
   KeywordText: styled.span`
     font-size: 16px;
