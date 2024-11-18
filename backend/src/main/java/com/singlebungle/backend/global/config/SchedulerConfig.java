@@ -57,7 +57,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
     @CacheEvict(value = "keywordRankCache", key = "'ranking'")
     public void updateKeywordRanking() {
         long startTime = System.currentTimeMillis(); // 시작 시간 기록
-        log.info(">>>>>> updateKeywordRanking 시작...");
+        log.info(">>>>>>>>>>>>>>>>>>       updateKeywordRanking 시작... <<<<<<<<<<<<<<<<<<<<<");
         try {
             Map<Object, Object> keywordMap = keywordTemplate.opsForHash().entries("keyword");
 
@@ -126,6 +126,8 @@ public class SchedulerConfig implements SchedulingConfigurer {
         }
         long endTime = System.currentTimeMillis(); // 종료 시간 기록
         log.info(">>> updateKeywordRanking 종료. 총 수행 시간: {}ms", (endTime - startTime));
+        log.info(">>>>>>>>>>>>>>>>>>       updateKeywordRanking 끄읕      <<<<<<<<<<<<<<<<<<<<<");
+
     }
 
 
@@ -134,7 +136,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
     @Scheduled(fixedRate = 12 * 60 * 60 * 1000)
     public void updateSQL() {
         long startTime = System.currentTimeMillis(); // 시작 시간 기록
-        log.info(">>> updateSQL 시작...");
+        log.info(">>>>>>>>>>>>>>>>>>       updateSQL 시작      <<<<<<<<<<<<<<<<<<<<<");
 
         try {
             Map<Object, Object> keywordMap = keywordTemplate.opsForHash().entries("keyword");
@@ -180,5 +182,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
 
         long endTime = System.currentTimeMillis(); // 종료 시간 기록
         log.info(">>> updateSQL 종료. 총 수행 시간: {}ms", (endTime - startTime));
+        log.info(">>>>>>>>>>>>>>>>>>       updateSQL 끄읕      <<<<<<<<<<<<<<<<<<<<<");
+
     }
 }
