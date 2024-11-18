@@ -110,11 +110,14 @@ public class KeywordServiceImpl implements KeywordService {
 
 
     @Override
-    @Cacheable(value = "keywordRankCache", key = "'ranking'", unless = "#result == null || #result.isEmpty()")
+//    @Cacheable(value = "keywordRankCache", key = "'ranking'", unless = "#result == null || #result.isEmpty()")
     public List<KeywordRankResponseDTO> getKeywordRankList() {
         // Redis에서 현재 순위 데이터 가져오기
-        Set<Object> currentRanks = keywordTemplate.opsForZSet()
-                .reverseRange("keyword-ranking", 0, 9); // 상위 10위 (0부터 9까지)
+        List<String> currentRanks = keywordTemplate.opsForZSet()
+                .reverseRange("keyword-ranking", 0, 9) // 상위 10위 (0부터 9까지)
+                .stream()
+                .map(Object::toString) // Object 타입을 String 타입으로 변환
+                .collect(Collectors.toList());
 
         log.info(">>> currentRanks : {}", currentRanks);
 
@@ -123,8 +126,11 @@ public class KeywordServiceImpl implements KeywordService {
         }
 
         // Redis에서 이전 순위 데이터 가져오기
-        Set<Object> previousRanks = keywordTemplate.opsForZSet()
-                .reverseRange("previous-ranking", 0, 9); // 상위 10위 (0부터 9까지)
+        List<String> previousRanks = keywordTemplate.opsForZSet()
+                .reverseRange("previous-ranking", 0, 9)
+                .stream()
+                .map(Object::toString)
+                .collect(Collectors.toList());// 상위 10위 (0부터 9까지)
 
         log.info(">>> previousRanks : {}", previousRanks);
 
@@ -137,12 +143,12 @@ public class KeywordServiceImpl implements KeywordService {
         Map<String, Integer> currentRankMap = createRankMap(currentRanks);
 
         // 현재 랭킹 기준으로 상태 비교
-        List<KeywordRankResponseDTO> rankedKeywords = currentRankMap.keySet().stream()
+        List<KeywordRankResponseDTO> rankedKeywords = currentRanks.stream()
                 .map(keyword -> {
                     Integer previousRank = previousRankMap.get(keyword);
                     Integer currentRank = currentRankMap.get(keyword);
 
-                    String isState;
+                    String isState = null;
                     if (previousRank == null) {
                         isState = "up"; // 새롭게 추가된 키워드
                     } else if (currentRank < previousRank) {
@@ -155,7 +161,6 @@ public class KeywordServiceImpl implements KeywordService {
 
                     return new KeywordRankResponseDTO(keyword, isState, 0.0); // gap은 필요 없으므로 0.0으로 고정
                 })
-                .sorted(Comparator.comparing(KeywordRankResponseDTO::getKeyword)) // 키워드 알파벳 순 정렬
                 .limit(5)
                 .collect(Collectors.toList());
 
@@ -164,11 +169,10 @@ public class KeywordServiceImpl implements KeywordService {
 
 
     // 순위를 Map으로 변환하는 유틸리티 메서드
-    private Map<String, Integer> createRankMap(Set<Object> ranks) {
+    private Map<String, Integer> createRankMap(List<String> ranks) {
         Map<String, Integer> rankMap = new HashMap<>();
-        int rank = 1; // 순위는 1부터 시작
-        for (Object obj : ranks) {
-            rankMap.put(obj.toString(), rank++);
+        for (int i = 0; i < ranks.size(); i++) {
+            rankMap.put(ranks.get(i), i + 1); // 순위는 1부터 시작
         }
         return rankMap;
     }
