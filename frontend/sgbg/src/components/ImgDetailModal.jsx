@@ -72,6 +72,7 @@ const s = {
     width: 600px;
     max-height: 600px;
     max-width: 100%;
+    object-fit: contain;
   `,
   InfoArea: styled.div`
     width: 650px;
