@@ -5,6 +5,7 @@ import LoginButtonSmall from "../asset/images/LoginPage/LoginButtonSmall.svg?rea
 import SingBung from "../asset/images/MainPage/SingBung.svg?react"
 import BigSingBung from "../asset/images/LoginPage/BigSingBung.svg?react"
 import { getLoginUrl, googleSignIn } from "../lib/api/user-api"
+import { useNavigate } from "react-router-dom"
 
 const s = {
   Container: styled.div`
@@ -59,6 +60,7 @@ const LoginPage = () => {
 
   const params = new URLSearchParams(window.location.search)
   const code = encodeURIComponent(params.get("code"))
+  const navigate = useNavigate()
 
   const googleLogin = async (code) => {
     googleSignIn(
