@@ -52,7 +52,7 @@ public class RedisCacheConfig {
                     .entryTtl(Duration.ofHours(1L));
                 */
 
-                .entryTtl(Duration.ofMinutes(90)); // 캐시 데이터의 TTL(1시간) 설정
+                .entryTtl(Duration.ofMinutes(2)); // 캐시 데이터의 TTL(1시간) 설정
 
         return RedisCacheManager
                 .RedisCacheManagerBuilder
