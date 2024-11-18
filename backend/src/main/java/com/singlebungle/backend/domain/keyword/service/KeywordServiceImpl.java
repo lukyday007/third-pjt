@@ -110,7 +110,7 @@ public class KeywordServiceImpl implements KeywordService {
 
 
     @Override
-//    @Cacheable(value = "keywordRankCache", key = "'ranking'", unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = "keywordRankCache", key = "'ranking'", unless = "#result == null || #result.isEmpty()")
     public List<KeywordRankResponseDTO> getKeywordRankList() {
         // Redis에서 현재 순위 데이터 가져오기
         List<String> currentRanks = keywordTemplate.opsForZSet()
