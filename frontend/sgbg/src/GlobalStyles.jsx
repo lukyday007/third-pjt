@@ -7,6 +7,10 @@ const GlobalStyle = createGlobalStyle`
     font-family: 'Pretendard';
     font-weight: 500;
   }
+
+  *::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+  }
 `
 
 export default GlobalStyle

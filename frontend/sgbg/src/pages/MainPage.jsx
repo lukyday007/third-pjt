@@ -217,9 +217,6 @@ const MainPage = () => {
               <s.TextWithTitle>
                 실시간 인기 키워드와 랜덤 이미지로 더 많은 즐거움을 만나보세요.
               </s.TextWithTitle>
-              <s.TitleButton onClick={handleLoginClick}>
-                로그인하는버튼 (임시)
-              </s.TitleButton>
             </s.TitleTextArea>
             <s.SingBungMove>
               <SingBung />
@@ -255,8 +252,15 @@ const MainPage = () => {
             </s.TitleButton>
             <div>
               <img
+                onClick={handleNewImageClick}
                 height={"300px"}
+                width={"450px"}
                 src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${newImage.imageUrl}`}
+                style={{
+                  objectFit: "contain",
+                  objectPosition: "left center",
+                  cursor: "pointer",
+                }}
               />
             </div>
           </s.NewImageArea>
@@ -269,8 +273,15 @@ const MainPage = () => {
             </s.TitleButtonLight>
             <div>
               <img
+                onClick={handleRandomImageClick}
                 height={"300px"}
+                width={"450px"}
                 src={`https://sgbgbucket.s3.ap-northeast-2.amazonaws.com/${randomImage.imageUrl}`}
+                style={{
+                  objectFit: "contain",
+                  objectPosition: "left center",
+                  cursor: "pointer",
+                }}
               />
             </div>
           </s.NewImageArea>
