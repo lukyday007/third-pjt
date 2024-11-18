@@ -53,8 +53,8 @@ public class SchedulerConfig implements SchedulingConfigurer {
 
     // todo 테스트 후 2시간 간격으로 수정 2 * 60 * 60 * 1000 : 2시간마다 실행
 //    @Scheduled(fixedRate = 60 * 60 * 1000)    // 1시간마다 실행
-    @Scheduled(fixedRate = 30 * 60 * 1000)    // *** test 용 30분마다 실행 ***
-    @CacheEvict(value = "keywordRankCache", key = "'ranking'")
+    @Scheduled(fixedRate = 60 * 1000)    // *** test 용 30분마다 실행 ***
+//    @CacheEvict(value = "keywordRankCache", key = "'ranking'")
     public void updateKeywordRanking() {
         long startTime = System.currentTimeMillis(); // 시작 시간 기록
         log.info(">>>>>>>>>>>>>>>>>>   {}    updateKeywordRanking 시작... <<<<<<<<<<<<<<<<<<<<<", startTime);
