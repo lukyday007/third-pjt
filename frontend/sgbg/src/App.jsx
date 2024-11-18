@@ -9,8 +9,8 @@ import { useLocation, Navigate, Route, Routes } from "react-router-dom"
 import LoginPage from "./pages/LoginPage"
 import LoginCallBackPage from "./pages/LoginCallBackPage"
 import SettingPage from "./pages/SettingPage"
-import { useEffect } from "react"
-import { AppProvider } from "./contexts/AppContext"
+import { useContext, useEffect } from "react"
+import { AppContext, AppProvider } from "./contexts/AppContext"
 const s = {
   Container: styled.div`
     display: flex;
@@ -41,30 +41,41 @@ function App() {
   const handleContextMenu = (event) => {
     event.preventDefault()
   }
+
+  const { isAuthenticated } = useContext(AppContext)
+
+  if (!isAuthenticated && !isLoginPage) {
+    return <Navigate to="/login" />
+  }
+
+  // if (isAuthenticated && isLoginPage) {
+  //   return <Navigate to="/" />
+  // }
+
   return (
     <div className="App">
-      <AppProvider>
-        <GlobalStyle />
-        <s.Container>
-          {!isLoginPage && <SideBar />}
-          {/* <SideBar /> */}
-          <s.ContentArea>
-            {!isLoginPage && !isSettingPage && <SearchBar />}
-            {/* <SearchBar /> */}
-            <s.MainContent>
-              <Routes>
-                <Route path="/" element={<MainPage />} />
-                <Route path="image" element={<ImgPage />}>
-                  <Route path=":id" />
-                </Route>
-                <Route path="login" element={<LoginPage />} />
-                <Route path="login-callback" element={<LoginCallBackPage />} />
-                <Route path="setting" element={<SettingPage />} />
-              </Routes>
-            </s.MainContent>
-          </s.ContentArea>
-        </s.Container>
-      </AppProvider>
+      {/* <AppProvider> */}
+      <GlobalStyle />
+      <s.Container>
+        {!isLoginPage && <SideBar />}
+        {/* <SideBar /> */}
+        <s.ContentArea>
+          {!isLoginPage && !isSettingPage && <SearchBar />}
+          {/* <SearchBar /> */}
+          <s.MainContent>
+            <Routes>
+              <Route path="/" element={<MainPage />} />
+              <Route path="image" element={<ImgPage />}>
+                <Route path=":id" />
+              </Route>
+              <Route path="login" element={<LoginPage />} />
+              <Route path="login-callback" element={<LoginCallBackPage />} />
+              <Route path="setting" element={<SettingPage />} />
+            </Routes>
+          </s.MainContent>
+        </s.ContentArea>
+      </s.Container>
+      {/* </AppProvider> */}
     </div>
   )
 }
