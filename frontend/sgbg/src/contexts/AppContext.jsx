@@ -20,14 +20,14 @@ export const AppProvider = ({ children }) => {
 
   const tokentest = localStorage.getItem("accessToken")
   useEffect(() => {
-    console.log("testtoken")
+    console.log("testtoken", tokentest)
   }, [tokentest])
   useEffect(() => {
     const token = localStorage.getItem("accessToken")
     if (token) {
       setIsAuthenticated(true)
     }
-    console.log("context useEffect")
+    console.log("context useEffect", token)
   }, [])
 
   useEffect(() => {
