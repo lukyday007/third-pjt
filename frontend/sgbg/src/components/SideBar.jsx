@@ -50,7 +50,7 @@ const s = {
     background-color: #ffffff;
     border-right: solid 1px #e1e3e1;
     min-width: 300px;
-    width: 300px;
+    width: 300px;ss
     padding: 28px;
     height: 100%;
     flex-direction: column;
