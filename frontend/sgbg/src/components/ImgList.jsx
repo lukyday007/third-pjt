@@ -115,23 +115,22 @@ const ImgList = () => {
       setDirectoryId(1)
       setIsBin(true)
       setFolderName("휴지통")
+    } else if (id === "0") {
+      setDirectoryId(0)
+      setFolderName("기본폴더")
     } else if (id) {
       setDirectoryId(id)
-
-      const directoryInfo = directoryInfos.find(
-        (directory) => directory.directoryId === Number(id) // id와 directoryId 비교
-      )
-      if (id === "0") {
-        setFolderName("기본 폴더")
-      }
-      if (directoryInfo) {
+      if (directoryInfos.length) {
+        const directoryInfo = directoryInfos.find(
+          (directory) => directory.directoryId === Number(id) // id와 directoryId 비교
+        )
         setFolderName(directoryInfo.directoryName)
       }
     } else {
       setDirectoryId(null)
       setFolderName(null)
     }
-  }, [params])
+  }, [params, directoryInfos])
 
   // 일단 주석
   // useEffect(() => {
