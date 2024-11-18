@@ -69,8 +69,8 @@ const LoginPage = () => {
         console.log("resp", resp.data["access-token"])
         localStorage.setItem("accessToken", resp.data["access-token"])
         window.dispatchEvent(new Event("localStorageUpdate"))
-        navigate("/", { replace: true })
-        history.replaceState(null, "", "/#/")
+        navigate("/login", { replace: true })
+        history.replaceState(null, "", "/#/login")
       },
       (error) => {
         console.log("error", error)
