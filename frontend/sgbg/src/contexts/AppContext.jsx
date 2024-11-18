@@ -18,11 +18,16 @@ export const AppProvider = ({ children }) => {
   // 로그인 상태
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
+  const tokentest = localStorage.getItem("accessToken")
+  useEffect(() => {
+    console.log("testtoken")
+  }, [tokentest])
   useEffect(() => {
     const token = localStorage.getItem("accessToken")
     if (token) {
       setIsAuthenticated(true)
     }
+    console.log("context useEffect")
   }, [])
 
   useEffect(() => {
