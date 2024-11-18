@@ -57,7 +57,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
     @CacheEvict(value = "keywordRankCache", key = "'ranking'")
     public void updateKeywordRanking() {
         long startTime = System.currentTimeMillis(); // 시작 시간 기록
-        log.info(">>>>>>>>>>>>>>>>>>       updateKeywordRanking 시작... <<<<<<<<<<<<<<<<<<<<<");
+        log.info(">>>>>>>>>>>>>>>>>>   {}    updateKeywordRanking 시작... <<<<<<<<<<<<<<<<<<<<<", startTime);
         try {
             Map<Object, Object> keywordMap = keywordTemplate.opsForHash().entries("keyword");
 
