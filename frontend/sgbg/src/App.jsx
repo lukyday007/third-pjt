@@ -48,9 +48,9 @@ function App() {
     return <Navigate to="/login" />
   }
 
-  // if (isAuthenticated && isLoginPage) {
-  //   return <Navigate to="/" />
-  // }
+  if (isAuthenticated && isLoginPage) {
+    return <Navigate to="/" />
+  }
 
   return (
     <div className="App">
