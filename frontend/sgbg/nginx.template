@@ -1,0 +1,15 @@
+server {
+    listen ${LISTEN_PORT};  # 환경 변수 LISTEN_PORT를 사용하여 포트 설정2
+    server_name k11b205.p.ssafy.io;
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}
