@@ -1,0 +1,130 @@
+pipeline {
+    agent any
+
+    environment {
+        TARGET_BRANCH = 'develop-be'  // 목표 브랜치 이름 설정
+        REMOTE_USER = 'ubuntu'
+        REMOTE_HOST = 'k11b205.p.ssafy.io'
+        REMOTE_DIR = '/home/ubuntu/plog'  // 원격 서버에서 프로젝트가 위치한 경로
+    }
+
+    stages {
+        stage('Check Branch') { // 내가 원하는 브랜치인지 필터링 진행
+            when {
+                expression {
+                    return env.GIT_BRANCH == "origin/${TARGET_BRANCH}"
+                }
+            }
+            steps {
+                echo "Building branch: ${env.GIT_BRANCH}"
+            }
+        }
+        stage('Cleanup Workspace') {
+            steps {
+                deleteDir() // 작업 공간 초기화
+            }
+        }
+        stage('Checkout') {
+            steps {
+                script {
+                    checkout([$class: 'GitSCM',
+                              branches: [[name: "*/${TARGET_BRANCH}"]],
+                              doGenerateSubmoduleConfigurations: false,
+                              extensions: [[$class: 'CleanCheckout']],
+                              userRemoteConfigs: [[url: 'https://lab.ssafy.com/s11-final/S11P31B205.git',
+                              credentialsId: 'gitlab']]  // credentialsId를 올바르게 설정
+                    ])
+                }
+            }
+        }
+        stage('Create Directories') {
+            steps {
+                script {
+                    // 필요한 디렉토리 생성
+                    sh 'mkdir -p ${WORKSPACE}/backend/src/main/resources'
+                }
+            }
+        }
+        stage('Copy application.yml') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: 'application-backend-yml', variable: 'APP_YML')]) {
+                        // 파일 복사
+                        sh 'cp $APP_YML backend/src/main/resources/application.yml'
+
+                        // 복사된 파일 내용 확인
+                        sh 'cat backend/src/main/resources/application.yml'
+                    }
+                }
+            }
+        }
+        stage('Build with Gradle') {
+            steps {
+                dir('backend') {
+                    sh 'chmod +x ./gradlew'  // 실행 권한 추가
+                    sh './gradlew clean build --no-daemon'
+                    sh 'ls -la build/test-results/test'  // 테스트 결과 파일 경로 출력
+                }
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // JAR 파일을 이용하여 Docker 이미지 빌드
+                    sh 'docker build -t backend:latest -f backend/Dockerfile backend/.'
+                }
+            }
+        }
+        stage('Deploy with Docker Compose') {
+            steps {
+                script {
+                    // SSH 키를 사용하여 원격 서버에 연결하고 명령을 실행
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i /var/jenkins_home/.ssh/jenkins_rsa ${REMOTE_USER}@${REMOTE_HOST} '
+                        cd ${REMOTE_DIR} &&
+                        docker-compose stop backend &&
+                        docker-compose rm -f backend &&
+                        docker-compose up -d backend
+                        '
+                    """
+                }
+            }
+        }
+        stage('Notification') {
+            steps {
+                echo 'jenkins notification!'
+            }
+        }
+    }
+    
+    post {
+        always {
+            junit '**/backend/build/test-results/test/*.xml'
+            archiveArtifacts artifacts: '**/backend/build/libs/*.jar', fingerprint: true
+        }
+        success {
+            echo 'Deployment successful!'
+            script {
+                def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+                def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+                mattermostSend(color: 'good',
+                    message: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|Details>)",
+                    endpoint: 'https://meeting.ssafy.com/hooks/nhgr1zq9rfrbzn3xsmcipbqjmr',
+                    channel: 'Jenkins_Build_Result'
+                )
+            }
+        }
+        failure {
+            echo 'Deployment failed!'
+            script {
+                def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+                def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+                mattermostSend(color: 'danger',
+                    message: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|Details>)",
+                    endpoint: 'https://meeting.ssafy.com/hooks/nhgr1zq9rfrbzn3xsmcipbqjmr',
+                    channel: 'Jenkins_Build_Result'
+                )
+            }
+        }
+    }
+}
