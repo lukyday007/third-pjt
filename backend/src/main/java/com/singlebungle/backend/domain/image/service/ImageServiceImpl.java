@@ -120,19 +120,8 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-
-    private long calculateContentLength(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        byte[] buffer = new byte[8192];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            byteArrayOutputStream.write(buffer, 0, bytesRead);
-        }
-        return byteArrayOutputStream.size();
-    }
-
-
-    private InputStream convertWebPToJPG(InputStream webpInputStream) throws IOException {
+    @Override
+    public InputStream convertWebPToJPG(InputStream webpInputStream) throws IOException {
         try (BufferedInputStream bufferedInputStream = new BufferedInputStream(webpInputStream)) {
             BufferedImage webpImage = ImageIO.read(bufferedInputStream); // WebP 이미지 읽기
             if (webpImage == null) {
@@ -151,6 +140,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
 
+    @Override
     public String getExtensionFromContentType(String contentType) {
         switch (contentType) {
             case "image/jpeg":
@@ -250,8 +240,9 @@ public class ImageServiceImpl implements ImageService {
     }
 
 
+    @Override
     // Redis 키워드 업데이트 로직
-    private void updateKeywordInRedis(String keyword, String currentTime) {
+    public void updateKeywordInRedis(String keyword, String currentTime) {
 
         String curCntKey = getRedisKey(keyword, "curCnt");
         String prevCntKey = getRedisKey(keyword, "prevCnt");

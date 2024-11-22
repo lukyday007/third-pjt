@@ -55,11 +55,8 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public List<String> getKeywordsByTag(String keyword) {
-        // 키워드가 포함된 문서 목록을 검색
-//        List<SearchDocument> documents = searchRepository.findByTagInfoContainingTag(keyword);
-        List<SearchDocument> documents = searchCustomRepository.searchByWildcardAndBoost(keyword);
 
-//        List<SearchDocument> documents = searchRepository.findByTagInfoTag(keyword);
+        List<SearchDocument> documents = searchCustomRepository.searchByWildcardAndBoost(keyword);
 
         // 검색된 문서에서 태그만 추출하여 리스트로 반환
         return documents.stream()
@@ -69,33 +66,5 @@ public class SearchServiceImpl implements SearchService {
     }
 
 
-//    @Autowired
-//    private ElasticsearchOperations elasticsearchOperations;
-//
-//    public List<String> getKeywordsByTag(String keyword) {
-//        // Criteria를 사용하여 쿼리 구성
-//        Criteria criteria = new Criteria("tagInfo.tag")
-//                .contains(keyword) // 부분 일치 검색
-//                .boost(10);        // 가중치 추가
-//
-//        CriteriaQuery query = new CriteriaQuery(criteria);
-//        query.addSort(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Order.desc("_score")));
-//
-//        // ElasticsearchOperations로 검색 수행
-//        SearchHits<SearchDocument> searchHits = elasticsearchOperations.search(query, SearchDocument.class);
-//
-//        // 결과 태그 리스트로 반환
-//        return searchHits.stream()
-//                .map(hit -> hit.getContent().getTagInfo().getTag())  // 태그 추출
-//                .distinct()  // 중복 제거
-//                .collect(Collectors.toList());
-//    }
-//
-
-
-    @Override
-    public void incrementSearchCount(String keyword) {
-
-    }
 
 }

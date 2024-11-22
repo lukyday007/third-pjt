@@ -6,7 +6,6 @@ import com.google.protobuf.ByteString;
 import com.singlebungle.backend.global.config.GoogleVisionConfig;
 import com.singlebungle.backend.global.exception.InvalidApiUrlException;
 import com.singlebungle.backend.global.exception.InvalidImageException;
-import com.singlebungle.backend.global.exception.InvalidRequestException;
 import com.singlebungle.backend.global.exception.UrlAccessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +35,7 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
 
     @Override
     public ImageAnnotatorClient createVisionClient() throws IOException {
+
         GoogleCredentials credentials = googleVisionConfig.getGoogleCredentials();
         ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
                 .setCredentialsProvider(() -> credentials)
@@ -103,9 +102,10 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
     @Override
     public List<String> analyzeImage(String imageUrl) throws IOException {
         // 단일 처리 메서드 사용
+        // 이미지 URL 처리: 이미지 객체(Google Vision) 생성
         Image image = buildImage(imageUrl);
 
-        // 병렬 처리 시작
+        // 병렬 처리 시작: SafeSearch 검증과 라벨 검출
         CompletableFuture<Boolean> safeSearchFuture = CompletableFuture.supplyAsync(() -> {
             try {
                 return detectSafeSearchGoogleVision(image);
@@ -124,7 +124,7 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
             }
         });
 
-        // 결과 병합
+        // 결과 병합: SafeSearch와 라벨 검출 결과를 확인하고 반환
         try {
             boolean isSafe = safeSearchFuture.get(); // SafeSearch 결과
             if (!isSafe) {
@@ -142,11 +142,11 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
     @Override
     public Image buildImage(String imageUrl) {
         try {
-            if (imageUrl.startsWith("data:image")) {
+            if (imageUrl.startsWith("data:image")) {    // base64 url일 경우
                 return buildImageFromBase64(imageUrl);
 
-            } else if (imageUrl.endsWith(".webp")) {
-                log.info(">>> WebP 이미지 감지, 변환을 시도합니다. URL: {}", imageUrl);
+            } else if (imageUrl.endsWith(".webp")) {    // webp url일 경우
+                 log.info(">>> WebP 이미지 감지, 변환을 시도합니다. URL: {}", imageUrl);
 
                 // WebP 지원 여부 확인
                 if (!isWebpSupported()) {
@@ -155,7 +155,7 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
 
                 return buildImageFromWebp(new URL(imageUrl).openStream().readAllBytes());
 
-            } else {
+            } else {    // 일반 url 처리
                 if (isUrlAccessible(imageUrl)) {
                     log.info(">>> 일반 URL 이미지 처리 시작...");
                     try {
@@ -176,38 +176,46 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
 
 
     // URL 접근 가능 여부 확인
-    private boolean isUrlAccessible(String imageUrl) {
+    @Override
+    public boolean isUrlAccessible(String imageUrl) {
         try {
+            //  URL 접근 가능 여부 확인: HTTP HEAD 요청
             URL url = new URL(imageUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("HEAD"); // HEAD 요청으로 리소스 확인
-            connection.setInstanceFollowRedirects(true); // 리다이렉션 허용
-            connection.setConnectTimeout(3000); // 연결 제한 시간 3초
-            connection.setReadTimeout(3000); // 읽기 제한 시간 3초
+            connection.setRequestMethod("HEAD");            // HEAD 요청으로 리소스 확인
+            connection.setInstanceFollowRedirects(true);    // 리다이렉션 허용
+            connection.setConnectTimeout(3000);             // 연결 제한 시간 3초
+            connection.setReadTimeout(3000);                // 읽기 제한 시간 3초
             int responseCode = connection.getResponseCode();
 
             log.info(">>> URL 접근 테스트: {} - 응답 코드: {}", imageUrl, responseCode);
 
-            // 리다이렉션 및 성공 상태 코드 처리
-            return (responseCode == HttpURLConnection.HTTP_OK ||
-                    (responseCode >= 300 && responseCode < 400));
+            // HTTP OK 또는 리다이렉션 상태 확인
+            return (responseCode == HttpURLConnection.HTTP_OK || (responseCode >= 300 && responseCode < 400));
+
         } catch (Exception e) {
             log.error(">>> URL 접근 실패: {} - 예외 메시지: {}", imageUrl, e.getMessage(), e);
             return false;
         }
     }
 
+
     // URL 직접 사용
-    private Image buildImageFromUrlDirect(String imageUrl) {
+    @Override
+    public Image buildImageFromUrlDirect(String imageUrl) {
+        // URL을 통해 직접 이미지 생성
 //        log.info(">>> URL을 통해 직접 이미지 사용: {}", imageUrl);
         ImageSource imgSource = ImageSource.newBuilder().setImageUri(imageUrl).build();
 
         return Image.newBuilder().setSource(imgSource).build();
     }
 
-    private Image buildImageFromUrlFallback(String imageUrl) {
+
+    @Override
+    public Image buildImageFromUrlFallback(String imageUrl) {
         log.info(">>> URL 접근 불가, 바이너리 데이터로 다운로드 처리: {}", imageUrl);
         try {
+            // URL을 통해 바이너리 데이터 다운로드 및 이미지 생성
             URL url = new URL(imageUrl);
             InputStream inputStream = url.openStream();
             byte[] imageBytes = inputStream.readAllBytes();
@@ -222,10 +230,13 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
 
 
     // Base64 이미지 처리
-    private Image buildImageFromBase64(String imageUrl) {
+    @Override
+    public Image buildImageFromBase64(String imageUrl) {
+        // Base64 문자열에서 이미지 데이터 디코딩 및 생성
         String base64Data = imageUrl.substring(imageUrl.indexOf(",") + 1);
         byte[] decodedBytes = Base64.getDecoder().decode(base64Data);
 
+        // WebP Base64 처리
         if (imageUrl.startsWith("data:image/webp")) {
             log.info(">>> WebP(Base64) 감지, JPG로 변환 중...");
             return buildImageFromWebp(decodedBytes);
@@ -246,7 +257,7 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
     @Override
     public Image buildImageFromWebp(byte[] webpBytes) {
         try {
-            // WebP 이미지를 BufferedImage로 읽음
+            // WebP 이미지를 BufferedImage(Jpg)로 읽음
             InputStream webpInputStream = new ByteArrayInputStream(webpBytes);
             BufferedImage bufferedImage = ImageIO.read(webpInputStream);
 
@@ -280,7 +291,8 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
 
 
     // 외부 이미지 URL을 사용하여 라벨 검출 실행
-    private List<String> detectLabels(Image image) throws IOException {
+    @Override
+    public List<String> detectLabels(Image image) throws IOException {
 
         AnnotateImageRequest request = AnnotateImageRequest.newBuilder()
                 .addFeatures(Feature.newBuilder().setType(Feature.Type.LABEL_DETECTION).build())
@@ -295,9 +307,6 @@ public class GoogleVisionServiceImpl implements GoogleVisionService {
                 log.error(">>> Google Vision API 라벨 검출 실패: {}", res.getError().getMessage());
                 throw new InvalidImageException("Google Vision - 라벨 검출 실패: " + res.getError().getMessage());
             }
-
-//            // 라벨 검출 결과 로그 출력
-//            log.info(">>> Google Vision API 라벨 응답: {}", res.getLabelAnnotationsList());
 
             // description 값만 추출하여 리스트로 반환
             return res.getLabelAnnotationsList().stream()

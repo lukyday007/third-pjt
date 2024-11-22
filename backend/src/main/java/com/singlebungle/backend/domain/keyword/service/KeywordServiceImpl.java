@@ -109,6 +109,9 @@ public class KeywordServiceImpl implements KeywordService {
     }
 
 
+
+
+
     @Override
     @Cacheable(value = "keywordRankCache", key = "'ranking'", unless = "#result == null || #result.isEmpty()")
     public List<KeywordRankResponseDTO> getKeywordRankList() {
@@ -168,8 +171,125 @@ public class KeywordServiceImpl implements KeywordService {
     }
 
 
+    @Override
+    public void updateKeywordRanking() {
+
+        Map<Object, Object> keywordMap = keywordTemplate.opsForHash().entries("keyword");
+
+        if (keywordMap != null) {
+            for (Map.Entry<Object, Object> temp : keywordMap.entrySet()) {
+                String fullField = temp.getKey().toString();
+                String[] parts = fullField.split(":");
+
+                if (parts.length != 2) {
+                    log.warn("==> 부적절한 데이터: {}", fullField);
+                    continue;
+                }
+
+                String keyword = parts[0];      // {keyword}
+                String fieldType = parts[1];    // curCnt, prevCnt
+
+                // 현재 값 curCnt를 기준으로 {keyword} 조회
+                if ("curCnt".equals(fieldType)) {
+                    String curCntStr = temp.getValue() != null ? temp.getValue().toString() : null;
+                    String prevCntStr = keywordMap.get(keyword + ":prevCnt") != null ? keywordMap.get(keyword + ":prevCnt").toString() : null;
+
+                    if (prevCntStr != null && curCntStr != null) {
+                        try {
+                            int prevCnt = Integer.parseInt(prevCntStr);
+                            int curCnt = Integer.parseInt(curCntStr);
+                            int gap = curCnt - prevCnt;
+
+                            if (gap > 0) {
+                                // 이전 점수 가져오기, 없으면 0으로 초기화
+                                Double currentScore = keywordTemplate.opsForZSet().score("keyword-ranking", keyword);
+                                if (currentScore == null) {
+                                    // keyword-ranking에 키워드가 없을 경우 초기화
+                                    keywordTemplate.opsForZSet().add("keyword-ranking", keyword, 0.0);
+                                    currentScore = 0.0;
+                                }
+
+                                Double previousScore = keywordTemplate.opsForZSet().score("previous-ranking", keyword);
+                                if (previousScore == null) {
+                                    // previous-ranking에 키워드가 없을 경우 초기화
+                                    keywordTemplate.opsForZSet().add("previous-ranking", keyword, 0.0);
+                                    previousScore = 0.0;
+                                }
+
+                                // keyword-ranking 갱신
+                                keywordTemplate.opsForZSet().incrementScore("keyword-ranking", keyword, gap);
+                                // previous-ranking 갱신
+                                keywordTemplate.opsForZSet().incrementScore("previous-ranking", keyword, currentScore);
+                            }
+
+                            // 해쉬 객제의 이전 값을 현재 값으로 갱신
+                            keywordTemplate.opsForHash().put("keyword", keyword + ":prevCnt", String.valueOf(curCnt));
+
+                        } catch (NumberFormatException e) {
+                            log.error("Number format exception for keyword: {}, prevCnt: {}, curCnt: {}", keyword, prevCntStr, curCntStr, e);
+                        }
+                    } else {
+                        log.warn("현재 값 혹은 이전 값이 없는 키워드: {}", keyword);
+                    }
+                }
+            }
+        }
+    }
+
+
+    @Override
+    public void updateSQLDB() {
+        Map<Object, Object> keywordMap = keywordTemplate.opsForHash().entries("keyword");
+
+        if (keywordMap != null) {
+
+            // 필요한 키워드 추출
+            Set<String> redisKeyword = keywordMap.keySet().stream()
+                    .map(key -> key.toString().split(":")[0])
+                    .collect(Collectors.toSet());
+            // 한 번의 쿼리로 데이터 베이스에서 모든 관련 키워드 가져오기
+            List<Keyword> dbkeywords = keywordRepository.findAllByKeywordNameIn(redisKeyword);
+            // 데이터 베이스의 키워드 맵핑
+            Map<String, Keyword> dbKeywordMap = dbkeywords.stream()
+                    .collect(Collectors.toMap(Keyword::getKeywordName, keyword -> keyword));
+
+            for (Map.Entry<Object, Object> temp : keywordMap.entrySet()) {
+                String fullField = temp.getKey().toString();
+                String[] parts = fullField.split(":");
+                if (parts.length != 2) {
+                    log.warn("부적절한 데이터: {}", fullField);
+                    continue;
+                }
+
+                String keyword = parts[0];
+                String fieldType = parts[1];
+
+                if (fieldType.equals("curCnt")) {
+                    // curCnt 값을 가져와서 SQL 데이터베이스에 저장
+                    String curCntStr = temp.getValue() != null ? temp.getValue().toString() : null;
+
+                    if (curCntStr != null) {
+                        try {
+                            int curCnt = Integer.parseInt(curCntStr);
+                            Keyword dbKeyword = dbKeywordMap.get(keyword);
+
+                            if (dbKeyword != null) {
+                                dbKeyword.setUseCount(curCnt);
+                                keywordRepository.save(dbKeyword);
+                            }
+                        } catch (NumberFormatException e) {
+                            log.error(">>> Number format exception for keyword: {}, curCnt: {}", keyword, curCntStr, e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
     // 순위를 Map으로 변환하는 유틸리티 메서드
-    private Map<String, Integer> createRankMap(List<String> ranks) {
+    @Override
+    public Map<String, Integer> createRankMap(List<String> ranks) {
         Map<String, Integer> rankMap = new HashMap<>();
         for (int i = 0; i < ranks.size(); i++) {
             rankMap.put(ranks.get(i), i + 1); // 순위는 1부터 시작
@@ -181,6 +301,7 @@ public class KeywordServiceImpl implements KeywordService {
     /*
         디렉토리 내 키워드 검색
     */
+    @Override
     public List<String> getKeywords(String token, String keyword, Long directoryId, boolean bin) {
         Long userId = extractUserIdFromToken(token);
 

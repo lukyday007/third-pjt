@@ -53,11 +53,6 @@ public class ImageManagementServiceImpl implements ImageManagementService {
             directory = directoryRepository.findById(directoryId).orElseThrow(() -> new EntityNotFoundException("해당 디렉토리 데이터가 존재하지 않습니다. " + directoryId));
         }
 
-//        // 이미지 중복 저장 방지
-//        ImageManagement imageManagement = imageManagementRepository.findByImageAndUser(image, user);
-//        if (imageManagement != null) {
-//            throw new EntityIsFoundException("이미 저장한 이미지 입니다.");
-//        }
 
         ImageManagement im = ImageManagement.convertToEntity(user, image, directory);
         imageManagementRepository.save(im);

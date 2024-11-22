@@ -2,6 +2,7 @@ package com.singlebungle.backend.global.config;
 
 import com.singlebungle.backend.domain.keyword.entity.Keyword;
 import com.singlebungle.backend.domain.keyword.repository.KeywordRepository;
+import com.singlebungle.backend.domain.keyword.service.KeywordService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -19,8 +20,10 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Configuration
@@ -33,6 +36,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
     // SchedulingConfigurer : 스레드 풀 사용을 위한 스케줄링 설정
     // -> 병럴로 처리하기 때문에 요청이 폭증해도 작업 큐에서 순차적으로 처리, 성능 개선
 
+    private final KeywordService keywordService;
     private final KeywordRepository keywordRepository;
 
     // @Qualifier로 특정 RedisTemplate을 주입받음
@@ -51,138 +55,48 @@ public class SchedulerConfig implements SchedulingConfigurer {
     }
 
 
-    // todo 테스트 후 2시간 간격으로 수정 2 * 60 * 60 * 1000 : 2시간마다 실행
-//    @Scheduled(fixedRate = 60 * 60 * 1000)    // 1시간마다 실행
-    @Scheduled(fixedRate = 60 * 1000)    // *** test 용 30분마다 실행 ***
+    @Scheduled(fixedRate = 60 * 1000)    // 1분 마다 진행
     @CacheEvict(value = "keywordRankCache", key = "'ranking'")
-    public void updateKeywordRanking() {
+    public void updateRanking() {
         long startTime = System.currentTimeMillis(); // 시작 시간 기록
-        log.info(">>>>>>>>>>>>>>>>>>   {}    updateKeywordRanking 시작... <<<<<<<<<<<<<<<<<<<<<", startTime);
+        log.info(">>>>>>>>>>>>>>>>>>   {}   updateKeywordRanking 시작... <<<<<<<<<<<<<<<<<<<<<", startTime);
         try {
-            Map<Object, Object> keywordMap = keywordTemplate.opsForHash().entries("keyword");
+            log.info(">>> 키워드 갱신");
+            keywordService.updateKeywordRanking();
 
-            if (keywordMap != null) {
-                for (Map.Entry<Object, Object> temp : keywordMap.entrySet()) {
-                    String fullField = temp.getKey().toString();
-                    String[] parts = fullField.split(":");
-                    if (parts.length != 2) {
-                        log.warn("==> 부적절한 데이터: {}", fullField);
-                        continue;
-                    }
-
-                    String keyword = parts[0];      // {keyword}
-                    String fieldType = parts[1];    // curCnt, prevCnt
-
-                    // 현재 값 curCnt를 기준으로 {keyword} 조회
-                    if ("curCnt".equals(fieldType)) {
-                        String curCntStr = temp.getValue() != null ? temp.getValue().toString() : null;
-                        String prevCntStr = keywordMap.get(keyword + ":prevCnt") != null ? keywordMap.get(keyword + ":prevCnt").toString() : null;
-
-                        if (prevCntStr != null && curCntStr != null) {
-                            try {
-                                int prevCnt = Integer.parseInt(prevCntStr);
-                                int curCnt = Integer.parseInt(curCntStr);
-                                int gap = curCnt - prevCnt;
-
-                                if (gap > 0) {
-                                    // 이전 점수 가져오기, 없으면 0으로 초기화
-                                    Double currentScore = keywordTemplate.opsForZSet().score("keyword-ranking", keyword);
-                                    if (currentScore == null) {
-                                        // keyword-ranking에 키워드가 없을 경우 초기화
-                                        keywordTemplate.opsForZSet().add("keyword-ranking", keyword, 0.0);
-                                        currentScore = 0.0;
-                                    }
-
-                                    Double previousScore = keywordTemplate.opsForZSet().score("previous-ranking", keyword);
-                                    if (previousScore == null) {
-                                        // previous-ranking에 키워드가 없을 경우 초기화
-                                        keywordTemplate.opsForZSet().add("previous-ranking", keyword, 0.0);
-                                        previousScore = 0.0;
-                                    }
-
-                                    // keyword-ranking 갱신
-                                    keywordTemplate.opsForZSet().incrementScore("keyword-ranking", keyword, gap);
-
-                                    // previous-ranking 갱신
-                                    keywordTemplate.opsForZSet().incrementScore("previous-ranking", keyword, currentScore);
-                                }
-
-                                // 해쉬 객제의 이전 값을 현재 값으로 갱신
-                                keywordTemplate.opsForHash().put("keyword", keyword + ":prevCnt", String.valueOf(curCnt));
-
-                            } catch (NumberFormatException e) {
-                                log.error("Number format exception for keyword: {}, prevCnt: {}, curCnt: {}", keyword, prevCntStr, curCntStr, e);
-                            }
-                        } else {
-                            log.warn("현재 값 혹은 이전 값이 없는 키워드: {}", keyword);
-                        }
-                    }
-                }
-            }
         } catch (RedisConnectionFailureException e) {
             log.error(">>> 키워드 랭킹 갱신 준 레디스 연결에 실패했습니다.", e);
+
         } catch (Exception e) {
             log.error(">>> 키워드 랭킹 갱신 중 예기치 못한 에러가 발생했습니다.", e);
+
         }
+
         long endTime = System.currentTimeMillis(); // 종료 시간 기록
         log.info(">>> updateKeywordRanking 종료. 총 수행 시간: {}ms", (endTime - startTime));
         log.info(">>>>>>>>>>>>>>>>>>       updateKeywordRanking 끄읕      <<<<<<<<<<<<<<<<<<<<<");
-
     }
 
 
     // 12시간마다 SQL 데이터베이스와 동기화
     @Transactional
-    @Scheduled(fixedRate = 12 * 60 * 60 * 1000)
+    @Scheduled(cron = "0 30 2 * * *", zone = "Asia/Seoul")
     public void updateSQL() {
         long startTime = System.currentTimeMillis(); // 시작 시간 기록
         log.info(">>>>>>>>>>>>>>>>>>       updateSQL 시작      <<<<<<<<<<<<<<<<<<<<<");
 
         try {
-            Map<Object, Object> keywordMap = keywordTemplate.opsForHash().entries("keyword");
+            log.info(">>> keyword DB 갱신 중...");
+            keywordService.updateSQLDB();
 
-            if (keywordMap != null) {
-                for (Map.Entry<Object, Object> temp : keywordMap.entrySet()) {
-                    String fullField = temp.getKey().toString();
-                    String[] parts = fullField.split(":");
-                    if (parts.length != 2) {
-                        log.warn("부적절한 데이터: {}", fullField);
-                        continue;
-                    }
-
-                    String keyword = parts[0];
-                    String fieldType = parts[1];
-
-                    if (fieldType.equals("curCnt")) {
-                        // curCnt 값을 가져와서 SQL 데이터베이스에 저장
-                        String curCntStr = temp.getValue() != null ? temp.getValue().toString() : null;
-
-                        if (curCntStr != null) {
-                            try {
-                                int curCnt = Integer.parseInt(curCntStr);
-                                Keyword kw = keywordRepository.findByKeywordName(keyword);
-                                if (kw != null) {
-                                    kw.setUseCount(curCnt);
-                                    keywordRepository.save(kw);
-                                }
-                            } catch (NumberFormatException e) {
-                                log.error(">>> Number format exception for keyword: {}, curCnt: {}", keyword, curCntStr, e);
-                            } catch (DataAccessException e) {
-                                log.error(">>> Database access error while saving keyword: {}", keyword, e);
-                            }
-                        }
-                    }
-                }
-            }
         } catch (RedisConnectionFailureException e) {
-            log.error("Redis connection failure while updating SQL.", e);
+            log.error("SQL 업데이트 도중 Redis 연결이 끊어졌습니다.", e);
         } catch (Exception e) {
-            log.error("Unexpected error occurred during update SQL.", e);
+            log.error("SQL 업데이트 도중 예기지 못한 에러 발생.", e);
         }
 
         long endTime = System.currentTimeMillis(); // 종료 시간 기록
         log.info(">>> updateSQL 종료. 총 수행 시간: {}ms", (endTime - startTime));
         log.info(">>>>>>>>>>>>>>>>>>       updateSQL 끄읕      <<<<<<<<<<<<<<<<<<<<<");
-
     }
 }

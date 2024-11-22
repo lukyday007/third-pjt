@@ -8,6 +8,5 @@ public interface SearchService {
 
     List<String> getKeywordsByTag(String keyword);
 
-    void incrementSearchCount(String keyword);
 
 }

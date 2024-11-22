@@ -71,20 +71,15 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
                         qImageManagement.imageManagementId,
                         qImage.imageId,
                         qImageManagement.image.imageUrl,
-                        qImageManagement.createdAt)) // createdAt 추가
+                        qImageManagement.createdAt))            // createdAt 추가
                 .distinct()
                 .from(qImageManagement)
-                // 유저와 조인
-                .leftJoin(qImageManagement.user, qUser)
-                // 이미지와 조인
-                .leftJoin(qImageManagement.image, qImage).on(qImageManagement.image.imageId.eq(qImage.imageId))
-                // 디렉토리와 조인
-                .leftJoin(qImageManagement.curDirectory)
-                .leftJoin(qImageManagement.prevDirectory)
-                // 이미지 상세 정보 조인
-                .leftJoin(qImageDetail).on(qImageManagement.image.eq(qImageDetail.image))
+                .leftJoin(qImageManagement.user, qUser)         // 유저
+                .leftJoin(qImageManagement.image, qImage).on(qImageManagement.image.imageId.eq(qImage.imageId))     // 이미지
+                .leftJoin(qImageManagement.curDirectory)        // 디렉토리 현재위치
+                .leftJoin(qImageManagement.prevDirectory)       // 디렉토리 과거위치
+                .leftJoin(qImageDetail).on(qImageManagement.image.eq(qImageDetail.image))       // 이미지 상세 정보
                 .leftJoin(qImageDetail.keyword, qKeyword)
-                // 조건 추가
                 .where(builder);
 
         // 정렬 조건 처리
@@ -143,6 +138,7 @@ public class ImageManagementRepositorySupport extends QuerydslRepositorySupport 
                 .from(qImageDetail)
                 .join(qImageDetail.keyword, qKeyword)       // ImageDetail과 Keyword 조인
                 .where(builder);
+
         return query.fetch();                               // 결과를 List<String>으로 반환
     }
 }

@@ -39,6 +39,7 @@ public class OpenaiServiceImpl implements OpenaiService {
     @Value("${openai.model}")
     private String apiModel;
 
+
     @Override
     public KeywordAndLabels requestImageAnalysis(String imageUrl, List<String> labels) {
         try {
@@ -91,14 +92,18 @@ public class OpenaiServiceImpl implements OpenaiService {
         }
     }
 
-    private List<String> requestKeywords(String imageUrl) throws Exception {
+
+    @Override
+    public List<String> requestKeywords(String imageUrl) throws Exception {
         String gptPromptForKeywords = generateKeywordsPrompt(imageUrl);
         ChatGPTResponse keywordsResponse = sendOpenAiRequest(imageUrl, gptPromptForKeywords);
         String keywordsContent = extractResponseContent(keywordsResponse);
         return extractKeywords(keywordsContent); // 키워드 추출
     }
 
-    private List<String> requestLabels(List<String> labels) throws Exception {
+
+    @Override
+    public List<String> requestLabels(List<String> labels) throws Exception {
         String gptPromptWithLabels = generateLabelsPrompt(labels);
         ChatGPTResponse labelsResponse = sendOpenAiRequest(null, gptPromptWithLabels);
         String labelsContent = extractResponseContent(labelsResponse);
@@ -106,8 +111,8 @@ public class OpenaiServiceImpl implements OpenaiService {
     }
 
 
-
-    private String convertWebPToJpegUrl(String webpUrl) throws IOException {
+    @Override
+    public String convertWebPToJpegUrl(String webpUrl) throws IOException {
         try {
             // WebP 이미지 다운로드
             BufferedImage webpImage = ImageIO.read(new URL(webpUrl));
@@ -207,7 +212,8 @@ public class OpenaiServiceImpl implements OpenaiService {
     }
 
 
-    private ChatGPTRequest createChatGPTRequest(String prompt, String imageUrl) {
+    @Override
+    public ChatGPTRequest createChatGPTRequest(String prompt, String imageUrl) {
         List<ChatGPTRequest.Content> contents = new ArrayList<>();
         contents.add(new ChatGPTRequest.Content("text", prompt));
 
